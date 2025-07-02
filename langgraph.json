@@ -1,6 +1,41 @@
 {
-  "dependencies": ["."],
-  "graphs": {
-    "research_agent": "./agent/graph.py:graph"
+  "name": "market-research-agent",
+  "version": "0.1.0",
+  "description": "Simple market research agent with Claude for deep psychology",
+  "entry_point": "agent.graph",
+  "api": {
+    "endpoints": [
+      {
+        "name": "research",
+        "graph": "agent:graph",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "business_context": {
+              "type": "string",
+              "description": "Business context to analyze"
+            }
+          },
+          "required": ["business_context"]
+        }
+      }
+    ]
+  },
+  "env": {
+    "ANTHROPIC_API_KEY": {
+      "description": "Anthropic API key for Claude",
+      "required": true
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API key (fallback)",
+      "required": false
+    },
+    "USE_CLAUDE": {
+      "description": "Use Claude for better psychology insights",
+      "default": "true"
+    }
+  },
+  "dependencies": {
+    "langchain-anthropic": "^0.2.0"
   }
 }
