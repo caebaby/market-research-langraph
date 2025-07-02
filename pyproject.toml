@@ -7,10 +7,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-langgraph = "^0.2.0"  # Changed from 0.1.0
+langgraph = "^0.2.0"
 langchain = "^0.3.0"
-langchain-openai = "^0.2.0"
-langchain-anthropic = "^0.2.0"  # Optional if using Claude
+langchain-anthropic = "^0.2.0"  # Claude support
+langchain-openai = "^0.2.0"  # Keep as fallback
 
 [build-system]
 requires = ["poetry-core"]
