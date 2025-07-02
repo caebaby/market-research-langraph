@@ -1,44 +1,7 @@
 {
-  "name": "market-research-intelligence",
-  "version": "1.0.0",
-  "description": "Sophisticated market research with deep psychological insights",
-  "entry_point": "agent.graph",
-  "api": {
-    "endpoints": [
-      {
-        "name": "research",
-        "graph": "agent:graph",
-        "input_schema": {
-          "type": "object",
-          "properties": {
-            "business_context": {
-              "type": "string",
-              "description": "Comprehensive business context"
-            },
-            "research_type": {
-              "type": "string",
-              "enum": ["comprehensive", "icp_only", "psychology_deep_dive"],
-              "default": "comprehensive"
-            },
-            "output_format": {
-              "type": "string", 
-              "enum": ["full_json", "psychology_report", "campaign_ready"],
-              "default": "full_json"
-            }
-          },
-          "required": ["business_context"]
-        }
-      }
-    ]
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "./agent/graph.py:graph"
   },
-  "env": {
-    "ANTHROPIC_API_KEY": {
-      "description": "Claude API key for superior psychology insights",
-      "required": true
-    },
-    "OPENAI_API_KEY": {
-      "description": "OpenAI key for interview simulation",
-      "required": false
-    }
-  }
+  "env": ".env"
 }
