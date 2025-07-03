@@ -203,7 +203,7 @@ def conduct_icp_research(state: ResearchState) -> ResearchState:
     """Phase 1: Deep ICP Research with Claude"""
     
     llm = ChatAnthropic(
-        model="claude-3-5-sonnet-20240222",
+        model="claude-3-5-sonnet-20241022",
         temperature=0.3,
         max_tokens=4000
     )
@@ -225,7 +225,7 @@ def simulate_interviews(state: ResearchState) -> ResearchState:
         model="gpt-4o-mini",
         temperature=0.7  # Higher for creativity
     ) if os.getenv("OPENAI_API_KEY") else ChatAnthropic(
-        model="claude-3-5-sonnet-20240222",
+        model="claude-3-5-sonnet-20241022",
         temperature=0.7
     )
     
@@ -241,7 +241,7 @@ def synthesize_research(state: ResearchState) -> ResearchState:
     """Phase 3: Synthesis and Campaign Insights"""
     
     llm = ChatAnthropic(
-        model="claude-3-5-sonnet-20240222",
+        model="claude-3-5-sonnet-20241022",
         temperature=0.3
     )
     
