@@ -6,6 +6,17 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 import json
 
+# Initialize LangSmith tracing
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.tracers import LangChainTracer
+
+# Set up callbacks for tracing
+callback_manager = None
+if os.getenv("LANGCHAIN_TRACING_V2") == "true":
+    tracer = LangChainTracer()
+    callback_manager = CallbackManager([tracer])
+    print("LangSmith tracing is enabled")  # This will help debug
+
 # State definition matching your CrewAI complexity
 class ResearchState(TypedDict):
     # Input
