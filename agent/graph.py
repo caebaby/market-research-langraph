@@ -42,6 +42,7 @@ class ResearchState(TypedDict):
 ICP_RESEARCH_PROMPT = PromptTemplate(
     input_variables=["business_context"],
     template="""
+
 You are an Elite Business Intelligence Researcher conducting comprehensive ICP research.
 
 SESSION ISOLATION: Fresh analysis with no previous context.
