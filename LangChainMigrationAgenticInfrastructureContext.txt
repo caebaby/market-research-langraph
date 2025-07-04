@@ -1,0 +1,315 @@
+# 🚀 LangChain Migration & Agentic Infrastructure Context
+
+## Overview
+
+This document provides context for AI assistants and developers about our migration from CrewAI to LangChain and our current agentic infrastructure setup.
+
+## Current Status ✅
+
+### Successfully Migrated
+
+- **Framework**: CrewAI → LangChain/LangGraph
+- **Deployment**: Render → Railway
+- **Monitoring**: Basic logging → LangSmith
+- **Architecture**: Sequential agents → Stateful graph-based orchestration
+
+### Live Infrastructure
+
+- **Production URL**: https://market-research-langraph-production.up.railway.app/
+- **Repository**: https://github.com/caebaby/market-research-langraph
+- **Status**: ✅ Operational and running
+
+## Technical Stack
+
+### Core Technologies
+
+```
+Framework: LangChain + LangGraph
+LLM: Claude 3.5 Sonnet (primary) + GPT-4 (secondary)
+Deployment: Railway (auto-scaling cloud)
+Monitoring: LangSmith (full observability)
+Languages: Python 3.11+
+API: FastAPI
+```
+
+### Current Agent Team
+
+```
+Market Research Intelligence Team:
+├── ICP Research Agent (Claude 3.5)
+├── Interview Simulation Agent (GPT-4o-mini)
+└── Campaign Synthesis Agent (Claude 3.5)
+```
+
+## Project Structure
+
+```
+market-research-langraph/
+├── agent/
+│   ├── __init__.py
+│   └── graph.py          # Core agent logic
+├── main.py               # FastAPI endpoints
+├── requirements.txt      # Dependencies
+├── railway.json         # Deployment config
+├── Procfile            # Start command
+└── pyproject.toml      # Poetry config
+```
+
+## Why We Migrated
+
+### From CrewAI
+
+- **Issue**: Cross-contamination between agent sessions
+- **Issue**: Limited control over agent orchestration
+- **Issue**: Difficult to implement complex workflows
+
+### To LangChain/LangGraph
+
+- **Benefit**: Complete control over state management
+- **Benefit**: Visual graph-based workflows
+- **Benefit**: Better debugging with LangSmith
+- **Benefit**: Industry standard with massive community
+
+## Environment Variables Required
+
+```bash
+# In Railway Variables:
+ANTHROPIC_API_KEY=sk-ant-xxx
+OPENAI_API_KEY=sk-xxx (optional)
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=ls__xxx
+LANGCHAIN_PROJECT=market-research-agents
+```
+
+## Key Features Implemented
+
+### 1. Session Isolation
+
+Each request gets fresh state - no more cross-contamination
+
+### 2. Comprehensive ICP Analysis
+
+- Deep psychological profiling
+- Voice of Customer language extraction
+- Multi-framework analysis (Jungian, JTBD, etc.)
+
+### 3. Full Observability
+
+- Every agent step tracked in LangSmith
+- Token usage monitoring
+- Latency tracking
+- Error tracing
+
+## API Endpoints
+
+### Main Endpoints
+
+```
+GET  /                    # Health check
+POST /research           # Run market research
+```
+
+### Research Request Format
+
+```json
+{
+  "business_context": "AI-powered CRM for real estate agents",
+  "research_type": "comprehensive",
+  "output_format": "psychology_report" | "campaign_ready" | "full_json"
+}
+```
+
+## Development Setup
+
+### Local Development
+
+```bash
+# Clone repository
+git clone https://github.com/caebaby/market-research-langraph.git
+cd market-research-langraph
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export ANTHROPIC_API_KEY=your_key
+
+# Run locally
+python main.py
+```
+
+### Testing the API
+
+```bash
+# Health check
+curl https://market-research-langraph-production.up.railway.app/
+
+# Run research
+curl -X POST https://market-research-langraph-production.up.railway.app/research \
+  -H "Content-Type: application/json" \
+  -d '{
+    "business_context": "Test business context",
+    "output_format": "psychology_report"
+  }'
+```
+
+## Future Architecture Plans
+
+### Next Agent Teams to Build
+
+1. **Sales Automation Team**
+    
+    - Lead enrichment
+    - Personalized outreach
+    - Meeting scheduling
+2. **Customer Success Team**
+    
+    - Health monitoring
+    - Churn prevention
+    - Upsell identification
+3. **Operations Team**
+    
+    - Email management
+    - Task automation
+    - Report generation
+
+### Infrastructure Roadmap
+
+- [ ] Add vector database for memory (Supabase + pgvector)
+- [ ] Implement tool calling for real actions
+- [ ] Add Slack integration
+- [ ] Build ambient agents
+- [ ] Create multi-tenant architecture
+
+## Common Issues & Solutions
+
+### Issue: Model not found error
+
+**Solution**: Update model name to `claude-3-5-sonnet-20241022`
+
+### Issue: No traces in LangSmith
+
+**Solution**: Ensure callbacks are passed to LLM instances
+
+### Issue: High latency
+
+**Solution**: Implement caching and parallel processing
+
+## Business Context
+
+### Vision
+
+Build a fully autonomous AI agent infrastructure to run coaching/consulting business operations from marketing to fulfillment, with deep business context across all departments.
+
+### Secondary Goal
+
+Help other businesses implement similar transformations through equity partnerships.
+
+### Current Phase
+
+- ✅ Core infrastructure built
+- ✅ First agent team operational
+- 🔄 Expanding to additional agent teams
+- 📅 Planning client implementations
+
+## Cost Considerations
+
+### Current Costs
+
+- **Railway Hosting**: ~$5-20/month
+- **LLM API Costs**: ~$0.01-0.05 per research request
+- **LangSmith**: Free tier (ample for current usage)
+
+### Optimization Tips
+
+- Use `gpt-4o-mini` for simple tasks
+- Cache common queries
+- Implement request throttling
+- Monitor token usage in LangSmith
+
+## Contributing & Development
+
+### Adding New Agents
+
+1. Create new node function in `graph.py`
+2. Add to workflow graph
+3. Update state definition if needed
+4. Test locally before deploying
+
+### Deployment Process
+
+```bash
+# Make changes
+git add .
+git commit -m "Description of changes"
+git push origin main
+
+# Railway auto-deploys from main branch
+```
+
+### Code Style
+
+- Type hints for all functions
+- Docstrings for agent nodes
+- Clear state management
+- Error handling on all external calls
+
+## Resources & Documentation
+
+### Essential Links
+
+- [LangChain Docs](https://python.langchain.com/docs/get_started/introduction)
+- [LangGraph Guide](https://langchain-ai.github.io/langgraph/)
+- [LangSmith Dashboard](https://smith.langchain.com/)
+- [Railway Dashboard](https://railway.app/dashboard)
+
+### Key Concepts to Understand
+
+- **StateGraph**: How LangGraph manages workflow state
+- **Nodes vs Edges**: Building agent workflows
+- **Callbacks**: Enabling tracing and monitoring
+- **Tool Calling**: Giving agents ability to take actions
+
+## Support & Troubleshooting
+
+### Common Commands
+
+```bash
+# Check Railway logs
+railway logs
+
+# Test agent locally
+python -m pytest tests/
+
+# Update dependencies
+pip install -r requirements.txt --upgrade
+```
+
+### Debug Checklist
+
+1. ✓ Environment variables set correctly?
+2. ✓ API keys valid and have credits?
+3. ✓ Railway deployment successful?
+4. ✓ LangSmith project receiving traces?
+5. ✓ Model names up to date?
+
+## Contact & Questions
+
+For questions about this infrastructure:
+
+1. Check this README first
+2. Review recent commits for changes
+3. Check Railway logs for errors
+4. Review LangSmith traces for agent behavior
+
+---
+
+**Note for AI Assistants**: This is a production system. When suggesting changes, always consider:
+
+- Impact on running agents
+- Cost implications
+- Backward compatibility
+- The goal of building a fully autonomous business system
+
+**Last Updated**: July 2025 **Migration Status**: ✅ Complete **System Status**: 🟢 Operational
