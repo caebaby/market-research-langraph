@@ -1,4 +1,4 @@
-# 🤖 New Chat Context: Level 10 Multi-Agent System Development
+# 🤖 New Chat Context: Multi-Agent Psychological Intelligence System
 
 *Essential context for continuing sophisticated agent development*
 
@@ -7,176 +7,209 @@
 ### **Business Context:**
 - **Revenue**: Sub-$20k/month coaching/consulting business  
 - **Goal**: Build fully autonomous agentic business operations
-- **Current Focus**: Multi-agent market research intelligence system
-- **Target**: 3-5x revenue growth through enterprise-level AI agents
+- **Current Focus**: Multi-agent market research intelligence system with psychological depth
+- **Target**: 3-5x revenue growth through enterprise-level AI agents delivering journal-level insights
 
 ### **Technical Status:**
 - ✅ **LangGraph system deployed** on Railway: https://market-research-langraph-production.up.railway.app/
-- ✅ **Session isolation working** (no cross-contamination)
-- ✅ **Basic agent functional** (85% quality, but needs depth upgrade)
-- 🔄 **Current Task**: Upgrade to sophisticated multi-agent system with journal-level insights
+- ✅ **Session isolation working** (no cross-contamination between business contexts)
+- ✅ **External prompt system implemented** (easy prompt tweaking without code changes)
+- ✅ **Learning memory system integrated** (agents improve while maintaining isolation)
+- 🔄 **Current Task**: Optimizing prompt depth for journal-level psychological insights
 
-## 🏗️ Agent Architecture Status
+## 🏗️ Agent Architecture Current State
 
-### **Current System (Functional but Basic):**
+### **Implemented System:**
 ```
 Railway + LangGraph Production System:
-├── ICP Intelligence Agent (functional, needs sophisticated prompts)
-├── Interview Simulation Agent (not connected)
-├── Campaign Synthesis Agent (not connected) 
-└── Multi-Agent Coordinator (not connected)
+├── External Prompt Library (prompts/research_prompts.py) ✅
+├── Learning Memory System (agent/learning_memory.py) ✅
+├── Multi-Pass ICP Analysis Agent (deep psychological frameworks) ✅
+├── Interview Simulation Agent (multiple authentic personas) ✅
+├── Campaign Synthesis Agent (conversion psychology) ✅
+└── Quality Scoring & Validation (enhanced metrics) ✅
 ```
 
-### **Target System (Level 10 Enterprise):**
+### **Key Technical Improvements:**
+- **External Prompts**: Easy tweaking without code deployment
+- **Multi-Pass Analysis**: 2+ passes for enhanced depth 
+- **Multiple Interview Personas**: 3 distinct psychological profiles
+- **Learning System**: Improves without session contamination
+- **Quality Metrics**: Enhanced scoring for depth and authenticity
+
+## 📊 Quality Standards & Current Performance
+
+### **Current Performance Metrics:**
+- ✅ **Quality Score:** 85-90% (up from 85% baseline)
+- ✅ **Processing Time:** 30-60 seconds (optimized)
+- ✅ **Session Isolation:** Working (no cross-contamination)
+- ✅ **Multi-Agent Coordination:** Functioning
+- 🔄 **Target Quality:** 95% journal-level insights
+
+### **Quality Framework Requirements:**
+- **Eugene Schwartz awareness levels** (5 levels with customer voice examples)
+- **Jungian Archetype Analysis** (identity & self-perception patterns)
+- **LAB Profile Analysis** (communication & motivation preferences)
+- **Multi-layer pain analysis** (surface → hidden → denied → root cause)
+- **Belief system archaeology** (surface → private → unconscious beliefs)
+- **JTBD Purchase Psychology** (functional, social, emotional jobs)
+- **Cognitive Biases & Decision Shortcuts** analysis
+- **Voice of Customer Language Maps** (TOFU/MOFU/BOFU funnel stages)
+- **Identity transformation insights** (not just business metrics)
+
+### **Journal-Level Quality Indicators:**
+- ✅ Client reactions: "How did you know that?"
+- ✅ Psychological contradictions revealed
+- ✅ Authentic voice patterns (sounds like real customers)
+- ✅ Behavioral predictions with specificity
+- ✅ Identity crisis analysis and transformation roadmaps
+
+## 🔧 Technical Implementation Details
+
+### **File Structure:**
 ```
-Sophisticated Multi-Agent Intelligence:
-├── ICP Research Agent (with comprehensive psychological frameworks)
-├── Interview Simulation Agent (realistic customer conversations)
-├── Campaign Synthesis Agent (GTM copy, conversion assets)
-├── Competitor Intelligence Agent (market positioning)
-├── Output Formatting Agent (professional reports)
-└── Multi-Agent Coordinator (orchestrates all agents)
+market-research-langraph/
+├── main.py (FastAPI app with /test endpoint)
+├── agent/
+│   ├── graph.py (LangGraph workflow orchestration)
+│   └── learning_memory.py (learning system without contamination)
+├── prompts/
+│   └── research_prompts.py (external prompt library)
+├── requirements.txt (dependencies)
+└── railway.json (deployment config)
 ```
 
-## 📊 Quality Requirements & Standards
+### **Key Configuration:**
+- **External Prompt System**: `ResearchPrompts.get_comprehensive_icp_research()`
+- **Learning Memory**: `LearningMemorySystem` with industry-specific patterns
+- **Multi-Agent Flow**: Goal → ICP → Interviews → Synthesis → Learning → Format
+- **Quality Scoring**: Enhanced metrics with depth and authenticity checks
 
-### **Current Performance:**
-- ✅ **Quality Score:** 85% (functional but not sophisticated)
-- ✅ **Confidence Score:** 80%
-- ✅ **Processing Time:** Under 60 seconds
-- ❌ **Depth:** Basic insights, not journal-level
+### **Environment Variables Required:**
+```bash
+ANTHROPIC_API_KEY=sk-ant-xxx
+OPENAI_API_KEY=sk-xxx (optional, for interview creativity)
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=ls__xxx
+LANGCHAIN_PROJECT=market-research-agents
+```
 
-### **Target Performance:**
-- 🎯 **Quality Score:** 95%+ (journal-level insights)
-- 🎯 **Depth:** "How did you know that?" client reactions
-- 🎯 **Sophistication:** Multi-framework psychological analysis
-- 🎯 **Output:** Campaign-ready assets with authentic voice
+## 🚀 Current Development Phase
 
-### **Required Framework Integration:**
-- ✅ **Eugene Schwartz awareness levels** (5 levels with customer voice examples)
-- ✅ **Jungian Archetype Analysis** (identity & self-perception)
-- ✅ **LAB Profile Analysis** (motivation direction, communication style)
-- ✅ **5-step reasoning chains** (Observation → Pattern → Root Cause → Contradiction → Confidence)
-- ✅ **Belief system archaeology** (Surface → Private → Unconscious beliefs)
-- ✅ **JTBD Purchase Psychology** (functional, social, emotional jobs)
-- ✅ **Cognitive Biases & Decision Shortcuts** 
-- ✅ **Voice of Customer Language Maps** (TOFU/MOFU/BOFU funnel stages)
+### **Phase 1: Prompt Optimization (In Progress)**
+- **Status**: Testing intensified psychological analysis prompts
+- **Goal**: Achieve 95% quality with journal-level depth
+- **Approach**: Enhanced psychological frameworks + multi-pass analysis
+- **Test Context**: Axiom Planning Resources (financial advisors)
 
-## 🔧 Technical Implementation Plan
+### **Phase 2: Search Integration (Planned)**
+- **Purpose**: Add web research capabilities for voice validation
+- **Tools**: Tavily API or DuckDuckGo for authentic customer voice
+- **Integration**: Easy toggle (`ENABLE_SEARCH = True`)
+- **Benefits**: Real customer language from forums, reviews, discussions
 
-### **Phase 1: Sophisticated Prompt Integration (30 minutes)**
-- Create external prompt library (`prompts/research_prompts.py`)
-- Replace basic prompts with comprehensive psychological frameworks
-- Implement prompt versioning for easy tweaking
-- Test upgraded ICP agent for journal-level quality
+### **Phase 3: Advanced Multi-Agent Features (Future)**
+- **Competitor Intelligence Agent**: Market positioning analysis
+- **Voice Research Agent**: Authentic customer language mining
+- **Campaign Optimization Agent**: Conversion psychology refinement
+- **Quality Validation Agent**: Psychological insight verification
 
-### **Phase 2: Multi-Agent System Completion (2 hours)**
-- Connect Interview Simulation Agent with realistic conversation generation
-- Connect Campaign Synthesis Agent for GTM copy and conversion assets
-- Add Competitor Intelligence Agent for market positioning
-- Implement multi-agent coordination workflow
+## 📋 Current Testing & Validation
 
-### **Phase 3: Level 10 Enhancement Features**
-- Persistent memory across sessions
-- Continuous learning from results
-- Quality scoring and validation
-- Professional report generation
+### **Testing Strategy:**
+1. **Manual Prompt Testing**: Validate psychological depth before agent implementation
+2. **Agent System Testing**: Compare manual vs. agent output quality
+3. **Cross-Context Testing**: Verify session isolation across different businesses
+4. **Quality Benchmarking**: Measure against consulting-grade standards
 
-## 💾 Key Files and Context
+### **Test Cases:**
+- **Primary**: Axiom Planning Resources (financial advisors)
+- **Secondary**: Pet Paradise Supplies (e-commerce)
+- **Tertiary**: Be Still Wellness Spa (B2C services)
 
-### **Current Working System:**
-- **Repository**: https://github.com/caebaby/market-research-langraph
-- **Production**: https://market-research-langraph-production.up.railway.app/
-- **Technology**: LangChain + LangGraph on Railway
-- **Monitoring**: LangSmith integration active
-
-### **System Files:**
-- **main.py** - FastAPI application with test interface
-- **agent/graph.py** - LangGraph workflow orchestration
-- **prompts/research_prompts.py** - External prompt library (to create)
-- **requirements.txt** - Dependencies
-
-### **Original Reference System:**
-- **Repository**: https://github.com/caebaby/market-research-agents  
-- **Technology**: CrewAI + FastAPI on Render
-- **Status**: Has sophisticated prompts but session contamination issues
-- **Use**: Reference for psychological frameworks and prompt templates
+### **Success Criteria:**
+- [ ] 95%+ quality score (currently 85-90%)
+- [ ] Journal-level psychological insights
+- [ ] Authentic voice of customer patterns
+- [ ] Identity transformation frameworks
+- [ ] Campaign-ready conversion assets
 
 ## 🎯 Immediate Next Steps
 
-### **1. Prompt System Upgrade**
-- Create `prompts/research_prompts.py` with comprehensive frameworks
-- Update `agent/graph.py` to call external prompts
-- Test with Axiom Planning context for quality comparison
-- Validate journal-level insight generation
+### **1. Prompt Depth Optimization (This Session)**
+- Test intensified psychological analysis prompt manually
+- Validate depth and authenticity of insights
+- Compare against current 85-90% baseline
+- Identify remaining gaps for journal-level quality
 
-### **2. Multi-Agent System Development**
-- Implement Interview Simulation Agent with authentic dialogue
-- Build Campaign Synthesis Agent for conversion copy
-- Add Competitor Intelligence Agent for market positioning
-- Create multi-agent coordination workflow
+### **2. Agent Implementation (Next)**
+- Implement optimized prompt in agent system
+- Test end-to-end workflow with enhanced prompts
+- Validate quality improvements in live system
+- Measure processing time and performance
 
-### **3. Quality Validation**
-- Compare output quality before/after upgrade
-- Test with multiple business contexts for consistency
-- Validate voice of customer authenticity
-- Ensure campaign-ready asset generation
+### **3. Search Integration Preparation (Future)**
+- Set up search tool integration points
+- Test search-enhanced insights manually
+- Implement toggle for easy search activation
+- Validate voice authenticity improvements
 
-## 📋 Success Criteria
-
-### **Quality Benchmarks:**
-- [ ] Client reactions: "How did you know that?"
-- [ ] Journal-level psychological insights
-- [ ] Authentic voice of customer language
-- [ ] Campaign-ready conversion copy
-- [ ] Professional consulting-grade analysis
-
-### **Technical Requirements:**
-- [ ] Session isolation maintained
-- [ ] Processing time under 5 minutes
-- [ ] Multiple agent coordination
-- [ ] External prompt management
-- [ ] Quality scoring integration
-
-### **Business Impact:**
-- [ ] Replace 40+ hours of consultant research
-- [ ] Generate immediately actionable GTM strategies
-- [ ] Produce McKinsey-quality insights
-- [ ] Create authentic customer dialogue
-- [ ] Deliver campaign-ready copy assets
-
-## 🚀 Project Vision
-
-**Transform market research from multi-week consulting engagement into sophisticated 5-minute AI-powered analysis using a team of specialized agents that conduct deep psychological research, simulate realistic customer interviews, analyze competitive positioning, and produce campaign-ready conversion assets.**
-
-**Value Proposition**: Feed comprehensive business context → Get journal-level customer insights + authentic voice patterns + conversion-ready copy + competitive positioning strategy
-
-**Competitive Advantage**: Multi-agent psychological depth vs. simple demographic analysis
-
----
-
-## 🎓 Context for AI Assistants
+## 💾 Key Context for AI Assistants
 
 ### **When continuing work on this project:**
 
-1. **Current Priority**: Upgrade basic agent to sophisticated multi-framework analysis
-2. **Quality Standard**: Journal-level insights that make clients say "how did you know that?"
-3. **Technical Approach**: External prompts for easy tweaking + multi-agent coordination
-4. **Framework Requirements**: Must include all psychological frameworks listed above
-5. **Output Standard**: Campaign-ready assets with authentic customer language
-
-### **Key Principles:**
-- Sophistication over simplicity
-- Psychological depth over surface analysis  
-- Authentic voice over AI-generated language
-- Campaign-ready output over generic insights
-- Multi-agent coordination for comprehensive analysis
+1. **Current Priority**: Optimizing prompt depth for journal-level psychological insights
+2. **Quality Standard**: Must achieve 95% quality with "how did you know that?" client reactions
+3. **Technical Approach**: External prompts + learning memory + multi-agent coordination
+4. **Framework Requirements**: All 8 psychological frameworks must be deeply analyzed
+5. **Output Standard**: Campaign-ready assets with authentic customer voice patterns
 
 ### **Development Philosophy:**
-Building an enterprise-grade agentic intelligence system that delivers breakthrough customer insights at consulting-level quality through sophisticated psychological analysis and authentic customer voice capture.
+- **Sophistication over simplicity**: Deep psychological analysis vs. surface insights
+- **Authenticity over AI-generated**: Real customer voice vs. artificial language
+- **Transformation over metrics**: Identity change vs. business improvement only
+- **Multi-framework analysis**: Comprehensive psychology vs. single framework
+- **Journal-level depth**: Consulting-grade vs. basic market research
+
+### **Current Challenges:**
+- **Prompt Optimization**: Achieving consistent journal-level depth
+- **Voice Authenticity**: Ensuring customer language sounds real
+- **Psychological Sophistication**: Revealing unconscious patterns and contradictions
+- **Campaign Readiness**: Converting insights to immediate implementation
+
+### **Success Indicators:**
+- Client says "This is scary accurate - how did you know?"
+- Reveals psychological patterns customers don't consciously recognize
+- Provides identity transformation roadmaps beyond business metrics
+- Generates campaign assets with authentic voice patterns
+- Delivers consulting-grade analysis in 5 minutes vs. 40+ hours
+
+---
+
+## 🔄 Recent Session Summary
+
+### **What We Accomplished:**
+- ✅ Fixed deployment issues (import path corrections)
+- ✅ Implemented external prompt system for easy tweaking
+- ✅ Created learning memory system without contamination
+- ✅ Developed intensified psychological analysis prompts
+- ✅ Established clear quality benchmarks and depth requirements
+
+### **What We're Testing:**
+- 🔄 Intensified prompt with ethical reframing for AI acceptance
+- 🔄 Multi-pass analysis for enhanced psychological depth
+- 🔄 Voice authenticity and behavioral prediction accuracy
+- 🔄 Quality improvements over 85-90% baseline
+
+### **Next Session Goals:**
+- Validate prompt quality against journal-level standards
+- Implement optimized prompts in agent system
+- Test end-to-end workflow improvements
+- Plan search integration for voice validation
 
 ---
 
 *Last Updated: July 2025*  
-*System Status: 🟡 Functional (needs sophistication upgrade)*  
-*Next Phase: Multi-agent psychological intelligence system*
+*System Status: 🟡 Deployed (optimizing for journal-level quality)*  
+*Next Phase: Prompt depth optimization and quality validation*
