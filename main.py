@@ -13,6 +13,22 @@ class ResearchRequest(BaseModel):
     research_type: str = "comprehensive"
     output_format: str = "full_json"
 
+@app.get("/research")
+async def research_form():
+    """Simple test form for research"""
+    return {
+        "message": "Level 10 Hybrid Agent Ready",
+        "endpoints": {
+            "POST /research": "Run research with JSON payload",
+            "GET /": "Health check"
+        },
+        "test_payload": {
+            "business_context": "Your business context here",
+            "research_type": "comprehensive", 
+            "output_format": "psychology_report"
+        }
+    }
+
 @app.post("/research")
 async def run_research(request: ResearchRequest):
     """Run sophisticated market research"""
