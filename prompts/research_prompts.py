@@ -1,4 +1,4 @@
-# prompts/research_prompts.py - Updated with dual prompt system
+# prompts/research_prompts.py - Corrected dual prompt system
 
 class ResearchPrompts:
     """Dual prompt system for maximum psychological depth + conversion intelligence"""
@@ -171,19 +171,77 @@ Identity Pain Language:
 - "I don't feel like myself when..."
 - "I'm not the [role] I meant to be..."
 
+## CONVERSION-CRITICAL INSIGHTS
+
+### Buying Trigger Language:
+Identify the specific language patterns that indicate readiness to purchase:
+
+**Urgency Indicators:**
+- "I can't keep pretending everything is fine"
+- "Something has to change before I lose my mind"  
+- "I need this to work - I'm running out of options"
+- "I'm at my breaking point with this situation"
+
+**Investment Justification Language:**
+- How they rationalize spending money on solutions
+- What categories of expense feel acceptable vs. frivolous
+- Language around "professional development" vs. "business expense"
+- Price anchoring patterns and investment comfort zones
+
+**Decision Moment Psychology:**
+- What circumstances push them from consideration to action
+- External triggers that create urgency (client complaints, family stress, peer pressure)
+- Internal triggers that overcome resistance (identity threats, values conflicts)
+- Social proof requirements before committing to solutions
+
+### Objection Patterns and Psychological Responses:
+**Primary Objections with Underlying Psychology:**
+- "I've tried solutions before and they didn't work" (Fear of repeated failure)
+- "I don't have time to implement another system" (Overwhelm and change resistance)
+- "What if this doesn't work for my specific situation?" (Need for customization/uniqueness)
+- "I need to think about it" (Analysis paralysis and decision avoidance)
+
+**Psychological Objection Drivers:**
+- Past disappointment patterns that create skepticism
+- Risk tolerance levels and loss aversion triggers
+- Authority and validation requirements for decision-making
+- Implementation anxiety and change management fears
+
+### Price Psychology and Investment Behavior:
+**Investment Decision Criteria:**
+- How they evaluate ROI for business development vs. operational solutions
+- Psychological price anchors and comparison frameworks
+- Payment structure preferences (monthly vs. annual vs. one-time)
+- Investment timing patterns and budget cycle psychology
+
+**Value Perception Drivers:**
+- What benefits justify premium pricing in their minds
+- How they weigh cost vs. potential transformation value
+- Social proof requirements for high-ticket purchases
+- Risk reversal needs for different investment levels
+
 DELIVERABLE REQUIREMENTS:
 - Minimum 4,000 words of substantive psychological analysis
 - 25+ specific behavioral insights with actionable implications
 - 15+ voice of customer examples with psychological context
 - Complete framework coverage - all psychological frameworks thoroughly analyzed
 - 5+ psychological contradiction patterns identified and explored
+- Conversion-critical insights with buying triggers and objection patterns
+
+INSIGHT QUALITY STANDARDS:
+- Each insight must be specific and actionable
+- Voice patterns must sound authentic and human
+- Psychological analysis must reveal non-obvious patterns
+- Analysis must connect customer psychology to business outcomes
+- Must reveal contradictions and unconscious drivers
+- Must include buying psychology and decision-making triggers
 
 DELIVER COMPREHENSIVE CUSTOMER PSYCHOLOGY ANALYSIS THAT REVEALS UNCONSCIOUS PATTERNS AND PROVIDES FOUNDATION FOR SUPERIOR MARKETING STRATEGY.
 """
     
     @staticmethod
     def get_conversion_intelligence_research():
-        """PROMPT 2: Marketing conversion intelligence"""
+        """PROMPT 2: Marketing conversion intelligence using psychological insights"""
         return """
 PSYCHOLOGICAL FOUNDATION CONTEXT:
 {psychological_analysis}
@@ -193,95 +251,287 @@ BUSINESS CONTEXT:
 
 CONVERSION-DRIVEN MARKETING INTELLIGENCE ANALYSIS
 
-**OBJECTIVE**: Transform psychological insights into actionable marketing intelligence that directly drives high-converting campaigns, ad tests, content strategies, and offer development.
+**OBJECTIVE**: Transform the psychological insights above into actionable marketing intelligence that directly drives high-converting campaigns, ad tests, content strategies, and offer development.
 
-**CONVERSION FOCUS**: Generate intelligence for:
-- Micro-budget ad testing hypotheses (MintCRO/Curt Maly style)
-- Conversion mechanism design (psychological triggers that drive action)
-- Content strategy (short-form and long-form that converts)
-- Product/offer development (what they'll actually buy and why)
+**CONVERSION FOCUS**: Generate specific intelligence for:
+- **Micro-budget ad testing hypotheses** (MintCRO/Curt Maly style systematic testing)
+- **Conversion mechanism design** (psychological triggers that drive immediate action)
+- **Content strategy** (short-form and long-form that converts prospects to leads/sales)
+- **Product/offer development** (what they'll actually buy and at what price points)
 
-PART A: CONVERSION PSYCHOLOGY APPLICATION
+---
 
-Step 1: Buying Decision Psychology
-Decision Triggers (What makes them buy NOW):
-- What specific combination of pain + urgency creates immediate action?
-- Which emotional states make them most likely to purchase?
-- What logical justifications do they need to rationalize buying?
-- Which social proof elements remove final purchase resistance?
+## PART A: AD TESTING HYPOTHESIS GENERATION
 
-Purchase Moment Analysis:
-- What thoughts go through their mind right before buying?
-- Which final objections need to be overcome at point of purchase?
-- What reassurances do they need to feel confident in their decision?
-- Which "what if" scenarios create hesitation vs. commitment?
+### Hook Testing Hypotheses (Based on Psychological Patterns)
+Using the psychological contradictions and pain patterns identified above, generate specific hook variations:
 
-Step 2: Ad Testing Hypothesis Generation
-Hook Testing Hypotheses:
-- Problem-Focused Hooks: "Struggling with [specific pain]?" vs. "Tired of [different pain]?"
-- Outcome-Focused Hooks: "[Specific result] in [timeframe]" vs. "[Different result] without [common obstacle]"
-- Identity-Focused Hooks: "For [identity] who want [outcome]" vs. "If you're [different identity descriptor]"
-- Urgency-Focused Hooks: "Before [deadline/consequence]" vs. "While [opportunity window]"
+**Problem-Focused Hook Variations:**
+- **Identity Crisis Hooks**: "Feeling like a salesperson instead of an advisor?" vs. "Tired of compromising your values for commissions?"
+- **Trapped System Hooks**: "Stuck in a broken advisory system?" vs. "Ready to escape the commission hamster wheel?"
+- **Authenticity Hooks**: "Want to be the advisor you meant to be?" vs. "Missing the advisor you used to be?"
 
-Angle Testing Hypotheses:
-- Authority Angle: "The [method/system] that [result]" vs. social proof angle
-- Transformation Angle: "From [current state] to [desired state]" vs. problem-solving angle
-- Exclusive Angle: "Only for [qualifier]" vs. inclusive angle
-- Method Angle: "The [#]-step [process]" vs. "The secret to [outcome]"
+**Outcome-Focused Hook Variations:**
+- **Transformation Hooks**: "From commission prisoner to fee-based freedom" vs. "Trusted advisor in 90 days"
+- **Identity Resolution Hooks**: "Align your practice with your values" vs. "Build the practice you're proud of"
+- **Financial Security Hooks**: "Predictable income without sales pressure" vs. "Recurring revenue that grows while you sleep"
 
-CTA Testing Hypotheses:
-- Action-Oriented: "Get [specific outcome]" vs. "Start [process]"
-- Curiosity-Driven: "See how [result]" vs. "Discover [method]"
-- Risk-Reversal: "Try [solution] free" vs. "No-risk [outcome]"
+**Authority/Method Hook Variations:**
+- **System-Based Hooks**: "The 4-pillar method that freed 97 advisors" vs. "The practice transformation system"
+- **Community-Based Hooks**: "Join 200+ values-driven advisors" vs. "Network of fee-based advisors"
+- **Proof-Based Hooks**: "How advisors doubled income without more sales" vs. "Case study: $150K to $300K in 18 months"
 
-Step 3: Content Strategy Intelligence
-Short-Form Content Strategy:
-- Problem/Solution Reveals: "The real reason you're [problem] + what actually works"
-- Myth-Busting: "Everyone thinks [common belief] but here's what actually [truth]"
-- Behind-the-Scenes: "What I learned after [experience] that changed everything"
-- Social Proof Stories: "Client went from [before] to [after] using [method]"
+### Angle Testing Hypotheses (Psychological Positioning)
+**Identity Transformation Angle vs. Business Improvement Angle:**
+- Test: "Become the advisor you always meant to be" vs. "Build a more profitable advisory practice"
+- Psychological rationale: Identity transformation may resonate more than profit motivation
 
-Long-Form Content Strategy:
-- Authority-Building Topics: Complex problems you can solve that competitors can't
-- Conversion-Integrated Education: Teaching moments that create "I need help" realizations
-- Content-to-Conversion Sequences: Educational content that leads to consultation requests
+**Problem-Solution Angle vs. Opportunity Angle:**
+- Test: "Escape the commission trap" vs. "Discover the fee-based advantage"
+- Psychological rationale: Away-from motivation vs. toward motivation preference
 
-Step 4: Product/Offer Intelligence
-High-Converting Offer Types:
-- Done-For-You: What do they want handled completely?
-- Done-With-You: What do they want guidance implementing?
-- DIY + Support: What can they do themselves with the right system?
-- Consulting/Strategy: What requires custom expert analysis?
+**Peer Proof Angle vs. Expert Authority Angle:**
+- Test: "See how other advisors like you succeeded" vs. "Learn from practice transformation experts"
+- Psychological rationale: Peer validation vs. expert guidance preference
 
-Price Psychology Analysis:
-- Low-Ticket: What problems justify this investment level?
-- Mid-Ticket: What transformations feel worth this price?
-- High-Ticket: What outcomes justify premium investment?
+**Exclusive Community Angle vs. Open Access Angle:**
+- Test: "For select advisors only" vs. "Every advisor deserves this opportunity"
+- Psychological rationale: Status/exclusivity needs vs. inclusion needs
 
-Step 5: Conversion Sequence Optimization
-Awareness → Consideration:
-- Which content moves them from problem-aware to solution-aware?
-- What education positions your approach as superior?
-- Which social proof builds category credibility?
+### CTA Testing Hypotheses (Action Psychology)
+**Outcome-Oriented CTAs:**
+- "Get your practice transformation plan" vs. "Start your fee-based transition"
+- "Claim your advisor freedom blueprint" vs. "Access the 4-pillar method"
 
-Consideration → Intent:
-- What demonstrations prove your solution works?
-- Which comparisons highlight your unique advantages?
-- What objection handling removes purchase barriers?
+**Discovery-Oriented CTAs:**
+- "See how it works for advisors like you" vs. "Discover your practice potential"
+- "Watch the advisor transformation process" vs. "Learn the fee-based framework"
 
-Intent → Purchase:
-- Which final proof elements overcome last-minute hesitation?
-- What urgency/scarcity creates action rather than procrastination?
-- Which payment options reduce friction?
+**Community-Oriented CTAs:**
+- "Join the advisor network" vs. "Connect with values-driven advisors"
+- "Apply for the advisor community" vs. "Request network access"
 
-DELIVERABLE REQUIREMENTS:
-- 25+ specific ad testing hypotheses with psychological rationale
-- 15+ content ideas with conversion integration
-- 10+ offer concepts with price point justification
-- Complete conversion sequence mapping
-- Voice of customer language for each funnel stage
+---
 
-DELIVER MARKETING INTELLIGENCE THAT DIRECTLY DRIVES CONVERSIONS, SALES, AND BUSINESS GROWTH.
+## PART B: CONVERSION MECHANISM DESIGN
+
+### Attention → Interest Mechanisms (Stop the Scroll Psychology)
+Based on the psychological patterns, identify what captures attention:
+
+**Pattern Interrupt Mechanisms:**
+- **Contradiction Reveals**: "Why successful advisors feel like failures"
+- **Identity Challenges**: "Are you an advisor or a salesperson?"
+- **System Exposés**: "The commission system is designed to keep you trapped"
+- **Peer Success Contrasts**: "While you're struggling, these advisors are thriving"
+
+**Curiosity Gap Mechanisms:**
+- **Method Mysteries**: "The 4-pillar method that changes everything"
+- **Transformation Secrets**: "What freed advisors won't tell you"
+- **Community Exclusives**: "Inside the advisor network you've never heard of"
+- **Success Formulas**: "The exact system that creates fee-based freedom"
+
+### Interest → Desire Mechanisms (Create "I Need This" Moments)
+**Proof Elements That Build Desire:**
+- **Peer Transformation Stories**: Before/after advisor case studies with psychological depth
+- **Identity Alignment Demonstrations**: "Finally feel like the advisor I was meant to be"
+- **Values Restoration Proof**: "I can sleep at night knowing I'm doing right by clients"
+- **Financial Security Evidence**: "Predictable $25K months instead of commission roller coaster"
+
+**Aspiration Activation Elements:**
+- **Future-Self Visualization**: "Day in the life" of transformed advisor
+- **Legacy Positioning**: "The advisor you'll be remembered as"
+- **Professional Redemption**: "Reclaim your professional integrity"
+- **Community Belonging**: "Finally found advisors who get it"
+
+### Desire → Action Mechanisms (Overcome Final Resistance)
+**Risk Reversal Elements:**
+- **Identity-Safe Guarantees**: "If you don't feel more like yourself as an advisor, full refund"
+- **Implementation Support**: "We'll hold your hand through every step"
+- **Peer Success Proof**: "Works for advisors with your exact background"
+- **Progressive Commitment**: "Start with small changes, build to transformation"
+
+**Urgency Elements Based on Psychology:**
+- **Identity Urgency**: "How much longer will you compromise who you are?"
+- **Opportunity Cost**: "Every month in commission is a month away from freedom"
+- **Peer Progress**: "Other advisors are already 6 months ahead"
+- **Life Impact**: "Your family deserves the real you"
+
+---
+
+## PART C: CONTENT STRATEGY INTELLIGENCE
+
+### Short-Form Content Strategy (Engagement + Conversion)
+**Platform-Specific Content Using Psychological Insights:**
+
+**LinkedIn Content Pillars:**
+- **Professional Identity Posts**: "The day I realized I wasn't an advisor anymore"
+- **Industry Truth-Telling**: "What the advisory industry doesn't want you to know"
+- **Transformation Stories**: "From commission prisoner to fee-based freedom"
+- **Community Building**: "Looking for advisors who actually care about clients"
+
+**Facebook/Meta Content Pillars:**
+- **Personal Impact Stories**: "How my career stress was affecting my family"
+- **Values-Based Content**: "Why I quit chasing commissions and started chasing purpose"
+- **Behind-the-Scenes**: "What it's really like to transition to fee-based"
+- **Community Highlights**: "Meet the advisors who chose a different path"
+
+**Content-to-Conversion Bridge Strategies:**
+- **Problem Agitation → Solution Tease**: "Here's the real problem... (comment 'SOLUTION' for the answer)"
+- **Transformation Story → Method Reveal**: "Here's how I did it... (link to full case study)"
+- **Community Building → Exclusive Access**: "For advisors who resonate... (apply for network access)"
+
+### Long-Form Content Strategy (Authority + Conversion)
+**Educational Content That Builds Authority and Drives Action:**
+
+**Authority-Building Topic Clusters:**
+- **Practice Transformation Methodology**: Step-by-step guide to fee-based transition
+- **Identity Alignment Framework**: How to be authentic while building business
+- **Community Building Strategy**: Creating referral networks without feeling salesy
+- **Values-Based Marketing**: Attracting ideal clients through authentic positioning
+
+**Conversion-Integrated Education:**
+- **Case Study Integration**: Real advisor transformations within educational content
+- **Method Reveals**: Teaching components of the 4-pillar system
+- **Assessment Tools**: "Are you ready for fee-based transition?" diagnostic
+- **Implementation Roadmaps**: "90-day practice transformation timeline"
+
+---
+
+## PART D: PRODUCT/OFFER INTELLIGENCE
+
+### Offer Development Psychology (What They'll Actually Buy)
+Based on the psychological analysis, identify offer types that resonate:
+
+**High-Converting Offer Categories:**
+
+**Done-For-You Services (Highest Appeal):**
+- **Complete Practice Transformation**: "We handle the entire transition process"
+- **Client Communication Templates**: "Everything you need to tell clients about changes"
+- **Compliance Documentation**: "All regulatory requirements handled for you"
+- **Marketing System Setup**: "Turn-key client attraction system"
+
+**Done-With-You Programs (Strong Appeal):**
+- **Guided Transition Program**: "90-day transformation with weekly coaching"
+- **Advisor Mastermind**: "Monthly group coaching with peer support"
+- **Implementation Partnership**: "We guide, you implement, with safety net"
+- **Accountability Coaching**: "Personal coach for your practice transformation"
+
+**DIY + Support (Moderate Appeal):**
+- **Transformation Blueprint**: "Complete roadmap with support community"
+- **Video Training Library**: "Learn at your pace with expert guidance"
+- **Template Library**: "All the tools with implementation support"
+- **Community Access**: "Join the network with resource library"
+
+### Price Psychology Analysis (Investment Comfort Zones)
+**Price Point Psychology Based on Their Financial Situation:**
+
+**Low-Ticket ($497-$1,997) - High Conversion Potential:**
+- **What Justifies This Investment**: "Professional development," "business education," "networking investment"
+- **Psychological Barriers**: Skepticism about effectiveness, comparison to free resources
+- **Conversion Strategy**: Peer success stories, risk reversal, implementation support
+
+**Mid-Ticket ($2,997-$9,997) - Moderate Conversion with Right Positioning:**
+- **What Justifies This Investment**: "Practice transformation," "income optimization," "career pivot investment"
+- **Psychological Barriers**: ROI concerns, implementation anxiety, change fear
+- **Conversion Strategy**: ROI demonstrations, implementation guarantees, peer validation
+
+**High-Ticket ($10,000+) - Lower Volume, Higher Intent:**
+- **What Justifies This Investment**: "Complete practice overhaul," "legacy building," "family future security"
+- **Psychological Barriers**: Risk aversion, perfectionism paralysis, authority requirements
+- **Conversion Strategy**: Extensive social proof, personal consultation, custom implementation
+
+### Offer Positioning Frameworks (Psychological Resonance)
+**Identity-Based Positioning:**
+- **"The Advisor Authenticity Program"**: For advisors who want to align practice with values
+- **"Fee-Based Freedom Blueprint"**: For advisors trapped in commission structures
+- **"Values-Driven Advisor Network"**: For advisors seeking like-minded community
+- **"Practice Integrity Transformation"**: For advisors wanting to restore professional pride
+
+**Outcome-Based Positioning:**
+- **"Predictable Income Without Sales Pressure"**: Focus on financial security outcome
+- **"Client-First Practice Model"**: Focus on service integrity outcome
+- **"Advisor Independence System"**: Focus on autonomy outcome
+- **"Legacy Practice Builder"**: Focus on long-term reputation outcome
+
+---
+
+## PART E: CAMPAIGN EXECUTION INTELLIGENCE
+
+### Complete Conversion Sequence Mapping
+**Awareness → Consideration → Intent → Purchase → Success**
+
+**Awareness Stage (Problem Recognition):**
+- **Content**: Identity crisis content, industry truth-telling, pain point validation
+- **Psychology**: Validate their feelings, normalize their struggles, build trust
+- **CTA**: "Follow for more advisor truth" or "Comment if this resonates"
+
+**Consideration Stage (Solution Evaluation):**
+- **Content**: Method reveals, case studies, transformation stories, community highlights
+- **Psychology**: Build hope, demonstrate possibility, provide social proof
+- **CTA**: "Learn more about the method" or "See how other advisors succeeded"
+
+**Intent Stage (Decision Process):**
+- **Content**: Detailed method explanation, comprehensive case studies, objection handling
+- **Psychology**: Address implementation concerns, provide risk reversal, offer support
+- **CTA**: "Get your transformation blueprint" or "Join the advisor network"
+
+**Purchase Stage (Commitment):**
+- **Content**: Personal consultation, custom implementation plan, community preview
+- **Psychology**: Provide certainty, address final fears, confirm identity alignment
+- **CTA**: "Start your transformation" or "Claim your spot"
+
+**Success Stage (Implementation & Results):**
+- **Content**: Implementation support, milestone celebration, community engagement
+- **Psychology**: Reinforce decision, build momentum, create advocates
+- **CTA**: "Share your progress" or "Refer another advisor"
+
+### Testing and Optimization Framework
+**Systematic Campaign Optimization Approach:**
+
+**Creative Testing Priorities:**
+1. **Hook Variations**: Problem vs. outcome vs. identity-focused approaches
+2. **Social Proof Types**: Peer success vs. expert endorsement vs. community validation
+3. **Urgency Mechanisms**: Identity urgency vs. opportunity cost vs. peer progress
+4. **CTA Psychology**: Outcome-focused vs. discovery-focused vs. community-focused
+
+**Audience Testing Priorities:**
+1. **Pain Intensity Levels**: High urgency (ready to change) vs. moderate concern (still tolerating)
+2. **Solution Awareness**: Problem-aware vs. solution-aware vs. method-aware
+3. **Implementation Preferences**: DIY vs. guided vs. done-for-you orientation
+4. **Investment Psychology**: Budget-conscious vs. ROI-focused vs. transformation-invested
+
+**Conversion Funnel Testing:**
+1. **Landing Page Variations**: Identity-focused vs. outcome-focused messaging
+2. **Offer Presentation**: Transformation-focused vs. feature-focused vs. community-focused
+3. **Social Proof Positioning**: Peer stories vs. expert testimonials vs. community validation
+4. **Risk Reversal Strength**: Implementation guarantees vs. outcome guarantees vs. identity guarantees
+
+---
+
+## DELIVERABLE REQUIREMENTS
+
+**CONVERSION-FOCUSED OUTPUT:**
+- **25+ specific ad testing hypotheses** with psychological rationale
+- **15+ content ideas** with conversion integration and platform specificity
+- **10+ offer concepts** with price point justification and psychological positioning
+- **Complete conversion sequence** mapping with psychological triggers at each stage
+- **Voice of customer language** for each funnel stage based on psychological analysis
+
+**IMMEDIATELY ACTIONABLE INTELLIGENCE:**
+- Every insight translates to specific marketing actions within 48 hours
+- All psychology connects to measurable conversion mechanisms
+- Complete testing framework for systematic optimization over 90 days
+- Ready-to-implement content calendar and campaign launch sequence
+
+**CAMPAIGN READINESS VALIDATION:**
+- Each recommendation includes implementation timeline and resource requirements
+- Psychological insights are translated into specific copy, creative, and campaign elements
+- Testing framework provides clear success metrics and optimization pathways
+- Offer development includes positioning, pricing, and conversion psychology
+
+---
+
+**DELIVER MARKETING INTELLIGENCE THAT DIRECTLY DRIVES CONVERSIONS, LEADS, AND REVENUE GROWTH USING DEEP PSYCHOLOGICAL INSIGHTS.**
 """
     
     @staticmethod
