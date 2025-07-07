@@ -60,11 +60,6 @@ async def root():
         "endpoints": ["/research"]
     }
 
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
 @app.get("/test")
 async def test_page():
     """Direct test page for Level 10 agent"""
@@ -74,30 +69,51 @@ async def test_page():
     <head>
         <title>Level 10 Agent Test</title>
         <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            textarea { width: 100%; height: 200px; margin: 10px 0; }
-            button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; border-radius: 5px; }
-            #result { margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 5px; white-space: pre-wrap; }
-            .loading { color: #007cba; }
+            body { font-family: Arial, sans-serif; margin: 40px; background: #f8f9fa; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            textarea { width: 100%; height: 300px; margin: 10px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; font-family: Arial, font-size: 14px; }
+            button { padding: 15px 30px; background: #007cba; color: white; border: none; cursor: pointer; border-radius: 5px; font-size: 16px; margin: 10px 0; }
+            button:hover { background: #005a85; }
+            #result { margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 5px; white-space: pre-wrap; max-height: 600px; overflow-y: auto; font-size: 12px; }
+            .loading { color: #007cba; font-weight: bold; }
+            .success { color: #28a745; }
+            .error { color: #dc3545; font-weight: bold; }
+            .metrics { background: #e9ecef; padding: 15px; border-radius: 5px; margin: 10px 0; font-weight: bold; }
+            .quick-tests { margin: 20px 0; }
         </style>
     </head>
     <body>
-        <h1>🚀 Level 10 Hybrid Agent Test</h1>
-        <p>Direct test interface for your Level 10 ICP Intelligence Agent</p>
-        
-        <h3>Business Context:</h3>
-        <textarea id="context">Axiom Planning Resources provides comprehensive back-office support for independent financial advisors. Target customers are mid-career advisors (5-10 years) stuck in commission models seeking recurring revenue stability. Customer complaints: "I'm trapped by a broken system - I'm on a hamster wheel and can't get off"</textarea>
-        
-        <br>
-        <button onclick="runTest()">🧪 Test Level 10 Agent</button>
-        
-        <div id="result"></div>
+        <div class="container">
+            <h1>🚀 Level 10 Hybrid Agent Test</h1>
+            <p>Test your hybrid agent with different business contexts to verify quality and isolation</p>
+            
+            <div class="quick-tests">
+                <h4>Test Instructions:</h4>
+                <p>Enter your business context below and click "Run Level 10 Analysis" to test the agent quality and session isolation.</p>
+            </div>
+            
+            <h3>Business Context:</h3>
+            <textarea id="context" placeholder="Enter your comprehensive business context here...
+
+Include:
+- Business type and target market
+- Main customer pain points
+- Voice of customer quotes
+- Current solution gaps
+- Customer demographics and psychographics"></textarea>
+            
+            <button onclick="runTest()">🧪 Run Level 10 Analysis</button>
+            
+            <div id="result"></div>
+        </div>
         
         <script>
         async function runTest() {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '⏳ Running Level 10 Agent... (this may take 30-60 seconds)';
+            resultDiv.innerHTML = '⏳ Running Level 10 Agent Analysis... (30-60 seconds)\\n\\nProcessing comprehensive ICP research with Eugene Schwartz frameworks...';
             resultDiv.className = 'loading';
+            
+            const startTime = Date.now();
             
             try {
                 const response = await fetch('/research', {
@@ -113,15 +129,56 @@ async def test_page():
                 });
                 
                 const data = await response.json();
-                resultDiv.className = '';
-                resultDiv.innerHTML = '✅ Level 10 Agent Results:\\n\\n' + JSON.stringify(data, null, 2);
+                const endTime = Date.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(1);
+                
+                resultDiv.className = 'success';
+                
+                // Extract key metrics if available
+                let metricsHtml = '';
+                if (data.quality_score !== undefined) {
+                    metricsHtml = `
+                    <div class="metrics">
+                        📊 Quality Score: ${(data.quality_score * 100).toFixed(1)}%
+                        🎯 Confidence: ${(data.confidence_score * 100).toFixed(1)}%
+                        ⏱️ Processing Time: ${duration}s
+                        🧠 Memory Patterns: ${data.memory_context?.successful_patterns?.length || 0}
+                        📝 Session ID: ${data.session_id || 'N/A'}
+                    </div>`;
+                }
+                
+                resultDiv.innerHTML = `✅ Level 10 Agent Analysis Completed!
+                
+${metricsHtml}
+
+🔍 Full Results:
+${JSON.stringify(data, null, 2)}`;
+                
             } catch (error) {
-                resultDiv.className = '';
-                resultDiv.innerHTML = '❌ Error: ' + error.message;
+                const endTime = Date.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(1);
+                
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Error after ${duration}s: ${error.message}
+                
+💡 This might be a timeout issue. Check the Railway logs - your agent may have completed processing successfully.
+                
+🔍 Common causes:
+- Long processing time (normal for comprehensive analysis)
+- Network timeout (results may still be generated)
+- Memory/resource limits
+
+Try a shorter business context or check Railway logs for actual completion.`;
             }
         }
         </script>
+        </div>
     </body>
     </html>
     """
     return HTMLResponse(content=html_content)
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
