@@ -13,7 +13,7 @@ from langchain.callbacks import LangChainTracer
 
 # Import your external prompts and learning system
 from prompts.research_prompts import ResearchPrompts
-from agents.learning_memory import LearningMemorySystem
+from agent.learning_memory import LearningMemorySystem
 
 print("🔍 LangSmith tracing is enabled")
 print("🆕 Creating new memory system")
