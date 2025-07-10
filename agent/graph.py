@@ -21,6 +21,84 @@ print("🚀 Creating Enhanced 5-Agent Intelligence System")
 # Initialize learning system
 learning_system = LearningMemorySystem()
 
+# Add this at the top of agent/graph.py with your other imports
+import requests
+import os
+
+# Add this function anywhere in your agent/graph.py file (before the agents)
+def web_search(query: str, num_results: int = 10) -> str:
+    """
+    Search the web using Brave Search API
+    Returns formatted search results for agent analysis
+    """
+    try:
+        api_key = os.getenv("BRAVE_SEARCH_API_KEY")
+        if not api_key:
+            return "Error: BRAVE_SEARCH_API_KEY not found in environment variables"
+        
+        # Brave Search API endpoint
+        url = "https://api.search.brave.com/res/v1/web/search"
+        
+        headers = {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "X-Subscription-Token": api_key
+        }
+        
+        params = {
+            "q": query,
+            "count": num_results,
+            "offset": 0,
+            "mkt": "en-US",
+            "safesearch": "moderate",
+            "freshness": "pd",  # Past day for fresh results
+            "text_decorations": False,
+            "spellcheck": True
+        }
+        
+        print(f"🔍 Searching web for: {query}")
+        
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        # Format results for agent analysis
+        results = []
+        if "web" in data and "results" in data["web"]:
+            for result in data["web"]["results"]:
+                formatted_result = {
+                    "title": result.get("title", ""),
+                    "url": result.get("url", ""),
+                    "description": result.get("description", ""),
+                    "age": result.get("age", ""),
+                    "language": result.get("language", "")
+                }
+                results.append(formatted_result)
+        
+        # Create formatted string for agent analysis
+        formatted_output = f"Web Search Results for: {query}\n\n"
+        for i, result in enumerate(results, 1):
+            formatted_output += f"{i}. {result['title']}\n"
+            formatted_output += f"   URL: {result['url']}\n"
+            formatted_output += f"   Description: {result['description']}\n"
+            formatted_output += f"   Age: {result['age']}\n\n"
+        
+        if not results:
+            formatted_output += "No results found for this query.\n"
+        
+        print(f"✅ Found {len(results)} results")
+        return formatted_output
+        
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Error searching web: {str(e)}"
+        print(f"❌ {error_msg}")
+        return error_msg
+    except Exception as e:
+        error_msg = f"Unexpected error in web search: {str(e)}"
+        print(f"❌ {error_msg}")
+        return error_msg
+
 class Level10ResearchState(TypedDict):
     # Input
     business_context: str
