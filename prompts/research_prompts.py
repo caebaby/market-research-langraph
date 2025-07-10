@@ -608,3 +608,260 @@ Create comprehensive GTM strategy that combines psychological depth with convers
 
 Focus on creating campaign strategy that leverages psychological depth for superior conversion performance.
 """
+
+@staticmethod
+def get_psychological_interviews():
+    """Get psychological depth interview prompt"""
+    return """
+PSYCHOLOGICAL FOUNDATION:
+{psychological_analysis}
+
+**COMPLETION REQUIREMENTS:**
+- **Must complete ALL 3 interviews** before stopping
+- **Each interview should be 300-500 words**
+- **Include psychological analysis section at the end**
+
+**ACCURACY REQUIREMENTS:**
+- ONLY use psychological insights provided in the analysis above
+- DO NOT invent psychological patterns not mentioned in the foundation
+- Base ALL dialogue on specific patterns from the psychological analysis
+- Use EXACT voice patterns and language from the analysis
+- Ground all conversations in the specific industry context
+- Use realistic scenarios that match the professional environment described
+
+ENHANCED CUSTOMER INTERVIEW SIMULATION
+
+**OBJECTIVE**: Create 3 unnervingly realistic customer interview simulations that reveal the psychological insights in natural conversation flow. These should feel like actual customer research sessions where deep truths emerge organically.
+
+**INTERVIEW QUALITY STANDARDS**:
+- **Psychological Authenticity**: Use exact language patterns and contradictions from psychological analysis
+- **Emotional Vulnerability**: Include moments where defenses drop and real pain emerges
+- **Natural Flow**: Conversations should feel spontaneous, not scripted
+- **Defense Mechanisms**: Show how customers protect themselves psychologically
+- **Layered Revelation**: Pain and desire emerge gradually through skilled probing
+- **Voice Authenticity**: Language must sound like actual customer conversations
+- **Industry Accuracy**: Use specific industry context and terminology
+
+---
+
+## INTERVIEW 1: HIGH-PAIN, EMOTIONALLY DRIVEN PERSONA
+
+**Background**: Based on the identity crisis and emotional urgency patterns identified in the psychological analysis. Focus on the core pain of losing professional identity.
+
+**Interviewer**: Thanks for taking the time to chat with me today. I'm researching [industry] practices and would love to understand your experience. How would you describe your current situation?
+
+**Customer**: [Create realistic response that gradually reveals the identity crisis using natural dialogue, hesitations, and emotional vulnerability. Show defense mechanisms, then break them down to reveal core pain. Include the decision trigger scenarios and use exact voice patterns from the psychological analysis.]
+
+[Continue this interview for 300-500 words total, ensuring each exchange reveals deeper psychological insights while maintaining natural conversation flow]
+
+---
+
+## INTERVIEW 2: ANALYTICAL, RISK-AVERSE PERSONA
+
+**Background**: Based on systematic evaluation patterns and need for certainty before change. Focus on contradictions between wanting change but being trapped by current systems.
+
+**Interviewer**: I understand you're someone who likes to research things thoroughly before making decisions. How has that approach served you in your practice?
+
+**Customer**: [Create realistic response showing analytical nature but gradually revealing the same core psychological patterns - identity crisis, value conflicts, and aspirations. Show how analytical thinking creates paralysis around change decisions.]
+
+[Continue developing analytical persona showing research patterns, perfectionism covering fear of change, and logical objections masking emotional concerns about transformation]
+
+---
+
+## INTERVIEW 3: ASPIRATIONAL, GROWTH-ORIENTED PERSONA
+
+**Background**: Based on transformation vision and success-driven patterns. Focus on the aspiration to build something aligned with values.
+
+**Interviewer**: You seem like someone who's always looking to improve and grow. What does growth look like for you in your practice?
+
+**Customer**: [Create realistic response showing growth mindset but revealing the same psychological foundation - the gap between current reality and aspiration for values-aligned practice. Show tension between growth desire and system limitations.]
+
+[Continue developing growth-oriented persona while grounding in the specific psychological insights provided - same identity crisis and contradictions but expressed through growth/aspiration lens]
+
+---
+
+## PSYCHOLOGICAL INTERVIEW ANALYSIS
+
+**Common Patterns Across All Three Interviews:**
+
+**Defense Mechanisms Observed:**
+[Analyze specific defense patterns that emerged, based ONLY on the psychological foundation provided]
+
+**Vulnerability Moments:**
+[Identify specific moments where authentic truth emerged, grounded in the identity crisis and value conflicts described]
+
+**Buying Psychology Revealed:**
+[What emotional states indicate readiness to invest in change, based on the aspirations identified]
+
+**Voice of Customer Language Captured:**
+[Exact phrases and expressions used across interviews that match the voice patterns from psychological analysis]
+
+**Implementation Insights:**
+[How these insights should inform marketing approach based on the psychological patterns revealed]
+
+**DELIVER CUSTOMER INTERVIEWS THAT FEEL LIKE REAL RESEARCH SESSIONS WHERE PSYCHOLOGICAL TRUTH EMERGES NATURALLY, GROUNDED ENTIRELY IN THE PROVIDED PSYCHOLOGICAL ANALYSIS.**
+"""
+
+@staticmethod
+def get_sales_intelligence_interviews():
+    """Get sales intelligence interview prompt"""
+    return """
+PSYCHOLOGICAL FOUNDATION:
+{psychological_analysis}
+
+**COMPLETION REQUIREMENTS:**
+- **Must complete ALL 3 interviews** before stopping
+- **Each interview should be 300-500 words**
+- **Include complete Sales Intelligence Analysis section at the end**
+- **Do not stop after just one interview**
+
+**ACCURACY REQUIREMENTS:**
+- ONLY use psychological insights provided in the analysis above
+- DO NOT invent psychological patterns not mentioned
+- Base ALL dialogue on specific patterns from the psychological analysis
+- Use industry-appropriate scenarios and terminology
+- Ground all conversations in the specific professional environment
+
+**SALES INTELLIGENCE INTERVIEW SIMULATION**
+
+**OBJECTIVE**: Create 3 realistic customer interviews that extract critical sales intelligence: current problems, pain intensity, desires, solution history, beliefs, objections, and buying criteria. Focus on uncovering what they need to know/believe to invest in change.
+
+**SALES INTELLIGENCE PRIORITIES:**
+- **Current Problems**: Specific operational and emotional challenges they face daily
+- **Pain Intensity**: How much these problems actually cost them (time, money, stress, relationships)
+- **Magic Wand Desires**: What they'd change if they could wave a magic wand
+- **Solution History**: What they've tried before and why it didn't work
+- **Beliefs About Solutions**: What they think about available options
+- **Objections**: What stops them from taking action
+- **Buying Criteria**: What they need to know/believe to invest in a solution
+
+---
+
+## INTERVIEW 1: CURRENT PROBLEMS & PAIN EXTRACTION
+
+**Interviewer**: I'm researching challenges that [industry professionals] face. What would you say are your biggest day-to-day problems right now?
+
+**Customer**: [Start with surface problems, then probe deeper using psychological insights to reveal specific scenarios showing contradictions and conflicts from the psychological analysis]
+
+**Interviewer**: Can you give me a specific example of that tension?
+
+**Customer**: [Reveal specific scenario showing the core contradictions from psychological analysis]
+
+**Interviewer**: How much is that costing you? Not just financially, but in other ways?
+
+**Customer**: [Reveal the real costs - stress, family impact, professional satisfaction, sleep, reputation concerns - based on psychological pain layers]
+
+**Interviewer**: If you could wave a magic wand and fix one thing about your practice, what would it be?
+
+**Customer**: [Reveal the core aspiration from psychological analysis]
+
+**Interviewer**: What have you tried to address this problem before?
+
+**Customer**: [Show solution history - courses, books, other approaches and why they failed]
+
+**Interviewer**: What do you think about [relevant solution category]?
+
+**Customer**: [Reveal beliefs and misconceptions about solutions]
+
+**Interviewer**: What stops you from making that change?
+
+**Customer**: [Uncover real objections - financial fears, implementation concerns, capability doubts]
+
+**Interviewer**: What would you need to know or believe to feel confident about making that change?
+
+**Customer**: [Reveal buying criteria and decision factors]
+
+---
+
+## INTERVIEW 2: SOLUTION BELIEFS & OBJECTION DEEP DIVE
+
+**Interviewer**: You mentioned you've looked into different approaches. What's your honest opinion about [solution type]?
+
+**Customer**: [Reveal beliefs about solutions - both positive and negative, grounded in psychological analysis]
+
+**Interviewer**: What specifically concerns you about that approach?
+
+**Customer**: [Uncover specific objections and fears based on psychological patterns]
+
+**Interviewer**: Have you tried transitioning before, or know others who have?
+
+**Customer**: [Reveal past attempts or social proof influences]
+
+**Interviewer**: What would need to be true about a solution process for you to feel confident moving forward?
+
+**Customer**: [Extract buying criteria and success requirements]
+
+**Interviewer**: If resources weren't an issue, would you make the change?
+
+**Customer**: [Reveal whether objections are financial or deeper psychological barriers]
+
+**Interviewer**: What would convince you that the solution could work for someone in your exact situation?
+
+**Customer**: [Uncover proof requirements and validation needs]
+
+---
+
+## INTERVIEW 3: BUYING PSYCHOLOGY & DECISION CRITERIA
+
+**Interviewer**: You seem thoughtful about big decisions. How do you typically evaluate major changes to your practice?
+
+**Customer**: [Reveal decision-making process and criteria based on psychological patterns]
+
+**Interviewer**: What would make you prioritize this change over other investments?
+
+**Customer**: [Show urgency drivers and competitive priorities]
+
+**Interviewer**: If you were going to make this change, what would the ideal support look like?
+
+**Customer**: [Reveal service requirements and expectations]
+
+**Interviewer**: What questions would you need answered before feeling ready to invest in a solution?
+
+**Customer**: [Extract information requirements for decision-making]
+
+**Interviewer**: How do you prefer to learn about new approaches - research on your own, get referrals, try before buying?
+
+**Customer**: [Reveal buying process preferences]
+
+**Interviewer**: What would success look like to you 12 months after making this change?
+
+**Customer**: [Define success metrics and outcome expectations based on aspirations from psychological analysis]
+
+---
+
+## SALES INTELLIGENCE EXTRACTION
+
+**Extract from all interviews:**
+
+**CURRENT PROBLEMS IDENTIFIED:**
+- [List specific problems mentioned across interviews with pain intensity ratings]
+
+**MAGIC WAND DESIRES:**
+- [What they'd change if they could, gap between current state and desired state]
+
+**SOLUTION HISTORY & FAILURES:**
+- [What they've tried before, why previous solutions failed, patterns in failed approaches]
+
+**BELIEFS ABOUT AVAILABLE SOLUTIONS:**
+- [What they think about solution categories, misconceptions and accurate beliefs, influences on their beliefs]
+
+**PRIMARY OBJECTIONS:**
+- [Financial objections and concerns, implementation and capability fears, risk and uncertainty factors, social proof and validation needs]
+
+**BUYING CRITERIA REVEALED:**
+- [What they need to know to buy, what they need to believe to move forward, proof and validation requirements, success metrics and expectations, decision-making process preferences, support and service requirements]
+
+**CONVERSION INSIGHTS:**
+- [Urgency drivers that create action, social proof requirements, risk reversal needs, implementation support expectations]
+
+**DELIVERABLE REQUIREMENTS:**
+- **3 complete sales intelligence interviews** focusing on problems, pain, desires, objections, and buying criteria
+- **Specific problem identification** with pain intensity
+- **Solution history extraction** showing what hasn't worked
+- **Belief system mapping** about available solutions
+- **Objection inventory** with underlying psychological drivers
+- **Buying criteria extraction** for confident decision-making
+- **Conversion psychology insights** for marketing application
+
+**DELIVER SALES INTELLIGENCE THAT REVEALS EXACTLY WHAT CUSTOMERS NEED TO KNOW AND BELIEVE TO BUY YOUR SOLUTION.**
+"""
