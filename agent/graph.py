@@ -1,7 +1,3 @@
-{
-  `path`: `agent/graph_fixed.py`,
-  `command`: `create`,
-  `file_text`: `# agent/graph.py - Enhanced 6-Agent Intelligence System with Error Handling
 
 import json
 import time
@@ -947,5 +943,4 @@ async def test_enhanced_intelligence_quality(business_context: str, expected_qua
     print(f\"   Processing Time: {processing_time:.1f}s\")
     
     return test_results
-`
-}
+
