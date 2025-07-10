@@ -443,11 +443,16 @@ def psychological_interview_agent(state: Level10ResearchState) -> Level10Researc
     return state
 
 def sales_intelligence_interview_agent(state: Level10ResearchState) -> Level10ResearchState:
-    """Agent 4: Sales intelligence interview agent - buying psychology and conversion insights"""
-    print("💰 Agent 4: Sales Intelligence Interview Analysis...")
+    """Agent 5: Sales intelligence interview agent - buying psychology and conversion insights"""
+    print("💰 Agent 5: Sales Intelligence Interview Analysis...")
     start_time = time.time()
     
     llm = ResearchConfig.get_llm("creative_interviews")
+    
+    print("🔍 DEBUG SALES: Available ResearchPrompts methods:")
+    print([method for method in dir(ResearchPrompts) if not method.startswith('_')])
+    print("🔍 DEBUG SALES: Looking for get_sales_intelligence_interviews")
+    print(hasattr(ResearchPrompts, 'get_sales_intelligence_interviews'))
     
     prompt = ResearchPrompts.get_sales_intelligence_interviews(
         psychological_analysis=state["psychological_analysis"]
