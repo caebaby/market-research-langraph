@@ -235,6 +235,9 @@ def competitor_discovery_agent(state: Level10ResearchState) -> Level10ResearchSt
         
         # Combine all search results
         combined_search_data = "\n\n".join(all_search_results)
+
+        print(f"🔍 DEBUG: Combined search data length: {len(combined_search_data)} chars")
+        print(f"🔍 DEBUG: First 500 chars of search data: {combined_search_data[:500]}")
         
         # Use LLM to analyze competitor intelligence
         llm = ResearchConfig.get_llm("conversion_intelligence")
