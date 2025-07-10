@@ -2,7 +2,50 @@
 
 *Essential context for continuing sophisticated marketing intelligence development*
 
+# 🚀 Enhanced 6-Agent System - Debug Session Context
 
+## ✅ **What's Working:**
+- **Agents 1 & 2:** Psychology + Conversion Intelligence (WORKING ✅)
+- **Agent 3:** Competitor Discovery with Brave Search API (WORKING ✅)
+- **Agent 6:** Campaign Synthesis (WORKING ✅)
+
+## ❌ **What's Broken:**
+- **Agent 4:** Psychological Interview Agent (500 error)
+- **Agent 5:** Sales Intelligence Interview Agent (500 error)
+
+## 🔧 **Current Status:**
+- **Railway deployment:** https://market-research-langraph-production.up.railway.app/
+- **Dashboard:** /dashboard endpoint working
+- **Brave Search API:** Working perfectly, finding competitors
+- **6-agent workflow:** Built but crashing on interview agents
+
+## 🚨 **The Problem:**
+**Interview agents crash with 500 Internal Server Error after competitor discovery completes. Railway logs don't show Python tracebacks - just server restarts.**
+
+## 📋 **What We Need to Do:**
+1. **Get complete `agent/graph.py` file**
+2. **Inspect entire structure for issues**
+3. **Add proper error handling to interview agents**
+4. **Replace entire file with clean version**
+5. **Test full 6-agent competitive intelligence system**
+
+## 🎯 **Success Criteria:**
+- All 6 agents complete without errors
+- Competitive intelligence with web search data
+- Psychological + sales interview simulations
+- Complete marketing intelligence report
+
+## 🔍 **Key Files:**
+- `agent/graph.py` - Main agent workflow (NEEDS DEBUG)
+- `prompts/research_prompts.py` - Has all required functions ✅
+- `main.py` - FastAPI app working ✅
+
+## 📊 **System Architecture:**
+```
+Goal → Dual Analysis → Competitor Discovery → Psych Interviews → Sales Interviews → Synthesis → Output
+```
+
+**Next: Get complete graph.py file, fix interview agents, deploy clean 6-agent system.**
 # 🚀 Enhanced Agentic Intelligence System - Competitive Intelligence Update
 
 *Major system enhancement: 7-agent intelligence system with real-time web search and interactive chat capabilities*
@@ -779,3 +822,5 @@ Not overcomplicated - this is exactly what growing agencies use!
 *Current Phase: Enhanced Interview Agent Implementation*  
 *System Status: 🟡 Prompts installed, adding agent functions next*  
 *Quality Target: "How the hell did you know that?" level interview accuracy*
+
+
