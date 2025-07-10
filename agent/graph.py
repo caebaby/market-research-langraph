@@ -426,6 +426,11 @@ def psychological_interview_agent(state: Level10ResearchState) -> Level10Researc
     
     llm = ResearchConfig.get_llm("creative_interviews")
     
+    print("🔍 DEBUG: Available ResearchPrompts methods:")
+    print([method for method in dir(ResearchPrompts) if not method.startswith('_')])
+    print("🔍 DEBUG: Looking for get_psychological_interviews")
+    print(hasattr(ResearchPrompts, 'get_psychological_interviews'))
+    
     prompt = ResearchPrompts.get_psychological_interviews(
         psychological_analysis=state["psychological_analysis"]
     )
