@@ -727,33 +727,35 @@ def calculate_confidence_score(state: Level10ResearchState) -> float:
     return min(base_confidence, 0.90)
 
 def create_enhanced_intelligence_workflow():
-    """Create the enhanced 5-agent intelligence workflow"""
+    """Create the enhanced 6-agent intelligence workflow"""
     
-    print("🏗️ Building Enhanced 5-Agent Intelligence Graph...")
+    print("🏗️ Building Enhanced 6-Agent Intelligence Graph...")
     
     workflow = StateGraph(Level10ResearchState)
     
-    # Enhanced 5-agent workflow
+    # Enhanced 6-agent workflow
     workflow.add_node("set_goal", set_research_goal)
     workflow.add_node("dual_analysis", conduct_dual_analysis_research)        # Agents 1 & 2
-    workflow.add_node("psychological_interviews", psychological_interview_agent)     # Agent 3
-    workflow.add_node("sales_intelligence_interviews", sales_intelligence_interview_agent)  # Agent 4
-    workflow.add_node("campaign_synthesis", synthesize_campaign_intelligence)       # Agent 5
+    workflow.add_node("competitor_discovery", competitor_discovery_agent)     # Agent 3 (NEW)
+    workflow.add_node("psychological_interviews", psychological_interview_agent)     # Agent 4
+    workflow.add_node("sales_intelligence_interviews", sales_intelligence_interview_agent)  # Agent 5
+    workflow.add_node("campaign_synthesis", synthesize_campaign_intelligence)       # Agent 6
     workflow.add_node("learn", learn_from_outcome)
     workflow.add_node("format_outputs", format_outputs)
     
     # Enhanced workflow sequence
     workflow.set_entry_point("set_goal")
     workflow.add_edge("set_goal", "dual_analysis")
-    workflow.add_edge("dual_analysis", "psychological_interviews")
+    workflow.add_edge("dual_analysis", "competitor_discovery")  # NEW
+    workflow.add_edge("competitor_discovery", "psychological_interviews")  # UPDATED
     workflow.add_edge("psychological_interviews", "sales_intelligence_interviews")
     workflow.add_edge("sales_intelligence_interviews", "campaign_synthesis")
     workflow.add_edge("campaign_synthesis", "learn")
     workflow.add_edge("learn", "format_outputs")
     workflow.add_edge("format_outputs", END)
     
-    print("✅ Enhanced 5-Agent Intelligence Graph created successfully")
-    print("🔄 Workflow: Goal → Dual Analysis → Psych Interviews → Sales Interviews → Synthesis → Learn → Output")
+    print("✅ Enhanced 6-Agent Intelligence Graph created successfully")
+    print("🔄 Workflow: Goal → Dual Analysis → Competitor Discovery → Psych Interviews → Sales Interviews → Synthesis → Learn → Output")
     
     return workflow.compile()
 
