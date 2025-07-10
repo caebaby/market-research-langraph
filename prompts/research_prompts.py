@@ -610,7 +610,7 @@ Focus on creating campaign strategy that leverages psychological depth for super
 """
 
 @staticmethod
-def get_psychological_interviews():
+def get_psychological_interviews(psychological_analysis):
     """Get psychological depth interview prompt"""
     return """
 PSYCHOLOGICAL FOUNDATION:
@@ -703,7 +703,7 @@ ENHANCED CUSTOMER INTERVIEW SIMULATION
 """
 
 @staticmethod
-def get_sales_intelligence_interviews():
+def get_sales_intelligence_interviews(psychological_analysis):
     """Get sales intelligence interview prompt"""
     return """
 PSYCHOLOGICAL FOUNDATION:
