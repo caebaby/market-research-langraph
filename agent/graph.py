@@ -3,6 +3,7 @@
 import json
 import time
 import os
+import requests
 from typing import TypedDict, Dict, Any, List
 from datetime import datetime
 
@@ -20,10 +21,6 @@ print("🚀 Creating Enhanced 5-Agent Intelligence System")
 
 # Initialize learning system
 learning_system = LearningMemorySystem()
-
-# Add this at the top of agent/graph.py with your other imports
-import requests
-import os
 
 # Add this function anywhere in your agent/graph.py file (before the agents)
 def web_search(query: str, num_results: int = 10) -> str:
