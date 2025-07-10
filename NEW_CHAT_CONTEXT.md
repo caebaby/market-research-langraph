@@ -551,6 +551,34 @@ Follow-up Tasks Created
 **Next**: Client dashboard implementation
 **Then**: Onboarding agent + project management integration
 
+Thinking through what the best PM tool combo would be to meet all the needs... 
+
+PM Tool + HITL + Client Chat Solution
+Perfect combo for your vision:
+Linear + Intercom Integration = 🎯 Winner
+Why Linear:
+
+Best API for agent automation
+Clean client views - Professional project visibility
+Real-time updates - Agents can update status automatically
+Scalable - Built for growing teams
+
+Why Intercom for Chat:
+
+HITL built-in - You can jump in anytime
+Agent integration - Connect your agents to respond initially
+Cost control - Set conversation limits/routing
+Client portal - Embedded chat in project dashboard
+
+Cost Control Strategy:
+
+Agent handles routine questions ("What's the status?", "When is delivery?")
+HITL triggers for complex questions or decisions
+Auto-responses for common queries
+Conversation routing to you only when needed
+
+Not overcomplicated - this is exactly what growing agencies use!
+
 ---
 
 *Added: Client delivery infrastructure and onboarding automation roadmap*  
