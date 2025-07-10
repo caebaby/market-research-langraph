@@ -607,7 +607,7 @@ Create comprehensive GTM strategy that combines psychological depth with convers
 - Success metrics and psychological indicators
 
 Focus on creating campaign strategy that leverages psychological depth for superior conversion performance.
-"""
+""" 
 
 @staticmethod
 def get_psychological_interviews(psychological_analysis):
