@@ -607,12 +607,12 @@ Create comprehensive GTM strategy that combines psychological depth with convers
 - Success metrics and psychological indicators
 
 Focus on creating campaign strategy that leverages psychological depth for superior conversion performance.
-""" 
+"""
 
-@staticmethod
-def get_psychological_interviews(psychological_analysis):
-    """Get psychological depth interview prompt"""
-    return """
+    @staticmethod
+    def get_psychological_interviews(psychological_analysis):
+        """Get psychological depth interview prompt"""
+        return f"""
 PSYCHOLOGICAL FOUNDATION:
 {psychological_analysis}
 
@@ -702,10 +702,10 @@ ENHANCED CUSTOMER INTERVIEW SIMULATION
 **DELIVER CUSTOMER INTERVIEWS THAT FEEL LIKE REAL RESEARCH SESSIONS WHERE PSYCHOLOGICAL TRUTH EMERGES NATURALLY, GROUNDED ENTIRELY IN THE PROVIDED PSYCHOLOGICAL ANALYSIS.**
 """
 
-@staticmethod
-def get_sales_intelligence_interviews(psychological_analysis):
-    """Get sales intelligence interview prompt"""
-    return """
+    @staticmethod
+    def get_sales_intelligence_interviews(psychological_analysis):
+        """Get sales intelligence interview prompt"""
+        return f"""
 PSYCHOLOGICAL FOUNDATION:
 {psychological_analysis}
 
