@@ -96,6 +96,148 @@ def web_search(query: str, num_results: int = 10) -> str:
         print(f"❌ {error_msg}")
         return error_msg
 
+def competitor_discovery_agent(state: Level10ResearchState) -> Level10ResearchState:
+    """Agent 6: Competitor Discovery & Strategic Intelligence"""
+    print("🔍 Agent 6: Competitor Discovery & Strategic Intelligence...")
+    start_time = time.time()
+    
+    # Extract industry and business type for competitor search
+    business_context = state["business_context"]
+    industry = extract_industry(business_context)
+    
+    # Generate competitor search queries
+    search_queries = [
+        f"{industry} companies competitors",
+        f"{business_context.split()[0]} {business_context.split()[1]} industry leaders",
+        f"top {industry} businesses marketing strategies",
+        f"{industry} market leaders positioning"
+    ]
+    
+    # Perform web searches
+    all_search_results = []
+    for query in search_queries:
+        search_result = web_search(query, num_results=5)
+        all_search_results.append(search_result)
+    
+    # Combine all search results
+    combined_search_data = "\n\n".join(all_search_results)
+    
+    # Use LLM to analyze competitor intelligence
+    llm = ResearchConfig.get_llm("conversion_intelligence")
+    
+    competitor_prompt = f"""
+BUSINESS CONTEXT:
+{business_context}
+
+PSYCHOLOGICAL INSIGHTS FOR COMPETITIVE ANALYSIS:
+{state.get('psychological_analysis', 'Not available')}
+
+WEB SEARCH RESULTS:
+{combined_search_data}
+
+COMPETITOR DISCOVERY & STRATEGIC INTELLIGENCE ANALYSIS
+
+**OBJECTIVE**: Identify key competitors and analyze their positioning, messaging, and strategic gaps using the psychological insights about our target customers.
+
+**ANALYSIS FRAMEWORK**:
+
+## PART A: COMPETITOR IDENTIFICATION & LANDSCAPE MAPPING
+
+### 1. Direct Competitors
+- Companies offering similar solutions to the same target market
+- Analyze their positioning, messaging, and value propositions
+- Identify market share and competitive strength
+
+### 2. Indirect Competitors  
+- Alternative solutions customers might consider
+- Different approaches to solving the same core problems
+- Substitute products or services
+
+### 3. Competitive Landscape Overview
+- Market positioning map showing where competitors sit
+- Identify crowded vs. uncrowded market spaces
+- Analyze competitive intensity in different segments
+
+## PART B: COMPETITOR MESSAGING & POSITIONING ANALYSIS
+
+### 1. Common Messaging Patterns
+- What themes and angles are competitors using?
+- What value propositions are most common?
+- How do they position against customer pain points?
+
+### 2. Positioning Gaps Analysis
+Using the psychological insights, identify:
+- What customer psychology are competitors missing?
+- Which emotional triggers are they not addressing?
+- What identity transformation opportunities are they ignoring?
+- Which unconscious beliefs are they not targeting?
+
+### 3. Messaging Weaknesses
+- Generic messaging that doesn't resonate deeply
+- Logical arguments that miss emotional drivers
+- Surface-level benefits vs. deeper psychological needs
+- Missed opportunities for identity-based positioning
+
+## PART C: STRATEGIC OPPORTUNITY IDENTIFICATION
+
+### 1. Psychological Positioning Gaps
+Based on customer psychology analysis:
+- What psychological angles are competitors missing?
+- Which identity transformation opportunities are untapped?
+- What unconscious motivations are they not addressing?
+- Which emotional triggers could create competitive advantage?
+
+### 2. Market Positioning Opportunities
+- Underserved customer segments or use cases
+- Unoccupied positioning territories
+- Differentiation opportunities based on psychological insights
+- Blue ocean opportunities in crowded markets
+
+### 3. "World Domination" Strategy Elements
+- Unique psychological positioning that competitors can't copy
+- Identity-based differentiation that creates customer loyalty
+- Emotional moats that make switching psychologically difficult
+- Messaging that hits deeper than competitors' surface-level benefits
+
+## PART D: COMPETITIVE INTELLIGENCE SYNTHESIS
+
+### 1. Competitor Strengths & Weaknesses
+- What are competitors doing well?
+- Where are their strategic vulnerabilities?
+- What resources and capabilities do they have?
+- Where are they vulnerable to disruption?
+
+### 2. Strategic Recommendations
+- How to position against identified competitors
+- What messaging will cut through competitive noise
+- Which psychological angles will create unbeatable advantage
+- How to build competitive moats using customer psychology
+
+### 3. Immediate Tactical Opportunities
+- Quick wins in positioning and messaging
+- Underutilized channels or approaches
+- Competitive gaps that can be exploited immediately
+- Psychological triggers that can be activated for rapid differentiation
+
+**DELIVERABLE REQUIREMENTS**:
+- Identify 5-10 key competitors with analysis
+- Map competitive landscape and positioning gaps
+- Provide specific psychological positioning opportunities
+- Deliver actionable "world domination" strategy recommendations
+- Include specific messaging angles that exploit competitive weaknesses
+
+**ANALYSIS DEPTH**: Minimum 2,000 words of substantive competitive intelligence with psychological strategy integration.
+
+Generate comprehensive competitor intelligence that reveals strategic opportunities for unbeatable market positioning.
+"""
+    
+    result = llm.invoke(competitor_prompt)
+    state["competitor_analysis"] = result.content
+    state["processing_times"]["competitor_analysis"] = time.time() - start_time
+    
+    print(f"✅ Competitor Discovery completed ({state['processing_times']['competitor_analysis']:.1f}s)")
+    return state
+
 class Level10ResearchState(TypedDict):
     # Input
     business_context: str
