@@ -96,6 +96,116 @@ def web_search(query: str, num_results: int = 10) -> str:
         print(f"❌ {error_msg}")
         return error_msg
 
+class Level10ResearchState(TypedDict):
+    # Input
+    business_context: str
+    research_type: str
+    output_format: str
+    
+    # Core Research Outputs
+    psychological_analysis: str
+    conversion_intelligence: str
+    # NEW - Competitor Intelligence Outputs
+    competitor_analysis: str        # Competitor discovery and analysis
+    competitive_intelligence: str   # Strategic gap analysis and opportunities
+    
+    # Enhanced Interview Outputs
+    psychological_interviews: str      # NEW - emotional depth interviews
+    sales_intelligence_interviews: str # NEW - buying psychology interviews
+    
+    # Synthesis Output
+    synthesis_results: str
+    
+    # Legacy fields (keep for backward compatibility)
+    interview_insights: str
+    icp_analysis: str
+    
+    # Quality metrics
+    quality_score: float
+    confidence_score: float
+    session_id: str
+    
+    # Learning and memory
+    memory_context: Dict[str, Any]
+    learning_insights: List[str]
+    
+    # Processing metrics
+    processing_times: Dict[str, float]
+    
+    # Final outputs
+    psychology_report: str
+    campaign_insights: str
+    voice_of_customer: List[str]
+
+class ResearchConfig:
+    """Configuration for research capabilities"""
+    
+    @staticmethod
+    def get_llm(task_type: str):
+        """Get optimized LLM for different tasks"""
+        
+        if task_type == "deep_psychological":
+            # Use Claude for sophisticated psychological analysis
+            llm = ChatAnthropic(
+                model="claude-3-5-sonnet-20241022",
+                temperature=0.2,
+                max_tokens=4000,
+                callbacks=[LangChainTracer()]
+            )
+        elif task_type == "conversion_intelligence":
+            # Use Claude for conversion analysis
+            llm = ChatAnthropic(
+                model="claude-3-5-sonnet-20241022",
+                temperature=0.3,
+                max_tokens=4000,
+                callbacks=[LangChainTracer()]
+            )
+        elif task_type == "creative_interviews":
+            # Use Claude for interview simulation (consistent with other agents)
+            llm = ChatAnthropic(
+                model="claude-3-5-sonnet-20241022",
+                temperature=0.4,
+                max_tokens=4000,
+                callbacks=[LangChainTracer()]
+            )
+        elif task_type == "synthesis":
+            # Use Claude for campaign synthesis
+            llm = ChatAnthropic(
+                model="claude-3-5-sonnet-20241022", 
+                temperature=0.3,
+                max_tokens=4000,
+                callbacks=[LangChainTracer()]
+            )
+        else:
+            # Default Claude configuration
+            llm = ChatAnthropic(
+                model="claude-3-5-sonnet-20241022",
+                temperature=0.2,
+                max_tokens=4000,
+                callbacks=[LangChainTracer()]
+            )
+            
+        return llm
+
+def extract_industry(business_context: str) -> str:
+    """Extract industry from business context for learning patterns"""
+    context_lower = business_context.lower()
+    
+    if any(word in context_lower for word in ['financial', 'advisor', 'planning', 'investment']):
+        return 'financial_services'
+    elif any(word in context_lower for word in ['wellness', 'spa', 'health', 'recovery']):
+        return 'wellness_health'
+    elif any(word in context_lower for word in ['pet', 'dog', 'animal', 'treats']):
+        return 'pet_products'
+    elif any(word in context_lower for word in ['saas', 'software', 'tech', 'app']):
+        return 'technology'
+    elif any(word in context_lower for word in ['ecommerce', 'store', 'retail', 'product']):
+        return 'ecommerce'
+    elif any(word in context_lower for word in ['coach', 'consulting', 'service', 'agency']):
+        return 'professional_services'
+    else:
+        return 'general'
+
 def competitor_discovery_agent(state: Level10ResearchState) -> Level10ResearchState:
     """Agent 6: Competitor Discovery & Strategic Intelligence"""
     print("🔍 Agent 6: Competitor Discovery & Strategic Intelligence...")
@@ -237,116 +347,6 @@ Generate comprehensive competitor intelligence that reveals strategic opportunit
     
     print(f"✅ Competitor Discovery completed ({state['processing_times']['competitor_analysis']:.1f}s)")
     return state
-
-class Level10ResearchState(TypedDict):
-    # Input
-    business_context: str
-    research_type: str
-    output_format: str
-    
-    # Core Research Outputs
-    psychological_analysis: str
-    conversion_intelligence: str
-    # NEW - Competitor Intelligence Outputs
-    competitor_analysis: str        # Competitor discovery and analysis
-    competitive_intelligence: str   # Strategic gap analysis and opportunities
-    
-    # Enhanced Interview Outputs
-    psychological_interviews: str      # NEW - emotional depth interviews
-    sales_intelligence_interviews: str # NEW - buying psychology interviews
-    
-    # Synthesis Output
-    synthesis_results: str
-    
-    # Legacy fields (keep for backward compatibility)
-    interview_insights: str
-    icp_analysis: str
-    
-    # Quality metrics
-    quality_score: float
-    confidence_score: float
-    session_id: str
-    
-    # Learning and memory
-    memory_context: Dict[str, Any]
-    learning_insights: List[str]
-    
-    # Processing metrics
-    processing_times: Dict[str, float]
-    
-    # Final outputs
-    psychology_report: str
-    campaign_insights: str
-    voice_of_customer: List[str]
-
-class ResearchConfig:
-    """Configuration for research capabilities"""
-    
-    @staticmethod
-    def get_llm(task_type: str):
-        """Get optimized LLM for different tasks"""
-        
-        if task_type == "deep_psychological":
-            # Use Claude for sophisticated psychological analysis
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.2,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-        elif task_type == "conversion_intelligence":
-            # Use Claude for conversion analysis
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.3,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-        elif task_type == "creative_interviews":
-            # Use Claude for interview simulation (consistent with other agents)
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.4,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-        elif task_type == "synthesis":
-            # Use Claude for campaign synthesis
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022", 
-                temperature=0.3,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-        else:
-            # Default Claude configuration
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.2,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-            
-        return llm
-
-def extract_industry(business_context: str) -> str:
-    """Extract industry from business context for learning patterns"""
-    context_lower = business_context.lower()
-    
-    if any(word in context_lower for word in ['financial', 'advisor', 'planning', 'investment']):
-        return 'financial_services'
-    elif any(word in context_lower for word in ['wellness', 'spa', 'health', 'recovery']):
-        return 'wellness_health'
-    elif any(word in context_lower for word in ['pet', 'dog', 'animal', 'treats']):
-        return 'pet_products'
-    elif any(word in context_lower for word in ['saas', 'software', 'tech', 'app']):
-        return 'technology'
-    elif any(word in context_lower for word in ['ecommerce', 'store', 'retail', 'product']):
-        return 'ecommerce'
-    elif any(word in context_lower for word in ['coach', 'consulting', 'service', 'agency']):
-        return 'professional_services'
-    else:
-        return 'general'
 
 def set_research_goal(state: Level10ResearchState) -> Level10ResearchState:
     """Initialize research with goal setting and memory context"""
