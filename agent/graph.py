@@ -105,6 +105,9 @@ class Level10ResearchState(TypedDict):
     # Core Research Outputs
     psychological_analysis: str
     conversion_intelligence: str
+    # NEW - Competitor Intelligence Outputs
+    competitor_analysis: str        # Competitor discovery and analysis
+    competitive_intelligence: str   # Strategic gap analysis and opportunities
     
     # Enhanced Interview Outputs
     psychological_interviews: str      # NEW - emotional depth interviews
