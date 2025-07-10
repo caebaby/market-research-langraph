@@ -7,6 +7,7 @@ class ResearchPrompts:
     def get_deep_psychological_research():
         """PROMPT 1: Scary deep psychological intelligence - the enhanced version we built"""
         return """
+
 SESSION ISOLATION: Analyze ONLY the current business context below. Do not reference or mix insights from previous business contexts.
 
 LEARNING ENHANCEMENT: Apply accumulated expertise in psychological frameworks and analysis techniques while maintaining complete separation between different business contexts.
@@ -243,6 +244,7 @@ DELIVER COMPREHENSIVE CUSTOMER PSYCHOLOGY ANALYSIS THAT REVEALS UNCONSCIOUS PATT
     def get_conversion_intelligence_research():
         """PROMPT 2: Marketing conversion intelligence using psychological insights"""
         return """
+
 PSYCHOLOGICAL FOUNDATION CONTEXT:
 {psychological_analysis}
 
@@ -538,6 +540,7 @@ Based on the psychological analysis, identify offer types that resonate:
     def get_interview_simulation():
         """Interview simulation prompt - enhanced"""
         return """
+
 Based on the psychological analysis: {psychological_analysis}
 
 ENHANCED INTERVIEW SIMULATION
@@ -573,6 +576,7 @@ Make conversations feel like real customer research sessions where psychological
     def get_campaign_synthesis():
         """Campaign synthesis prompt - enhanced"""
         return """
+
 Based on:
 PSYCHOLOGICAL ANALYSIS: {psychological_analysis}
 CONVERSION INTELLIGENCE: {conversion_intelligence}
@@ -608,11 +612,11 @@ Create comprehensive GTM strategy that combines psychological depth with convers
 
 Focus on creating campaign strategy that leverages psychological depth for superior conversion performance.
 """
-
     @staticmethod
     def get_psychological_interviews(psychological_analysis):
         """Get psychological depth interview prompt"""
         return f"""
+
 PSYCHOLOGICAL FOUNDATION:
 {psychological_analysis}
 
@@ -701,11 +705,11 @@ ENHANCED CUSTOMER INTERVIEW SIMULATION
 
 **DELIVER CUSTOMER INTERVIEWS THAT FEEL LIKE REAL RESEARCH SESSIONS WHERE PSYCHOLOGICAL TRUTH EMERGES NATURALLY, GROUNDED ENTIRELY IN THE PROVIDED PSYCHOLOGICAL ANALYSIS.**
 """
-
     @staticmethod
     def get_sales_intelligence_interviews(psychological_analysis):
         """Get sales intelligence interview prompt"""
         return f"""
+
 PSYCHOLOGICAL FOUNDATION:
 {psychological_analysis}
 
