@@ -2,6 +2,54 @@
 
 *Essential context for continuing sophisticated marketing intelligence development*
 
+# 🤖 6-Agent Competitive Intelligence System - Current Status
+
+## System Overview
+Building a 6-agent marketing intelligence system using LangChain/LangGraph deployed on Railway. The system performs deep psychological analysis + conversion intelligence + competitive intelligence with web search.
+
+## Current Issues to Fix
+
+### 1. Interview Agents Broken (Priority 1)
+- **Problem**: Interview methods in `prompts/research_prompts.py` were outside the class (indentation error)
+- **Fix Applied**: Moved methods inside ResearchPrompts class with proper 4-space indentation
+- **Status**: Need to deploy and test
+- **Impact**: Missing 40% of intelligence (no conversational depth or voice patterns)
+
+### 2. Quality Below Expectations
+- **Problem**: Output is ~90% quality but lacks "holy shit how did you know that?" depth
+- **Root Causes**:
+  - Temperature too low (0.2) - needs 0.7-0.8
+  - Max tokens too low (4000) - needs 8000-12000
+  - Missing interview agents reducing depth
+  - Using older Claude model
+
+### 3. Claude 4 Now Available!
+- **New Models** (released July 10, 2025):
+  - `claude-opus-4-20250514` - For complex/deep analysis
+  - `claude-sonnet-4-20250514` - For standard tasks
+- **Recommendation**: Use Opus 4 for psychological analysis, Sonnet 4 for others
+
+## Technical Details
+- **Deployment**: Railway at https://market-research-langraph-production.up.railway.app/
+- **Cost**: Only $0.55/day currently - plenty of room to increase quality
+- **Brave Search**: Working correctly (verified in logs)
+- **Files to Update**:
+  - `prompts/research_prompts.py` - Fix indentation ✓
+  - `agent/graph.py` - Update ResearchConfig with new models and parameters
+
+## Next Steps
+1. Deploy indentation fix
+2. Update to Claude 4 models with higher temperature/tokens
+3. Test full 6-agent system
+4. Verify interview agents are generating conversations
+5. Check if quality reaches "uncomfortable accuracy" level
+
+## Success Criteria
+- All 6 agents complete without errors
+- Psychological analysis has visceral, specific moments
+- Interview conversations sound frighteningly real
+- Quality score >95% with "how did you know that?" reactions
+
 # 🚀 Enhanced 6-Agent System - Debug Session Context
 
 ## ✅ **What's Working:**
