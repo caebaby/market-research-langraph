@@ -141,50 +141,39 @@ class Level10ResearchState(TypedDict):
     executive_summary: str
 
 class ResearchConfig:
-    """Configuration for research capabilities"""
+    """Upgraded to Sonnet 4 with optimal settings"""
     
     @staticmethod
     def get_llm(task_type: str):
-        """Get optimized LLM for different tasks"""
+        """Use Sonnet 4 for better completion and quality"""
+        
+        from langchain_anthropic import ChatAnthropic
+        from langchain.callbacks import LangChainTracer
+        
+        # Sonnet 4 for all agents - better instruction following
+        # Temperature 0.6 - your proven sweet spot
+        # Appropriate tokens for each agent type
         
         if task_type == "deep_psychological":
-            # Use Claude for sophisticated psychological analysis
             llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.2,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-        elif task_type == "conversion_intelligence":
-            # Use Claude for conversion analysis
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.3,
-                max_tokens=4000,
+                model="claude-sonnet-4-20250514",  # Sonnet 4
+                temperature=0.6,
+                max_tokens=6000,  # Deep analysis space
                 callbacks=[LangChainTracer()]
             )
         elif task_type == "creative_interviews":
-            # Use Claude for interview simulation (consistent with other agents)
             llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.4,
-                max_tokens=4000,
-                callbacks=[LangChainTracer()]
-            )
-        elif task_type == "synthesis":
-            # Use Claude for campaign synthesis
-            llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022", 
-                temperature=0.3,
-                max_tokens=4000,
+                model="claude-sonnet-4-20250514",  # Sonnet 4
+                temperature=0.6,
+                max_tokens=5000,  # Full conversations
                 callbacks=[LangChainTracer()]
             )
         else:
-            # Default Claude configuration
+            # All other agents
             llm = ChatAnthropic(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.2,
-                max_tokens=4000,
+                model="claude-sonnet-4-20250514",  # Sonnet 4
+                temperature=0.6,
+                max_tokens=4000,  # Focused insights
                 callbacks=[LangChainTracer()]
             )
             
