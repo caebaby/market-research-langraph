@@ -21,6 +21,9 @@ Examples of the accuracy-industry agnostic:
 - "You've caught yourself avoiding certain clients at the grocery store because you know what you sold them" as an example
 
 **Important**
+- We need the visceral but also we need it to strike a balance of accurate and practical
+- We can't sacrifice accurate for visceral
+- it needs to simulate as if we've spent weeks and a whole team interviewing target ICP
 - we're creating HIGH level marketing campaigns with this intel
 - this should be like we read the ICP's journal
 - it should be like we're reading their mind
