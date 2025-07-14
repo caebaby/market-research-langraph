@@ -8,7 +8,8 @@ from typing import Dict, Any, List
 from langchain_anthropic import ChatAnthropic
 
 # Import our Level 5 base template
-from core.agents.base_agent import Level5BaseAgent
+from core.agents.standard_agent import Level5BaseAgent
+from Team-ICP.prompts.research_prompts import ICPResearchPrompts
 
 class Level5PsychologicalAgent(Level5BaseAgent):
     """
