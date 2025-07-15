@@ -5,7 +5,7 @@ from core.config import Config
 from core.memory import SimpleMemory
 from core.learning import SimpleLearning
 from core.tools import ToolBox
-from Team_ICP.prompts.research_prompts import ResearchPrompts
+from Team_ICP.prompts.research_prompts import ICPResearchPrompts
 
 class PsychologicalAgent:
     """
@@ -81,7 +81,7 @@ class PsychologicalAgent:
         if tools:
             print(f"🔧 Using tools: {tools}")
         
-        prompt = ResearchPrompts.get_deep_psychological_research().format(
+        prompt = ICPResearchPrompts.get_deep_psychological_research().format(
             business_context=context,
             learning_context=memory_context,
             industry_patterns=self._extract_patterns(memories)
