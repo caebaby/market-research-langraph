@@ -9,3 +9,7 @@ langsmith
 pydantic
 python-dotenv
 requests
+chromadb==0.4.24
+langchain-anthropic==0.1.0
+apscheduler==3.10.4
+ratelimit==2.2.1
