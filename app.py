@@ -37,34 +37,32 @@ async def analyze(request: ResearchRequest):
     """Run Level 5 psychological analysis"""
     try:
         # Initialize agent
-        agent = Level5PsychologicalAgent()
+        agent = PsychologicalAgent()  # Fixed class name
         
-        # Create goal
-        goal = {
-            "description": "Extract deep psychological insights",
-            "context": request.business_context,
-            "type": "psychological_analysis"
+        # Create state for the agent
+        state = {
+            "task": "Extract deep psychological insights about target customer",
+            "context": request.business_context
         }
         
-        # Run analysis
-        result = await agent.pursue_goal(goal)
+        # Run analysis using the pragmatic agent's run method
+        result = agent.run(state)
         
         # Extract the analysis
-        analysis = ""
-        if result["results"]:
-            analysis = result["results"][0].get("analysis", "No analysis found")
+        analysis = result.get("result", "No analysis found")
+        quality_score = result.get("quality_score", 0)
         
         return {
             "analysis": analysis,
-            "success_score": result["success_score"],
-            "execution_time": result["execution_time"],
-            "memory_patterns_used": result["metrics"]["tasks_completed"]
+            "success_score": quality_score,
+            "agent": result.get("agent", "Unknown"),
+            "timestamp": result.get("timestamp", "")
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/test")
+@app.get("/test")  # Fixed - added decorator
 async def test():
     """Quick test endpoint"""
     return {"message": "Level 5 Agent is running!"}
