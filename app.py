@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import your Level 5 agent
-from Team_ICP.agents.psychological import Level5PsychologicalAgent
+from Team_ICP.agents.psychological import PsychologicalAgent
 
 app = FastAPI(title="Level 5 ICP Intelligence")
 
