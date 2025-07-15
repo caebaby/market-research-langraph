@@ -5,7 +5,7 @@ from core.config import Config
 from core.memory import SimpleMemory
 from core.learning import SimpleLearning
 from core.tools import ToolBox
-from prompts.research_prompts import ResearchPrompts
+from Team_ICP.prompts.research_prompts import ResearchPrompts
 
 class PsychologicalAgent:
     """
