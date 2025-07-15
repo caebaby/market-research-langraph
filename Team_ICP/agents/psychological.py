@@ -2,7 +2,6 @@ from core.config import Config
 from core.memory import SimpleMemory
 from core.learning import SimpleLearning
 from core.tools import ToolBox
-from apscheduler.schedulers.background import BackgroundScheduler
 from ratelimit import limits
 from typing import Dict
 from prompts.research_prompts import ResearchPrompts
