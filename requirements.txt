@@ -12,3 +12,4 @@ requests
 chromadb
 streamlit
 supabase
+python-multipart
