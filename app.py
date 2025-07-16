@@ -329,7 +329,13 @@ async def dashboard():
     """
 
 @app.post("/analyze")
-async def analyze(business_context: str = Form(...), agents: list = Form(...), team: str = Form(...), industry: str = Form(None), report_name: str = Form(None)):
+async def analyze(request: dict):
+    business_context = request.get("business_context")
+    agents = request.get("agents", [])
+    team = request.get("team")
+    industry = request.get("industry")
+    report_name = request.get("report_name")
+    
     results = {}
     overall_score = 0.0
     for agent in agents:
@@ -354,7 +360,7 @@ async def analyze(business_context: str = Form(...), agents: list = Form(...), t
         "agent": f"{team} Platform",
         "timestamp": datetime.now().isoformat()
     }
-
+    
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8080))
