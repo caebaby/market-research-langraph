@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from typing import Dict
-from agents.psychological import PsychologicalAgent
+from ..agents.psychological import PsychologicalAgent
 
 class ICPState(Dict):
     task: str
@@ -10,7 +10,6 @@ class ICPState(Dict):
     quality: float
 
 agent = PsychologicalAgent()
-
 workflow = StateGraph(ICPState)
 workflow.add_node("psychological", agent.run)
 workflow.set_entry_point("psychological")
