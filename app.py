@@ -11,7 +11,7 @@ from supabase import create_client, Client
 load_dotenv()
 
 # Import agents - COMMENTED OUT FOR NOW since it's causing import errors
-from team_icp.workflows.graph import graph
+from Team_ICP.workflows.graph import graph
 
 app = FastAPI(title="Level 5 ICP Intelligence")
 
