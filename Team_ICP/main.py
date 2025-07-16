@@ -13,7 +13,7 @@ import json
 load_dotenv()
 
 # Import your Level 5 agent
-from Team_ICP.agents.psychological import Level5PsychologicalAgent
+from team_icp.agents.psychological import PsychologicalAgent
 
 async def main():
     """Test the Level 5 ICP Psychological Agent with persistent memory"""
