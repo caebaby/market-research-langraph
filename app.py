@@ -11,7 +11,7 @@ from supabase import create_client, Client
 load_dotenv()
 
 # Import agents - COMMENTED OUT FOR NOW since it's causing import errors
-# from team_icp.workflows.graph import graph
+from team_icp.workflows.graph import graph
 
 app = FastAPI(title="Level 5 ICP Intelligence")
 
@@ -328,16 +328,29 @@ async def dashboard():
     """
 
 @app.post("/analyze")
-async def analyze(request: ResearchRequest):
-    # Simplified mock response for testing
+async def analyze(business_context: str = Form(...), agents: list = Form(...), team: str = Form(...), industry: str = Form(None), report_name: str = Form(None)):
+    results = {}
+    overall_score = 0.0
+    for agent in agents:
+        state = {"task": f"{agent} analysis", "context": business_context, "new_data": True, "team": team}
+        result = await graph.ainvoke(state)
+        results[agent] = result["result"]
+        overall_score = max(overall_score, result["quality_score"])
+    if supabase:
+        supabase.table("reports").insert({
+            "report_name": report_name or f"Report_{datetime.now().strftime('%Y%m%d')}",
+            "team": team,
+            "industry": industry,
+            "context": business_context,
+            "agents": agents,
+            "results": results,
+            "success_score": overall_score,
+            "timestamp": datetime.now().isoformat()
+        }).execute()
     return {
-        "analysis": {
-            "psychological": "Deep psychological analysis would go here",
-            "conversion": "Conversion optimization insights here",
-            "competitor": "Competitor analysis here"
-        },
-        "success_score": 0.95,
-        "agent": "ICP Platform",
+        "analysis": results,
+        "success_score": overall_score,
+        "agent": f"{team} Platform",
         "timestamp": datetime.now().isoformat()
     }
 
