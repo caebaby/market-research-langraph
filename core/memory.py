@@ -17,3 +17,8 @@ class HybridMemory:
         if self.client:
             return self.client.table(self.table).select("*").limit(limit).execute().data
         return []
+
+    def get_all_memories(self) -> List[Dict]:
+        if self.client:
+            return self.client.table(self.table).select("*").execute().data
+        return []
