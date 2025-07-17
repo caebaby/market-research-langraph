@@ -2,7 +2,7 @@ from langchain_anthropic import ChatAnthropic
 import os
 
 class Config:
-    LLM_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20250514")
+    LLM_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
     TEMP = 0.85  # Deep insights
 
     @staticmethod
