@@ -1,9 +1,49 @@
-from core.config import Config
+import os
+from supabase import create_client, Client
+from core.tools import ToolBox
 
-class SimpleLearning:
-    def critique(self, result: str):
-        llm = Config.get_llm()
-        prompt = f"Score (0-1) and improve: {result}"
-        eval = llm.invoke(prompt).content.split('\n')
-        score = float(eval[0].split()[0])
-        return eval[1] if score < 0.9 else None
+class LearningManager:
+    """
+    Manages meta-learning for the agent
+    """
+    def __init__(self, agent_name: str):
+        self.agent_name = agent_name
+        self.strategy_table = "agent_strategies"
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_KEY")
+        if not url or not key:
+            raise ValueError("Supabase URL and Key must be set.")
+        self.client = create_client(url, key)
+
+    def get_strategic_insights(self, context: str) -> str:
+        print("🧠 Retrieving strategic insights...")
+        response = self.client.rpc("match_strategies", {
+            "query_embedding": ToolBox.use("embedding", context),
+            "match_threshold": 0.75,
+            "match_count": 3
+        }).execute()
+        if not response.data:
+            return "No strategies found. Use best practices."
+        insights = "\n".join([f"- {item['strategy_description']}" for item in response.data])
+        return f"Apply these strategies:\n{insights}"
+
+    def update_strategies(self, successful_result: str, context: str, score: float):
+        print(f"🔬 Analyzing result (Score: {score})...")
+        prompt = f"""
+        Analysis scored {score}. Context: {context[:500]}
+        Result: {successful_result[:1500]}
+        Extract a reusable strategy. Example: 'Focus on contradictions.'
+        STRATEGY:
+        """
+        strategy = ToolBox.use("llm", prompt)
+        if strategy:
+            print(f"Learned strategy: {strategy}")
+            self.client.table(self.strategy_table).insert({
+                "agent_name": self.agent_name,
+                "strategy_description": strategy,
+                "source_context": context,
+                "embedding": ToolBox.use("embedding", strategy)
+            }).execute()
+
+    def run_learning_cycle(self, all_memories: list):
+        print("\n🔄 Checking learning opportunities... (placeholder)")
