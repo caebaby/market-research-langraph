@@ -1,14 +1,19 @@
-import chromadb
+from supabase import create_client, Client
 from typing import List, Dict
+import os
 
-class SimpleMemory:
+class HybridMemory:
     def __init__(self):
-        self.client = chromadb.Client()
-        self.collection = self.client.get_or_create_collection("icp_memory")
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        self.client = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
+        self.table = "agent_memory"
 
     def store(self, data: List[Dict]):
-        ids = [str(i) for i in range(len(data))]
-        self.collection.add(documents=[d['content'] for d in data], ids=ids)
+        if self.client:
+            self.client.table(self.table).insert(data).execute()
 
-    def recall(self, query: str, limit: int = 3):
-        return self.collection.query(query_texts=[query], n_results=limit)['documents'][0]
+    def recall(self, query: str, limit: int = 3) -> List[Dict]:
+        if self.client:
+            return self.client.table(self.table).select("*").limit(limit).execute().data
+        return []
