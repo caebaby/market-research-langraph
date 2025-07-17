@@ -17,15 +17,12 @@ class LearningManager:
 
     def get_strategic_insights(self, context: str) -> str:
         print("🧠 Retrieving strategic insights...")
-        response = self.client.rpc("match_strategies", {
-            "query_embedding": ToolBox.use("embedding", context),
-            "match_threshold": 0.75,
-            "match_count": 3
-        }).execute()
-        if not response.data:
-            return "No strategies found. Use best practices."
-        insights = "\n".join([f"- {item['strategy_description']}" for item in response.data])
-        return f"Apply these strategies:\n{insights}"
+        if self.client:
+            response = self.client.table(self.strategy_table).select("*").limit(3).execute()
+            if response.data:
+                insights = "\n".join([f"- {item['strategy_description']}" for item in response.data])
+                return f"Apply these strategies:\n{insights}"
+        return "No strategies found. Use best practices."
 
     def update_strategies(self, successful_result: str, context: str, score: float):
         print(f"🔬 Analyzing result (Score: {score})...")
