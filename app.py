@@ -327,14 +327,16 @@ async def dashboard():
     </body>
     </html>
     """
+from fastapi import Request
 
 @app.post("/analyze")
-async def analyze(request: dict):
-    business_context = request.get("business_context")
-    agents = request.get("agents", [])
-    team = request.get("team")
-    industry = request.get("industry")
-    report_name = request.get("report_name")
+async def analyze(request: Request):
+    data = await request.json()
+    business_context = data.get("business_context")
+    agents = data.get("agents", [])
+    team = data.get("team")
+    industry = data.get("industry")
+    report_name = data.get("report_name")
     
     results = {}
     overall_score = 0.0
@@ -360,4 +362,3 @@ async def analyze(request: dict):
         "agent": f"{team} Platform",
         "timestamp": datetime.now().isoformat()
     }
-    
