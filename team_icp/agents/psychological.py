@@ -83,7 +83,7 @@ class PsychologicalAgent:
         
         prompt = ICPResearchPrompts.get_psychological_analysis_prompt().format(
             business_context=context,
-            learning_context=memory_context,
+            memory_patterns=memory_context
             industry_patterns=self._extract_patterns(memories)
         )
         prompt += """
