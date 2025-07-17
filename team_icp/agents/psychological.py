@@ -1,17 +1,19 @@
 from typing import Dict, Any, List
 from datetime import datetime
-
-from core.config import Config
-from core.memory import SimpleMemory
+import os
+from dotenv import load_dotenv
+from core.memory import HybridMemory
 from core.learning import SimpleLearning
 from core.tools import ToolBox
 from team_icp.prompts.research_prompts import ICPResearchPrompts
+
+load_dotenv()
 
 class PsychologicalAgent:
     """
     Level 4+ Agent with:
     - Deep reflection and quality scoring (Level 4)
-    - Memory integration (Level 4)
+    - Memory integration with Supabase (Level 4)
     - Dynamic tool selection (Level 4)
     - Simple learning loops (approaching Level 5)
     - Clean, testable implementation
@@ -20,11 +22,8 @@ class PsychologicalAgent:
     def __init__(self):
         self.name = "Psychological_Agent"
         self.role = "Deep psychological ICP analysis with Level 4+ capabilities"
-        self.llm = Config.get_llm()
-        self.memory = SimpleMemory()
+        self.memory = HybridMemory()
         self.learning = SimpleLearning()
-        
-        # Quality settings
         self.target_quality = 0.9
         self.max_attempts = 2
     
@@ -34,8 +33,8 @@ class PsychologicalAgent:
         """
         print(f"\n🧠 {self.name} Starting Analysis...")
         
-        task = state.get('task', 'Analyze psychological profile')
-        context = state.get('context', '')
+        task = state.get("task", "Analyze psychological profile")
+        context = state.get("context", "")
         
         best_result = None
         best_score = 0
@@ -54,7 +53,7 @@ class PsychologicalAgent:
                 best_score = quality['score']
                 break
             
-            if quality['improvements'] and attempt < self.max_attempts - 1:
+            if quality.get("improvements") and attempt < self.max_attempts - 1:
                 print("🔧 Applying improvements...")
                 context += f"\n\nImprovement focus: {quality['improvements']}"
             
@@ -63,19 +62,20 @@ class PsychologicalAgent:
                 best_score = quality['score']
         
         if best_score > 0.85:
-            self._store_success(task, best_result, best_score)
+            self._store_success(task, best_result, best_score, state)
         
-        state.update({
-            'result': best_result,
-            'quality_score': best_score,
-            'agent': self.name,
-            'timestamp': datetime.now().isoformat()
-        })
-        return state
-    
+        return {
+            "result": best_result,
+            "quality_score": best_score,
+            "agent": self.name,
+            "timestamp": datetime.now().isoformat()
+        }
+
     def _analyze(self, task: str, context: str, state: Dict) -> str:
         memories = self.memory.recall(context, limit=5)
         memory_context = self._format_memories(memories)
+        patterns = self._extract_patterns(memories)
+        memory_context += f"\n\nPROVEN PATTERNS:\n{patterns}"
         
         tools = self._select_tools(task, context)
         if tools:
@@ -84,7 +84,6 @@ class PsychologicalAgent:
         prompt = ICPResearchPrompts.get_psychological_analysis_prompt().format(
             business_context=context,
             memory_patterns=memory_context
-            industry_patterns=self._extract_patterns(memories)
         )
         prompt += """
         
@@ -96,7 +95,7 @@ class PsychologicalAgent:
         - Focus on depth over breadth
         """
         
-        response = self.llm.invoke(prompt).content
+        response = ToolBox.use("llm", prompt)
         
         if "web" in tools:
             search_query = f"{task[:50]} psychology insights"
@@ -105,7 +104,7 @@ class PsychologicalAgent:
                 response += f"\n\nAdditional Market Insights:\n{web_results}"
         
         return response
-    
+
     def _reflect(self, task: str, result: str) -> Dict[str, Any]:
         reflection_prompt = f"""
         Evaluate this psychological analysis:
@@ -124,14 +123,13 @@ class PsychologicalAgent:
         Improvements Needed: [if score < 0.9, what specifically would improve it?]
         """
         
-        response = self.llm.invoke(reflection_prompt).content
-        lines = response.split('\n')
+        response = ToolBox.use("llm", reflection_prompt).split("\n")
         scores = []
         
-        for line in lines:
+        for line in response:
             if any(f"{i}." in line for i in range(1, 6)):
                 try:
-                    score_part = line.split(':')[-1].strip()
+                    score_part = line.split(":")[-1].strip()
                     for word in score_part.split():
                         try:
                             score = float(word)
@@ -145,54 +143,55 @@ class PsychologicalAgent:
         
         overall_score = sum(scores) / len(scores) if scores else 0.7
         improvements = ""
-        for i, line in enumerate(lines):
+        for i, line in enumerate(response):
             if "improvements" in line.lower():
-                improvements = ' '.join(lines[i:i+3])
+                improvements = " ".join(response[i:i+3])
                 break
         
         return {
-            'score': overall_score,
-            'criteria_scores': scores,
-            'improvements': improvements.strip()
+            "score": overall_score,
+            "criteria_scores": scores,
+            "improvements": improvements.strip()
         }
-    
+
     def _select_tools(self, task: str, context: str) -> List[str]:
         tools = []
         combined_text = f"{task} {context}".lower()
         
-        if any(word in combined_text for word in ['market', 'competitor', 'industry']):
-            tools.append('web')
+        if any(word in combined_text for word in ["market", "competitor", "industry"]):
+            tools.append("web")
         
         return tools
-    
-    def _store_success(self, task: str, result: str, score: float) -> None:
+
+    def _store_success(self, task: str, result: str, score: float, state: Dict) -> None:
         self.memory.store([{
-            'content': result[:1000],
-            'metadata': {
-                'task': task,
-                'score': score,
-                'timestamp': datetime.now().isoformat(),
-                'agent': self.name
+            "content": result[:1000],
+            "metadata": {
+                "task": task,
+                "score": score,
+                "timestamp": datetime.now().isoformat(),
+                "agent": self.name,
+                "team": state.get("team", "icp")
             }
         }])
         print(f"💾 Stored successful pattern (score: {score:.2f})")
-    
+
     def _format_memories(self, memories: List[Dict]) -> str:
         if not memories:
             return "No previous analyses found for this context."
         
         formatted = "RELEVANT PREVIOUS INSIGHTS:\n"
         for i, memory in enumerate(memories[:3]):
-            content = memory.get('content', '')[:200]
+            content = memory.get("content", "")[:200]
             formatted += f"{i+1}. {content}...\n"
         
         return formatted
-    
+
     def _extract_patterns(self, memories: List[Dict]) -> str:
         patterns = []
         
         for memory in memories:
-            if memory.get('metadata', {}).get('score', 0) > 0.85:
+            if memory.get("metadata", {}).get("score", 0) > 0.85:
                 patterns.append(f"High-scoring approach (score: {memory['metadata']['score']})")
         
         return f"Successful patterns: {len(patterns)} found" if patterns else "No proven patterns yet"
