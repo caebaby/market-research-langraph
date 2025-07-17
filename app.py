@@ -243,7 +243,6 @@ async def dashboard():
             }
 
             async function generateReport() {
-                alert('Button clicked!');
                 const context = document.getElementById('businessContext').value.trim();
                 if (!context) return alert('Enter context');
                 const team = document.getElementById('team').value;
