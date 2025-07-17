@@ -297,7 +297,7 @@ async def dashboard():
 
             function downloadReport() {
                 if (currentReport) {
-                    const content = `ENTERPRISE REPORT\n${currentReport.name}\n${new Date(currentReport.date).toLocaleString()}\nQuality: ${(currentReport.success_score*100).toFixed(1)}%\nAgents: ${currentReport.agents.join(', ')}\n\nCONTEXT:\n${currentReport.context}\n\nANALYSIS:\n${Object.entries(currentReport.analysis).map(([k,v])=>`${k}: ${v}`).join('\n')}\n\n---\nLevel 5 System`;
+                    const content = `ENTERPRISE REPORT\n${currentReport.name}\n${new Date(currentReport.date).toLocaleString()}\nQuality: ${(currentReport.success_score*100).toFixed(1)}%\nAgents: ${currentReport.agents.join(', ')}\n\nCONTEXT:\n${currentReport.context}\n\nANALYSIS:\n${Object.entries(currentReport.analysis).map(([k,v])=>`${k}: ${v}`).join('\\n')}\n\n---\nLevel 5 System`;
                     const blob = new Blob([content], {type: 'text/plain'});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a'); a.href = url; a.download = `Report_${new Date().toISOString().split('T')[0]}.txt`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
