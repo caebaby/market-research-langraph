@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from core.config import Config  # ADD THIS IMPORT
 from core.memory import HybridMemory
 from core.learning import LearningManager
 from core.tools import ToolBox
@@ -20,6 +21,7 @@ class PsychologicalAgent:
     def __init__(self):
         self.name = "Psychological_Agent"
         self.role = "Deep psychological ICP analysis with Level 5 capabilities"
+        self.llm = Config.get_llm()  # ADD THIS LINE
         self.memory = HybridMemory()
         self.learning = LearningManager(agent_name=self.name)
         self.target_quality = 0.9
@@ -58,7 +60,7 @@ class PsychologicalAgent:
                 best_result, best_score = result, quality['score']
         
         if best_score > 0.85:
-            self._store_success(task, best_result, best_score, state)
+            self._store_success(task, best_result, best_score, state, context)  # ADD context parameter
             self.learning.update_strategies(best_result, context, best_score)
 
         return {
@@ -71,36 +73,40 @@ class PsychologicalAgent:
     def _analyze(self, task: str, context: str, state: Dict) -> str:
         memories = self.memory.recall(context, limit=3)
         memory_context = self._format_memories(memories)
-        strategic_insights = self.learning.get_strategic_insights(context)
+        strategic_insights = self.learning.get_strategic_insights(context)  # FIX INDENTATION
         
         prompt = ICPResearchPrompts.get_psychological_analysis_prompt().format(
             business_context=context,
             memory_patterns=memory_context
         )
+        
+        # Add strategic insights to the prompt
         prompt += f"\n\nSTRATEGIC DIRECTIVES:\n{strategic_insights}"
         
-        response = ToolBox.use("llm", prompt)
+        # This actually sends to the LLM
+        response = self.llm.invoke(prompt).content
         return response
 
     def _reflect(self, task: str, result: str) -> Dict[str, Any]:
         reflection_prompt = f"""
         Evaluate this psychological analysis:
-        
+    
         Task: {task}
         Result Preview: {result[:500]}...
-        
+    
         Score these criteria (0-1):
         1. Psychological Depth: Are unconscious patterns revealed?
         2. Framework Application: Are multiple frameworks applied?
         3. Visceral Accuracy: Would the customer feel understood?
         4. Actionability: Are next steps clear?
         5. Insight Quality: Are insights profound?
-        
+    
         Overall Score: [average of above]
         Improvements Needed: [if score < 0.9, suggest improvements]
         """
-        
-        response = ToolBox.use("llm", reflection_prompt).split("\n")
+    
+        # Change ToolBox to self.llm.invoke
+        response = self.llm.invoke(reflection_prompt).content.split("\n")
         scores = []
         for line in response:
             if any(f"{i}." in line for i in range(1, 6)):
@@ -112,10 +118,10 @@ class PsychologicalAgent:
                     pass
         overall_score = sum(scores) / len(scores) if scores else 0.7
         improvements = next((line for line in response if "improvements" in line.lower()), "").split(":")[-1].strip()
-        
+    
         return {"score": overall_score, "improvements": improvements}
 
-    def _store_success(self, task: str, result: str, score: float, state: Dict) -> None:
+    def _store_success(self, task: str, result: str, score: float, state: Dict, context: str) -> None:  # ADD context parameter
         self.memory.store([{
             "content": result[:1000],
             "metadata": {
