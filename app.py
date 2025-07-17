@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import asyncio
 from datetime import datetime
 from supabase import create_client, Client
+from typing import List, Optional
 
 # Load environment
 load_dotenv()
@@ -22,6 +23,10 @@ supabase = create_client(supabase_url, supabase_key) if supabase_url and supabas
 
 class ResearchRequest(BaseModel):
     business_context: str
+    agents: List[str]
+    team: str
+    industry: Optional[str] = None
+    report_name: Optional[str] = None
 
 @app.get("/")
 async def root():
