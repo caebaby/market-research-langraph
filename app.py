@@ -12,7 +12,7 @@ from typing import List, Optional
 load_dotenv()
 
 # Import agents - COMMENTED OUT FOR NOW since it's causing import errors
-from Team_ICP.workflows.graph import graph
+from team_icp.workflows.graph import graph  # Change Team_ICP to team_icp
 
 app = FastAPI(title="Level 5 ICP Intelligence")
 
