@@ -8,7 +8,7 @@ class LearningManager:
     """
     def __init__(self, agent_name: str):
         self.agent_name = agent_name
-        self.strategy_table = "agent_strategies"
+        self.strategy_table = "strategies"
         url = os.environ.get("SUPABASE_URL")
         key = os.environ.get("SUPABASE_KEY")
         if not url or not key:
