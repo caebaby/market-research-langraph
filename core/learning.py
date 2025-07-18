@@ -54,13 +54,14 @@ class LearningManager:
                 # If it does, add it:
                 # insert_data["agent_name"] = self.agent_name
                 
-                # Try to get embedding, but don't fail if it doesn't work
-                try:
-                    embedding = ToolBox.use("embedding", strategy)
-                    if embedding:
-                        insert_data["embedding"] = embedding
-                except Exception as e:
-                    print(f"⚠️ Embedding generation failed: {e}")
+                # Skip embedding for now - column doesn't exist
+                # TODO: Add embedding column to strategies table later
+                # try:
+                #     embedding = ToolBox.use("embedding", strategy)
+                #     if embedding:
+                #         insert_data["embedding"] = embedding
+                # except Exception as e:
+                #     print(f"⚠️ Embedding generation failed: {e}")
                 
                 # Insert into Supabase
                 response = self.client.table(self.strategy_table).insert(insert_data).execute()
