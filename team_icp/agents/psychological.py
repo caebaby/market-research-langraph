@@ -59,7 +59,7 @@ class PsychologicalAgent:
             if quality['score'] > best_score:
                 best_result, best_score = result, quality['score']
         
-        if best_score > 0.85:
+        if best_score > 0.65:
             self._store_success(task, best_result, best_score, state, context)  # ADD context parameter
             self.learning.update_strategies(best_result, context, best_score)
 
