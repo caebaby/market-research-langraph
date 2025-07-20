@@ -11,7 +11,7 @@ class ICPState(Dict):
 
 agent = PsychologicalAgent()
 workflow = StateGraph(ICPState)
-workflow.add_node("psychological", agent.run)
+workflow.add_node("psychological", agent)
 workflow.set_entry_point("psychological")
 workflow.add_edge("psychological", END)
 graph = workflow.compile()
