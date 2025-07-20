@@ -343,26 +343,37 @@ async def analyze(request: Request):
     report_name = data.get("report_name")
     
     results = {}
-    overall_score = 0.0
-    for agent in agents:
-        state = {"task": f"{agent} analysis", "context": business_context, "new_data": True, "team": team}
-        result = await graph.ainvoke(state)
-        results[agent] = result.get("current_output", "Analysis failed")
-        overall_score = max(overall_score, result.get("quality_score", 0))
-    if supabase:
-        supabase.table("reports").insert({
-            "report_name": report_name or f"Report_{datetime.now().strftime('%Y%m%d')}",
-            "team": team,
-            "industry": industry,
-            "context": business_context,
-            "agents": agents,
-            "results": results,
-            "success_score": overall_score,
-            "timestamp": datetime.now().isoformat()
-        }).execute()
-    return {
-        "analysis": results,
-        "success_score": overall_score,
-        "agent": f"{team} Platform",
-        "timestamp": datetime.now().isoformat()
+overall_score = 0.0
+for agent in agents:
+    state = {
+        "task": f"{agent} analysis",  # Keep for backward compatibility
+        "current_task": {"description": f"{agent} analysis"},  # StandardAgent expects this
+        "context": business_context,  # Keep for backward compatibility
+        "master_context": business_context,  # StandardAgent looks for this
+        "business_context": business_context,  # StandardAgent also looks for this
+        "new_data": True,
+        "team": team
     }
+    result = await graph.ainvoke(state)
+    results[agent] = result.get("current_output", "Analysis failed")
+    overall_score = max(overall_score, result.get("quality_score", 0))
+
+# Rest of your code stays the same
+if supabase:
+    supabase.table("reports").insert({
+        "report_name": report_name or f"Report_{datetime.now().strftime('%Y%m%d')}",
+        "team": team,
+        "industry": industry,
+        "context": business_context,
+        "agents": agents,
+        "results": results,
+        "success_score": overall_score,
+        "timestamp": datetime.now().isoformat()
+    }).execute()
+
+return {
+    "analysis": results,
+    "success_score": overall_score,
+    "agent": f"{team} Platform",
+    "timestamp": datetime.now().isoformat()
+}
