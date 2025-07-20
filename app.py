@@ -347,7 +347,7 @@ async def analyze(request: Request):
     for agent in agents:
         state = {"task": f"{agent} analysis", "context": business_context, "new_data": True, "team": team}
         result = await graph.ainvoke(state)
-        results[agent] = result["result"]
+        results[agent] = result.get("current_output", "Analysis failed")
         overall_score = max(overall_score, result.get("quality_score", 0))
     if supabase:
         supabase.table("reports").insert({
