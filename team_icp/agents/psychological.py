@@ -49,11 +49,18 @@ unconscious motivations, hidden fears, and unspoken desires of the target audien
         # Get the full sophisticated prompt
         sophisticated_prompt = self.sophisticated_prompts.get_psychological_analysis_prompt()
         
+        # DEBUG: Check prompt size
+        print(f"DEBUG: Sophisticated prompt length: {len(sophisticated_prompt)} chars")
+        
         # Format it with our context
         formatted_prompt = sophisticated_prompt.format(
             business_context=business_context,
             memory_patterns=memory_patterns
         )
+        
+        # DEBUG: Check formatted prompt
+        print(f"DEBUG: Formatted prompt length: {len(formatted_prompt)} chars")
+        print(f"DEBUG: Prompt preview: {formatted_prompt[:200]}...")
         
         # Add any strategic insights from learning system if available
         if "INSIGHTS FROM OTHER AGENTS" in context:
@@ -69,7 +76,13 @@ unconscious motivations, hidden fears, and unspoken desires of the target audien
         
         # Otherwise proceed with analysis
         response = llm.invoke(formatted_prompt)
-        return response.content if hasattr(response, 'content') else str(response)
+        actual_response = response.content if hasattr(response, 'content') else str(response)
+        
+        # DEBUG: Check response
+        print(f"DEBUG: Response length: {len(actual_response)} chars")
+        print(f"DEBUG: Response starts with: {actual_response[:300]}...")
+        
+        return actual_response
     
     def _format_memories_detailed(self, memories: List) -> str:
         """Format memories to match the original sophisticated structure"""
@@ -125,6 +138,9 @@ unconscious motivations, hidden fears, and unspoken desires of the target audien
         """
         print(f"[{self.agent_name}] Evaluating psychological analysis quality...")
         
+        # DEBUG: Check what we're evaluating
+        print(f"DEBUG: Evaluating response of {len(response)} chars")
+        
         reflection_prompt = f"""
 As a psychological analysis quality expert, evaluate this response on these SPECIFIC criteria:
 
@@ -148,6 +164,10 @@ Remember: {self.target_quality} or higher is considered enterprise-ready.
 CRITIQUE:"""
         
         critique_result = llm.invoke(reflection_prompt).content.strip()
+        
+        # DEBUG: Check critique
+        print(f"DEBUG: Full critique result:\n{critique_result}")
+        print(f"DEBUG: Last line (should be score): {critique_result.split(chr(10))[-1]}")
         
         try:
             lines = critique_result.split('\n')
