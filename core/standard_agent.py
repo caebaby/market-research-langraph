@@ -169,7 +169,7 @@ CRITIQUE:
             raise ValueError("Security Error: client_id is required for memory operations but was not found in the state.")
             
         # 3. Recall relevant memories
-        memories =
+        memories = []
         if memory_service:
             query = f"{task_description} for {business_context}"
             memories = memory_service.recall(query=query, limit=5, client_id=client_id)
