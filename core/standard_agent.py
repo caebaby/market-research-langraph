@@ -6,8 +6,9 @@ from datetime import datetime
 
 # These services are expected to be provided by the graph's state
 from core.config import Config
-from core.memory.interfaces import MemoryInterface
-from core.tools.tool_executor import ToolExecutor
+# Your project uses these instead
+from core.memory import HybridMemory
+from core.tools import ToolBox
 
 class StandardAgentNode:
     """
