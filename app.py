@@ -269,6 +269,8 @@ async def dashboard():
             }
 
             async function generateReport() {
+                console.log('Generate report clicked');
+                
                 const context = document.getElementById('businessContext').value.trim();
                 if (!context) {
                     alert('Please enter your business context to generate insights.');
@@ -277,6 +279,7 @@ async def dashboard():
                 
                 const team = document.getElementById('team').value;
                 const agents = Array.from(document.querySelectorAll('.agent-checkbox input:checked')).map(cb => cb.id);
+                
                 if (!agents.length) {
                     alert('Please select at least one agent for analysis.');
                     return;
@@ -307,7 +310,7 @@ async def dashboard():
                     const data = await response.json();
                     currentReport = {
                         ...data,
-                        name: document.getElementById('reportName').value || `Report_${new Date().toLocaleDateString()}`,
+                        name: document.getElementById('reportName').value || 'Report_' + new Date().toLocaleDateString(),
                         industry: document.getElementById('industry').value,
                         date: new Date().toISOString(),
                         context,
@@ -319,19 +322,15 @@ async def dashboard():
                     displayResults(currentReport);
                     
                     // Auto-save if enabled
-                    if (document.getElementById('autoSave')?.value === 'true') {
+                    const autoSave = document.getElementById('autoSave');
+                    if (autoSave && autoSave.value === 'true') {
                         saveReport(true);
                     }
                     
                 } catch (error) {
+                    console.error('Error:', error);
                     stopProgress();
-                    document.getElementById('resultsContent').innerHTML = `
-                        <div class="error-message">
-                            <h3>❌ Analysis Error</h3>
-                            <p>${error.message}</p>
-                            <p style="margin-top: 0.5rem; font-size: 0.875rem;">Please check your input and try again.</p>
-                        </div>
-                    `;
+                    document.getElementById('resultsContent').innerHTML = '<div class="error-message"><h3>❌ Analysis Error</h3><p>' + error.message + '</p><p style="margin-top: 0.5rem; font-size: 0.875rem;">Please check your input and try again.</p></div>';
                 }
             }
 
@@ -340,41 +339,35 @@ async def dashboard():
                 let sections = '';
                 
                 if (data.agents && data.analysis) {
+                    const agentIcons = {
+                        'psychological': '🧠',
+                        'conversion': '🎯',
+                        'competitor': '🔍',
+                        'interview': '🎭',
+                        'voice': '🗣️',
+                        'synthesis': '📋'
+                    };
+                    
                     data.agents.forEach(agent => {
-                        const agentIcons = {
-                            'psychological': '🧠',
-                            'conversion': '🎯',
-                            'competitor': '🔍',
-                            'interview': '🎭',
-                            'voice': '🗣️',
-                            'synthesis': '📋'
-                        };
+                        const icon = agentIcons[agent] || '📊';
+                        const agentName = agent.charAt(0).toUpperCase() + agent.slice(1);
+                        const analysis = data.analysis[agent] || 'Analysis pending...';
                         
-                        sections += `
-                            <div class="analysis-section">
-                                <h3>${agentIcons[agent] || '📊'} ${agent.charAt(0).toUpperCase() + agent.slice(1)} Analysis</h3>
-                                <div class="analysis-content">${data.analysis[agent] || 'Analysis pending...'}</div>
-                                <div class="hitl-controls">
-                                    <button class="hitl-btn approve-btn" onclick="hitlAction('${agent}', 'approve')">✓ Approve</button>
-                                    <button class="hitl-btn improve-btn" onclick="hitlAction('${agent}', 'improve')">↻ Improve</button>
-                                    <button class="hitl-btn reject-btn" onclick="hitlAction('${agent}', 'reject')">✗ Reject</button>
-                                </div>
-                            </div>
-                        `;
+                        sections += '<div class="analysis-section">';
+                        sections += '<h3>' + icon + ' ' + agentName + ' Analysis</h3>';
+                        sections += '<div class="analysis-content">' + analysis + '</div>';
+                        sections += '<div class="hitl-controls">';
+                        sections += '<button class="hitl-btn approve-btn" onclick="hitlAction(\'' + agent + '\', \'approve\')">✓ Approve</button>';
+                        sections += '<button class="hitl-btn improve-btn" onclick="hitlAction(\'' + agent + '\', \'improve\')">↻ Improve</button>';
+                        sections += '<button class="hitl-btn reject-btn" onclick="hitlAction(\'' + agent + '\', \'reject\')">✗ Reject</button>';
+                        sections += '</div></div>';
                     });
                 }
                 
-                document.getElementById('resultsContent').innerHTML = `
-                    <div class="metrics-grid">
-                        <div class="metric-card"><div class="metric-value">${score}%</div><div class="metric-label">Quality Score</div></div>
-                        <div class="metric-card"><div class="metric-value">${data.agents?.length || 0}</div><div class="metric-label">Agents Used</div></div>
-                        <div class="metric-card"><div class="metric-value">Level 5</div><div class="metric-label">Intelligence Tier</div></div>
-                    </div>
-                    ${sections}
-                    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #718096; font-size: 0.875rem;">
-                        Generated by ${data.agent || 'Level 5 System'} • ${new Date(data.timestamp).toLocaleString()}
-                    </div>
-                `;
+                const timestamp = new Date(data.timestamp).toLocaleString();
+                const agentName = data.agent || 'Level 5 System';
+                
+                document.getElementById('resultsContent').innerHTML = '<div class="metrics-grid"><div class="metric-card"><div class="metric-value">' + score + '%</div><div class="metric-label">Quality Score</div></div><div class="metric-card"><div class="metric-value">' + (data.agents?.length || 0) + '</div><div class="metric-label">Agents Used</div></div><div class="metric-card"><div class="metric-value">Level 5</div><div class="metric-label">Intelligence Tier</div></div></div>' + sections + '<div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #718096; font-size: 0.875rem;">Generated by ' + agentName + ' • ' + timestamp + '</div>';
             }
 
             function startProgress() {
@@ -408,33 +401,29 @@ async def dashboard():
 
             function downloadReport() {
                 if (currentReport) {
-                    const content = `ENTERPRISE INTELLIGENCE REPORT
-==============================
-${currentReport.name}
-Generated: ${new Date(currentReport.date).toLocaleString()}
-Quality Score: ${(currentReport.success_score * 100).toFixed(1)}%
-Agents Used: ${currentReport.agents.join(', ')}
-Industry: ${currentReport.industry || 'Not specified'}
-
-BUSINESS CONTEXT:
-----------------
-${currentReport.context}
-
-ANALYSIS RESULTS:
-----------------
-${Object.entries(currentReport.analysis || {}).map(([agent, analysis]) => `
-${agent.toUpperCase()} ANALYSIS:
-${analysis}
-`).join('\n')}
-
----
-Generated by Level 5 Enterprise Intelligence Platform
-`;
+                    const content = 'ENTERPRISE INTELLIGENCE REPORT\n' +
+                        '==============================\n' +
+                        currentReport.name + '\n' +
+                        'Generated: ' + new Date(currentReport.date).toLocaleString() + '\n' +
+                        'Quality Score: ' + (currentReport.success_score * 100).toFixed(1) + '%\n' +
+                        'Agents Used: ' + currentReport.agents.join(', ') + '\n' +
+                        'Industry: ' + (currentReport.industry || 'Not specified') + '\n\n' +
+                        'BUSINESS CONTEXT:\n' +
+                        '----------------\n' +
+                        currentReport.context + '\n\n' +
+                        'ANALYSIS RESULTS:\n' +
+                        '----------------\n' +
+                        Object.entries(currentReport.analysis || {}).map(([agent, analysis]) => 
+                            agent.toUpperCase() + ' ANALYSIS:\n' + analysis + '\n'
+                        ).join('\n') +
+                        '\n---\n' +
+                        'Generated by Level 5 Enterprise Intelligence Platform\n';
+                        
                     const blob = new Blob([content], {type: 'text/plain'});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `${currentReport.name || 'Report'}_${new Date().toISOString().split('T')[0]}.txt`;
+                    a.download = (currentReport.name || 'Report') + '_' + new Date().toISOString().split('T')[0] + '.txt';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -445,16 +434,14 @@ Generated by Level 5 Enterprise Intelligence Platform
             function loadReports() {
                 const tbody = document.getElementById('reportsTableBody');
                 if (reports.length) {
-                    tbody.innerHTML = reports.map((r, i) => `
-                        <tr>
-                            <td>${r.name}</td>
-                            <td>${new Date(r.date).toLocaleDateString()}</td>
-                            <td>${r.industry || 'N/A'}</td>
-                            <td>${((r.success_score || 0) * 100).toFixed(1)}%</td>
-                            <td>${r.agents.join(', ')}</td>
-                            <td><button class="view-report-btn" onclick="viewReport(${i})">View</button></td>
-                        </tr>
-                    `).join('');
+                    tbody.innerHTML = reports.map((r, i) => 
+                        '<tr><td>' + r.name + '</td><td>' + 
+                        new Date(r.date).toLocaleDateString() + '</td><td>' + 
+                        (r.industry || 'N/A') + '</td><td>' + 
+                        ((r.success_score || 0) * 100).toFixed(1) + '%</td><td>' + 
+                        r.agents.join(', ') + '</td><td>' +
+                        '<button class="view-report-btn" onclick="viewReport(' + i + ')">View</button></td></tr>'
+                    ).join('');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #718096;">No reports generated yet. Create your first report!</td></tr>';
                 }
@@ -473,7 +460,7 @@ Generated by Level 5 Enterprise Intelligence Platform
                 if (reports.length > 0) {
                     const avgScore = (reports.reduce((sum, r) => sum + (r.success_score || 0), 0) / reports.length * 100).toFixed(1);
                     document.getElementById('avgQuality').textContent = avgScore + '%';
-                    document.getElementById('activeAgents').textContent = `6/6`;
+                    document.getElementById('activeAgents').textContent = '6/6';
                 } else {
                     document.getElementById('avgQuality').textContent = '0%';
                     document.getElementById('activeAgents').textContent = '0/6';
@@ -490,8 +477,8 @@ Generated by Level 5 Enterprise Intelligence Platform
             }
 
             function hitlAction(agent, action) {
-                console.log(`HITL: ${action} for ${agent}`);
-                alert(`${action.charAt(0).toUpperCase() + action.slice(1)}d ${agent} analysis. This feedback will improve future analyses.`);
+                console.log('HITL: ' + action + ' for ' + agent);
+                alert(action.charAt(0).toUpperCase() + action.slice(1) + 'd ' + agent + ' analysis. This feedback will improve future analyses.');
                 // TODO: Send to Supabase for learning
             }
 
@@ -500,7 +487,8 @@ Generated by Level 5 Enterprise Intelligence Platform
                 if (!data.graph_available) {
                     console.warn('Graph system not available - running in mock mode');
                 }
-            });
+            }).catch(err => console.error('System check failed:', err));
+
         </script>
     </body>
     </html>
