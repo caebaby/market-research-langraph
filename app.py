@@ -585,6 +585,20 @@ async def analyze(request: Request):
                     
                     result = await graph.ainvoke(state)
                     
+                    # DEBUG: Log what we got back
+                    print(f"\n=== DEBUG: Result for {agent} ===")
+                    print(f"Keys in result: {list(result.keys())}")
+                    print(f"current_output exists: {'current_output' in result}")
+                    print(f"quality_score: {result.get('quality_score', 'NOT FOUND')}")
+                    print(f"agent_name: {result.get('agent_name', 'NOT FOUND')}")
+                    
+                    # Check for different possible output keys
+                    possible_output_keys = ['current_output', 'output', 'response', 'analysis', agent + '_analysis']
+                    for key in possible_output_keys:
+                        if key in result:
+                            print(f"Found output in key '{key}': {result[key][:200]}...")
+                            break
+                    
                     # Extract results
                     results[agent] = result.get("current_output", "Analysis completed but no output found")
                     overall_score = max(overall_score, result.get("quality_score", 0))
