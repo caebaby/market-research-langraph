@@ -173,7 +173,12 @@ CRITIQUE:
         memories = []
         if memory_service:
             query = f"{task_description} for {business_context}"
-            memories = memory_service.recall(query=query, limit=5, client_id=client_id)
+            # Try with client_id first, fall back without it
+            try:
+                memories = memory_service.recall(query=query, limit=5, client_id=client_id)
+            except TypeError:
+            # HybridMemory doesn't support client_id
+                memories = memory_service.recall(query=query, limit=5)
             print(f"📚 Recalled {len(memories)} relevant memories")
         else:
             print("📚 No memory service available")
