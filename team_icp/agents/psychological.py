@@ -172,9 +172,27 @@ CRITIQUE:"""
         try:
             lines = critique_result.split('\n')
             critique_text = '\n'.join(lines[:-1])
-            score = float(lines[-1].strip())
+            last_line = lines[-1].strip()
+    
+            # Extract numeric score from various formats
+            import re
+            # This regex will find any decimal number in the last line
+            score_match = re.search(r'(\d*\.?\d+)', last_line)
+    
+            if score_match:
+                score = float(score_match.group(1))
+            else:
+                # Fallback: try to convert the whole line
+                try:
+                    score = float(last_line)
+                except:
+                    print(f"WARNING: Could not parse score from: {last_line}")
+                    score = 0.5
+    
             score = max(0.0, min(1.0, score))
-        except (ValueError, IndexError):
+    
+        except (ValueError, IndexError) as e:
+            print(f"ERROR parsing score: {e}")
             critique_text = "Error parsing critique"
             score = 0.5
             
