@@ -253,246 +253,266 @@ async def dashboard():
             </div>
         </div>
 
-        <script>
-            let currentReport = null;
-            let reports = JSON.parse(localStorage.getItem('level5_reports') || '[]');
-            let progressInterval = null;
-
-            updateStats();
-
-            function switchTab(tab) {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                event.target.classList.add('active');
-                document.getElementById(tab + '-tab').classList.add('active');
-                if (tab === 'reports') loadReports();
-            }
-
-            async function generateReport() {
-                console.log('Generate report clicked');
-                
-                const context = document.getElementById('businessContext').value.trim();
-                if (!context) {
-                    alert('Please enter your business context to generate insights.');
-                    return;
-                }
-                
-                const team = document.getElementById('team').value;
-                const agents = Array.from(document.querySelectorAll('.agent-checkbox input:checked')).map(cb => cb.id);
-                
-                if (!agents.length) {
-                    alert('Please select at least one agent for analysis.');
-                    return;
-                }
-
-                document.getElementById('results').style.display = 'block';
-                startProgress();
-                document.getElementById('results').scrollIntoView({behavior: 'smooth'});
-
-                try {
-                    const response = await fetch('/analyze', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            business_context: context,
-                            agents: agents,
-                            team: team,
-                            industry: document.getElementById('industry').value,
-                            report_name: document.getElementById('reportName').value
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.detail || 'Analysis failed');
-                    }
-                    
-                    const data = await response.json();
-                    currentReport = {
-                        ...data,
-                        name: document.getElementById('reportName').value || 'Report_' + new Date().toLocaleDateString(),
-                        industry: document.getElementById('industry').value,
-                        date: new Date().toISOString(),
-                        context,
-                        agents,
-                        team
-                    };
-                    
-                    stopProgress();
-                    displayResults(currentReport);
-                    
-                    // Auto-save if enabled
-                    const autoSave = document.getElementById('autoSave');
-                    if (autoSave && autoSave.value === 'true') {
-                        saveReport(true);
-                    }
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    stopProgress();
-                    document.getElementById('resultsContent').innerHTML = '<div class="error-message"><h3>❌ Analysis Error</h3><p>' + error.message + '</p><p style="margin-top: 0.5rem; font-size: 0.875rem;">Please check your input and try again.</p></div>';
-                }
-            }
-
-            function displayResults(data) {
-                const score = ((data.success_score || 0) * 100).toFixed(1);
-                let sections = '';
-                
-                if (data.agents && data.analysis) {
-                    const agentIcons = {
-                        'psychological': '🧠',
-                        'conversion': '🎯',
-                        'competitor': '🔍',
-                        'interview': '🎭',
-                        'voice': '🗣️',
-                        'synthesis': '📋'
-                    };
-                    
-                    data.agents.forEach(agent => {
-                        const icon = agentIcons[agent] || '📊';
-                        const agentName = agent.charAt(0).toUpperCase() + agent.slice(1);
-                        const analysis = data.analysis[agent] || 'Analysis pending...';
-                        
-                        sections += '<div class="analysis-section">';
-                        sections += '<h3>' + icon + ' ' + agentName + ' Analysis</h3>';
-                        sections += '<div class="analysis-content">' + analysis + '</div>';
-                        sections += '<div class="hitl-controls">';
-                        sections += '<button class="hitl-btn approve-btn" onclick="hitlAction(\'' + agent + '\', \'approve\')">✓ Approve</button>';
-                        sections += '<button class="hitl-btn improve-btn" onclick="hitlAction(\'' + agent + '\', \'improve\')">↻ Improve</button>';
-                        sections += '<button class="hitl-btn reject-btn" onclick="hitlAction(\'' + agent + '\', \'reject\')">✗ Reject</button>';
-                        sections += '</div></div>';
-                    });
-                }
-                
-                const timestamp = new Date(data.timestamp).toLocaleString();
-                const agentName = data.agent || 'Level 5 System';
-                
-                document.getElementById('resultsContent').innerHTML = '<div class="metrics-grid"><div class="metric-card"><div class="metric-value">' + score + '%</div><div class="metric-label">Quality Score</div></div><div class="metric-card"><div class="metric-value">' + (data.agents?.length || 0) + '</div><div class="metric-label">Agents Used</div></div><div class="metric-card"><div class="metric-value">Level 5</div><div class="metric-label">Intelligence Tier</div></div></div>' + sections + '<div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #718096; font-size: 0.875rem;">Generated by ' + agentName + ' • ' + timestamp + '</div>';
-            }
-
-            function startProgress() {
-                let progress = 0;
-                const bar = document.getElementById('progressBar');
-                progressInterval = setInterval(() => {
-                    progress += Math.random() * 15 + 5;
-                    if (progress > 90) progress = 90;
-                    bar.style.width = progress + '%';
-                }, 500);
-            }
-
-            function stopProgress() {
-                if (progressInterval) {
-                    clearInterval(progressInterval);
-                    document.getElementById('progressBar').style.width = '100%';
-                    setTimeout(() => {
-                        document.getElementById('progressBar').style.width = '0%';
-                    }, 1000);
-                }
-            }
-
-            function saveReport(silent = false) {
-                if (currentReport) {
-                    reports.unshift(currentReport);
-                    localStorage.setItem('level5_reports', JSON.stringify(reports));
-                    updateStats();
-                    if (!silent) alert('Report saved successfully!');
-                }
-            }
-
-            function downloadReport() {
-                if (currentReport) {
-                    const content = 'ENTERPRISE INTELLIGENCE REPORT\n' +
-                        '==============================\n' +
-                        currentReport.name + '\n' +
-                        'Generated: ' + new Date(currentReport.date).toLocaleString() + '\n' +
-                        'Quality Score: ' + (currentReport.success_score * 100).toFixed(1) + '%\n' +
-                        'Agents Used: ' + currentReport.agents.join(', ') + '\n' +
-                        'Industry: ' + (currentReport.industry || 'Not specified') + '\n\n' +
-                        'BUSINESS CONTEXT:\n' +
-                        '----------------\n' +
-                        currentReport.context + '\n\n' +
-                        'ANALYSIS RESULTS:\n' +
-                        '----------------\n' +
-                        Object.entries(currentReport.analysis || {}).map(([agent, analysis]) => 
-                            agent.toUpperCase() + ' ANALYSIS:\n' + analysis + '\n'
-                        ).join('\n') +
-                        '\n---\n' +
-                        'Generated by Level 5 Enterprise Intelligence Platform\n';
-                        
-                    const blob = new Blob([content], {type: 'text/plain'});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = (currentReport.name || 'Report') + '_' + new Date().toISOString().split('T')[0] + '.txt';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            }
-
-            function loadReports() {
-                const tbody = document.getElementById('reportsTableBody');
-                if (reports.length) {
-                    tbody.innerHTML = reports.map((r, i) => 
-                        '<tr><td>' + r.name + '</td><td>' + 
-                        new Date(r.date).toLocaleDateString() + '</td><td>' + 
-                        (r.industry || 'N/A') + '</td><td>' + 
-                        ((r.success_score || 0) * 100).toFixed(1) + '%</td><td>' + 
-                        r.agents.join(', ') + '</td><td>' +
-                        '<button class="view-report-btn" onclick="viewReport(' + i + ')">View</button></td></tr>'
-                    ).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #718096;">No reports generated yet. Create your first report!</td></tr>';
-                }
-            }
-
-            function viewReport(index) {
-                currentReport = reports[index];
-                displayResults(currentReport);
-                document.getElementById('results').style.display = 'block';
-                switchTab('generate');
-                document.getElementById('results').scrollIntoView({behavior: 'smooth'});
-            }
-
-            function updateStats() {
-                document.getElementById('totalReports').textContent = reports.length;
-                if (reports.length > 0) {
-                    const avgScore = (reports.reduce((sum, r) => sum + (r.success_score || 0), 0) / reports.length * 100).toFixed(1);
-                    document.getElementById('avgQuality').textContent = avgScore + '%';
-                    document.getElementById('activeAgents').textContent = '6/6';
-                } else {
-                    document.getElementById('avgQuality').textContent = '0%';
-                    document.getElementById('activeAgents').textContent = '0/6';
-                }
-            }
-
-            function clearForm() {
-                document.getElementById('businessContext').value = '';
-                document.getElementById('team').value = 'icp';
-                document.getElementById('industry').value = '';
-                document.getElementById('reportName').value = '';
-                document.getElementById('results').style.display = 'none';
-                currentReport = null;
-            }
-
-            function hitlAction(agent, action) {
-                console.log('HITL: ' + action + ' for ' + agent);
-                alert(action.charAt(0).toUpperCase() + action.slice(1) + 'd ' + agent + ' analysis. This feedback will improve future analyses.');
-                // TODO: Send to Supabase for learning
-            }
-
-            // Check system status on load
-            fetch('/test').then(r => r.json()).then(data => {
-                if (!data.graph_available) {
-                    console.warn('Graph system not available - running in mock mode');
-                }
-            }).catch(err => console.error('System check failed:', err));
-
-        </script>
+        <script src="/dashboard.js"></script>
     </body>
     </html>
     """
+   
+
+@app.get("/dashboard.js")
+async def dashboard_js():
+    """Serve the JavaScript separately to avoid string escaping issues"""
+    js_content = """
+let currentReport = null;
+let reports = JSON.parse(localStorage.getItem('level5_reports') || '[]');
+let progressInterval = null;
+
+updateStats();
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tab + '-tab').classList.add('active');
+    if (tab === 'reports') loadReports();
+}
+
+async function generateReport() {
+    console.log('Generate report clicked');
+    
+    const context = document.getElementById('businessContext').value.trim();
+    if (!context) {
+        alert('Please enter your business context to generate insights.');
+        return;
+    }
+    
+    const team = document.getElementById('team').value;
+    const agents = Array.from(document.querySelectorAll('.agent-checkbox input:checked')).map(cb => cb.id);
+    
+    if (!agents.length) {
+        alert('Please select at least one agent for analysis.');
+        return;
+    }
+
+    document.getElementById('results').style.display = 'block';
+    startProgress();
+    document.getElementById('results').scrollIntoView({behavior: 'smooth'});
+
+    try {
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                business_context: context,
+                agents: agents,
+                team: team,
+                industry: document.getElementById('industry').value,
+                report_name: document.getElementById('reportName').value
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Analysis failed');
+        }
+        
+        const data = await response.json();
+        currentReport = {
+            ...data,
+            name: document.getElementById('reportName').value || 'Report_' + new Date().toLocaleDateString(),
+            industry: document.getElementById('industry').value,
+            date: new Date().toISOString(),
+            context,
+            agents,
+            team
+        };
+        
+        stopProgress();
+        displayResults(currentReport);
+        
+        const autoSave = document.getElementById('autoSave');
+        if (autoSave && autoSave.value === 'true') {
+            saveReport(true);
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        stopProgress();
+        document.getElementById('resultsContent').innerHTML = '<div class="error-message"><h3>❌ Analysis Error</h3><p>' + error.message + '</p></div>';
+    }
+}
+
+function displayResults(data) {
+    const score = ((data.success_score || 0) * 100).toFixed(1);
+    let sections = '';
+    
+    if (data.agents && data.analysis) {
+        const agentIcons = {
+            'psychological': '🧠',
+            'conversion': '🎯',
+            'competitor': '🔍',
+            'interview': '🎭',
+            'voice': '🗣️',
+            'synthesis': '📋'
+        };
+        
+        data.agents.forEach(agent => {
+            const icon = agentIcons[agent] || '📊';
+            const agentName = agent.charAt(0).toUpperCase() + agent.slice(1);
+            const analysis = data.analysis[agent] || 'Analysis pending...';
+            
+            sections += `
+                <div class="analysis-section">
+                    <h3>${icon} ${agentName} Analysis</h3>
+                    <div class="analysis-content">${analysis}</div>
+                    <div class="hitl-controls">
+                        <button class="hitl-btn approve-btn" onclick="hitlAction('${agent}', 'approve')">✓ Approve</button>
+                        <button class="hitl-btn improve-btn" onclick="hitlAction('${agent}', 'improve')">↻ Improve</button>
+                        <button class="hitl-btn reject-btn" onclick="hitlAction('${agent}', 'reject')">✗ Reject</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    document.getElementById('resultsContent').innerHTML = `
+        <div class="metrics-grid">
+            <div class="metric-card"><div class="metric-value">${score}%</div><div class="metric-label">Quality Score</div></div>
+            <div class="metric-card"><div class="metric-value">${data.agents?.length || 0}</div><div class="metric-label">Agents Used</div></div>
+            <div class="metric-card"><div class="metric-value">Level 5</div><div class="metric-label">Intelligence Tier</div></div>
+        </div>
+        ${sections}
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #718096; font-size: 0.875rem;">
+            Generated by ${data.agent || 'Level 5 System'} • ${new Date(data.timestamp).toLocaleString()}
+        </div>
+    `;
+}
+
+function startProgress() {
+    let progress = 0;
+    const bar = document.getElementById('progressBar');
+    progressInterval = setInterval(() => {
+        progress += Math.random() * 15 + 5;
+        if (progress > 90) progress = 90;
+        bar.style.width = progress + '%';
+    }, 500);
+}
+
+function stopProgress() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        document.getElementById('progressBar').style.width = '100%';
+        setTimeout(() => {
+            document.getElementById('progressBar').style.width = '0%';
+        }, 1000);
+    }
+}
+
+function saveReport(silent = false) {
+    if (currentReport) {
+        reports.unshift(currentReport);
+        localStorage.setItem('level5_reports', JSON.stringify(reports));
+        updateStats();
+        if (!silent) alert('Report saved successfully!');
+    }
+}
+
+function downloadReport() {
+    if (!currentReport) return;
+    
+    let content = 'ENTERPRISE INTELLIGENCE REPORT\\n';
+    content += '==============================\\n';
+    content += currentReport.name + '\\n';
+    content += 'Generated: ' + new Date(currentReport.date).toLocaleString() + '\\n';
+    content += 'Quality Score: ' + (currentReport.success_score * 100).toFixed(1) + '%\\n';
+    content += 'Agents Used: ' + currentReport.agents.join(', ') + '\\n';
+    content += 'Industry: ' + (currentReport.industry || 'Not specified') + '\\n\\n';
+    content += 'BUSINESS CONTEXT:\\n';
+    content += '----------------\\n';
+    content += currentReport.context + '\\n\\n';
+    content += 'ANALYSIS RESULTS:\\n';
+    content += '----------------\\n';
+    
+    Object.entries(currentReport.analysis || {}).forEach(([agent, analysis]) => {
+        content += agent.toUpperCase() + ' ANALYSIS:\\n' + analysis + '\\n\\n';
+    });
+    
+    content += '---\\n';
+    content += 'Generated by Level 5 Enterprise Intelligence Platform\\n';
+    
+    const blob = new Blob([content], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (currentReport.name || 'Report') + '_' + new Date().toISOString().split('T')[0] + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function loadReports() {
+    const tbody = document.getElementById('reportsTableBody');
+    if (reports.length) {
+        let rows = '';
+        reports.forEach((r, i) => {
+            rows += '<tr>';
+            rows += '<td>' + r.name + '</td>';
+            rows += '<td>' + new Date(r.date).toLocaleDateString() + '</td>';
+            rows += '<td>' + (r.industry || 'N/A') + '</td>';
+            rows += '<td>' + ((r.success_score || 0) * 100).toFixed(1) + '%</td>';
+            rows += '<td>' + r.agents.join(', ') + '</td>';
+            rows += '<td><button class="view-report-btn" onclick="viewReport(' + i + ')">View</button></td>';
+            rows += '</tr>';
+        });
+        tbody.innerHTML = rows;
+    } else {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #718096;">No reports generated yet.</td></tr>';
+    }
+}
+
+function viewReport(index) {
+    currentReport = reports[index];
+    displayResults(currentReport);
+    document.getElementById('results').style.display = 'block';
+    switchTab('generate');
+    document.getElementById('results').scrollIntoView({behavior: 'smooth'});
+}
+
+function updateStats() {
+    document.getElementById('totalReports').textContent = reports.length;
+    if (reports.length > 0) {
+        const avgScore = (reports.reduce((sum, r) => sum + (r.success_score || 0), 0) / reports.length * 100).toFixed(1);
+        document.getElementById('avgQuality').textContent = avgScore + '%';
+        document.getElementById('activeAgents').textContent = '6/6';
+    } else {
+        document.getElementById('avgQuality').textContent = '0%';
+        document.getElementById('activeAgents').textContent = '0/6';
+    }
+}
+
+function clearForm() {
+    document.getElementById('businessContext').value = '';
+    document.getElementById('team').value = 'icp';
+    document.getElementById('industry').value = '';
+    document.getElementById('reportName').value = '';
+    document.getElementById('results').style.display = 'none';
+    currentReport = null;
+}
+
+function hitlAction(agent, action) {
+    console.log('HITL: ' + action + ' for ' + agent);
+    alert(action.charAt(0).toUpperCase() + action.slice(1) + 'd ' + agent + ' analysis.');
+}
+
+// Check system status on load
+fetch('/test').then(r => r.json()).then(data => {
+    if (!data.graph_available) {
+        console.warn('Graph system not available - running in mock mode');
+    }
+}).catch(err => console.error('System check failed:', err));
+"""
+    return Response(content=js_content, media_type="application/javascript")
 
 @app.post("/analyze")
 async def analyze(request: Request):
