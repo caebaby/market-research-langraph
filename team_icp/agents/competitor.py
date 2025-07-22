@@ -41,11 +41,17 @@ Always ground your analysis in real market evidence, not assumptions."""
         """
         Override to handle web search BEFORE calling parent
         """
+        print(f"[CompetitorAgent] Starting with business_context: {state.get('business_context', 'None')[:100]}")
+        print(f"[CompetitorAgent] State keys: {list(state.keys())}")
+    
         # Store tool executor for this request
         self._temp_tool_executor = state.get("tool_executor")
-        
+        print(f"[CompetitorAgent] Tool executor available: {self._temp_tool_executor is not None}")
+        print(f"[CompetitorAgent] Tool executor type: {type(self._temp_tool_executor)}")
+    
         # First, do competitor research if we have tools and valid context
         if self._temp_tool_executor and state.get("business_context", "").strip():
+            print(f"[CompetitorAgent] Executing searches...")
             # Build search queries based on business context
             business_context = state.get("business_context", "")
             search_queries = [
@@ -53,26 +59,31 @@ Always ground your analysis in real market evidence, not assumptions."""
                 f"best {business_context} alternatives",
                 f"{business_context} market leaders"
             ]
-            
+        
             # Execute searches and add to context
             search_results = []
             for query in search_queries[:2]:  # Limit to 2 searches for speed
                 try:
+                    print(f"[CompetitorAgent] Searching for: {query}")
                     results = self._temp_tool_executor.execute("web_search", {"query": query})
+                    print(f"[CompetitorAgent] Search successful, got {len(str(results))} chars of results")
                     search_results.append(f"Results for '{query}':\n{results}\n")
                 except Exception as e:
-                    print(f"Search failed for {query}: {e}")
+                    print(f"[CompetitorAgent] Search failed for {query}: {e}")
                     search_results.append(f"Results for '{query}':\nError retrieving data: {str(e)}\n")
-            
+        
             if search_results:
                 # Add search results to master context
                 additional_context = "\n\nCOMPETITOR RESEARCH RESULTS:\n" + "\n".join(search_results)
                 state["master_context"] = state.get("master_context", "") + additional_context
-        
+                print(f"[CompetitorAgent] Added {len(search_results)} search results to context")
+        else:
+            print(f"[CompetitorAgent] Skipping search - tool_executor: {self._temp_tool_executor is not None}, context: {bool(state.get('business_context', '').strip())}")
+    
         # Clean up temp storage
         result = super().__call__(state)
         self._temp_tool_executor = None
-        
+    
         return result
     
     def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
