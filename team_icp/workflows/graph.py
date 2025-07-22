@@ -53,10 +53,31 @@ def psychological_node(state: ICPState) -> ICPState:
     
     return state
 
-# Add node with wrapper function
+# ============= ADD THIS SECTION START =============
+# Add synthesis node (simple for now)
+def synthesis_node(state: ICPState) -> ICPState:
+    """Simple synthesis - combines all results"""
+    # For now, just pass through and mark complete
+    state["synthesis_complete"] = True
+    
+    # If we have multiple agent results, combine them
+    if "result" in state and isinstance(state["result"], dict):
+        # Future: This will combine insights from all agents
+        state["final_report"] = state["result"]
+    
+    return state
+# ============= ADD THIS SECTION END =============
+
+# Add nodes
 workflow.add_node("psychological", psychological_node)
+workflow.add_node("synthesis", synthesis_node)  # ADD THIS LINE
+
+# Set entry point
 workflow.set_entry_point("psychological")
-workflow.add_edge("psychological", END)
+
+# Update edges - CHANGE THESE TWO LINES:
+workflow.add_edge("psychological", "synthesis")  # Changed from END
+workflow.add_edge("synthesis", END)              # Added this
 
 # Compile the graph
 graph = workflow.compile()
@@ -79,3 +100,4 @@ if __name__ == "__main__":
     result = graph.invoke(state)
     print(f"Output: {result.get('current_output', 'No output')}")
     print(f"Quality: {result.get('quality_score', 0.0)}")
+    print(f"Synthesis complete: {result.get('synthesis_complete', False)}")  # Added this
