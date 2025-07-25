@@ -32,9 +32,9 @@ class ICPState(Dict):
     review_reason: Optional[str]
 
 # Import all agents
-from ..agents.psychological_agent import PsychologicalAgent
-from ..agents.competitor_agent import CompetitorAgent
-from ..agents.voice_agent import VoiceAgent
+from ..agents.psychological import PsychologicalAgent
+from ..agents.competitor import CompetitorAgent
+from ..agents.voice import VoiceAgent
 
 # Create agent instances
 psychological_agent = PsychologicalAgent()
