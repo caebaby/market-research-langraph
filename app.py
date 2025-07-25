@@ -16,6 +16,7 @@ try:
     GRAPH_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Could not import graph: {e}")
+    print(f"Import error details: {str(e)}")
     GRAPH_AVAILABLE = False
 
 print(f"=== GRAPH AVAILABLE: {GRAPH_AVAILABLE} ===")
