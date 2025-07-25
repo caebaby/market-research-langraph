@@ -29,9 +29,9 @@ class ICPState(Dict):
     review_reason: Optional[str]
 
 # Imports fixed for your structure
-from ..agents.psychological import PsychologicalAgent
-from ..agents.competitor import CompetitorAgent
-from ..agents.voice import VoiceAgent
+from team_icp.agents.psychological import PsychologicalAgent
+from team_icp.agents.competitor import CompetitorAgent
+from team_icp.agents.voice import VoiceAgent
 
 psychological_agent = PsychologicalAgent()
 competitor_agent = CompetitorAgent()
