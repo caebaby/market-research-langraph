@@ -19,6 +19,8 @@ except ImportError as e:
     print(f"Warning: Could not import graph: {e}")
     GRAPH_AVAILABLE = False
 
+print(f"=== GRAPH AVAILABLE: {GRAPH_AVAILABLE} ===")
+
 app = FastAPI(title="Level 5 ICP Intelligence")
 
 # Supabase client
