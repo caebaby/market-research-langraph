@@ -1,7 +1,7 @@
 # team_icp/agents/psychological.py
 
 from typing import Dict, Any, List
-from ...core.standard_agent import StandardAgentNode
+from core.standard_agent import StandardAgentNode
 from team_icp.prompts.research_prompts import ICPResearchPrompts
 
 class PsychologicalAgent(StandardAgentNode):
