@@ -1,6 +1,8 @@
 from langgraph.graph import StateGraph, END
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ICPState(Dict):
     task: str
@@ -11,7 +13,12 @@ class ICPState(Dict):
     result: Optional[Dict[str, Any]]
     current_output: Optional[str]
     quality_score: Optional[float]
-    quality: Optional[float]  # Keep for backward compatibility
+    quality: Optional[float]
+    
+    # Add requested_agents to state
+    requested_agents: Optional[List[str]]
+    current_agent_index: Optional[int]
+    agents_to_run: Optional[List[str]]
     
     # StandardAgentNode fields
     current_task: Optional[Dict[str, Any]]
@@ -25,43 +32,41 @@ class ICPState(Dict):
     review_reason: Optional[str]
 
 # Import all agents
-from ..agents.psychological import PsychologicalAgent
-from ..agents.competitor import CompetitorAgent  # ADD THIS LINE
+from src.agents.psychological_agent import PsychologicalAgent
+from src.agents.competitor_agent import CompetitorAgent
 from src.agents.voice_agent import VoiceAgent
 
 # Create agent instances
 psychological_agent = PsychologicalAgent()
-competitor_agent = CompetitorAgent()  # ADD THIS LINE
-voice_agent = VoiceAgent()  # ADD THIS LINE
+competitor_agent = CompetitorAgent()
+voice_agent = VoiceAgent()
 
 # Create workflow
 workflow = StateGraph(ICPState)
 
-# Add the psychological node with proper state handling
+# Agent node functions
 def psychological_node(state: ICPState) -> ICPState:
     """Wrapper to ensure state is properly updated"""
+    logger.info("Running psychological agent")
+    
     # Call the agent
     updated_state = psychological_agent(state)
     
-    # Ensure critical fields are preserved
+    # Safe state merging
     if isinstance(updated_state, dict):
-        # Merge the updated state back into the original
         for key, value in updated_state.items():
-            state[key] = value
+            if key not in state or value is not None:
+                state[key] = value
     
-    # Ensure backward compatibility
-    if "quality_score" in state and "quality" not in state:
-        state["quality"] = state["quality_score"]
-    
-    if "current_output" in state and "result" not in state:
-        state["result"] = {"psychological": state["current_output"]}
+    # Store output in result
+    if "current_output" in state and state["current_output"]:
+        state["result"]["psychological"] = state["current_output"]
     
     return state
 
-# ADD THIS ENTIRE SECTION - Competitor node
 def competitor_node(state: ICPState) -> ICPState:
     """Wrapper for competitor agent"""
-    # Update task for competitor agent
+    logger.info("Running competitor agent")
     state["current_task"] = {
         "description": "Analyze competitive landscape and identify positioning opportunities",
         "is_high_stakes": False
@@ -70,27 +75,21 @@ def competitor_node(state: ICPState) -> ICPState:
     # Call the agent
     updated_state = competitor_agent(state)
     
-    # Ensure critical fields are preserved
+    # Safe state merging
     if isinstance(updated_state, dict):
         for key, value in updated_state.items():
-            state[key] = value
+            if key not in state or value is not None:
+                state[key] = value
     
-    # Store competitor output in result
-    if "current_output" in state:
-        if "result" not in state:
-            state["result"] = {}
+    # Store output in result
+    if "current_output" in state and state["current_output"]:
         state["result"]["competitor"] = state["current_output"]
     
     return state
 
-def competitor_node(state: ICPState) -> ICPState:
-    # ... existing competitor code ...
-    return state
-
-# ADD THIS ENTIRE FUNCTION:
 def voice_node(state: ICPState) -> ICPState:
     """Wrapper for voice of customer agent"""
-    # Update task for voice agent
+    logger.info("Running voice agent")
     state["current_task"] = {
         "description": "Extract authentic customer language and create copy-ready phrases",
         "is_high_stakes": False
@@ -99,66 +98,119 @@ def voice_node(state: ICPState) -> ICPState:
     # Call the agent
     updated_state = voice_agent(state)
     
-    # Ensure critical fields are preserved
+    # Safe state merging
     if isinstance(updated_state, dict):
         for key, value in updated_state.items():
-            state[key] = value
+            if key not in state or value is not None:
+                state[key] = value
     
-    # Store voice output in result
-    if "current_output" in state:
-        if "result" not in state:
-            state["result"] = {}
+    # Store output in result
+    if "current_output" in state and state["current_output"]:
         state["result"]["voice"] = state["current_output"]
     
     return state
 
-# Add synthesis node (simple for now)
 def synthesis_node(state: ICPState) -> ICPState:
     """Simple synthesis - combines all results"""
-    # For now, just pass through and mark complete
+    logger.info("Running synthesis")
     state["synthesis_complete"] = True
     
-    # If we have multiple agent results, combine them
     if "result" in state and isinstance(state["result"], dict):
-        # Future: This will combine insights from all agents
         state["final_report"] = state["result"]
     
     return state
 
+# NEW: Router node to handle dynamic agent selection
+def router_node(state: ICPState) -> ICPState:
+    """Initialize routing based on requested agents"""
+    requested = state.get("requested_agents", [])
+    logger.info(f"Router: Requested agents: {requested}")
+    
+    # Initialize shared state
+    state.setdefault("result", {})
+    state.setdefault("quality", 0.0)
+    state.setdefault("shared_insights", {})
+    
+    # Initialize routing
+    state["current_agent_index"] = 0
+    state["agents_to_run"] = requested
+    
+    return state
+
+# NEW: Dynamic routing function
+def route_to_next_agent(state: ICPState) -> str:
+    """Determine which agent to run next"""
+    requested = state.get("agents_to_run", [])
+    current_index = state.get("current_agent_index", 0)
+    
+    if current_index < len(requested):
+        next_agent = requested[current_index]
+        # Increment for next iteration
+        state["current_agent_index"] = current_index + 1
+        logger.info(f"Routing to: {next_agent} (index: {current_index})")
+        return next_agent
+    else:
+        logger.info("All agents complete, routing to synthesis")
+        return "synthesis"
+
 # Add nodes
+workflow.add_node("router", router_node)
 workflow.add_node("psychological", psychological_node)
-workflow.add_node("competitor", competitor_node)  # ADD THIS LINE
-workflow.add_node("voice", voice_node)  # ADD THIS LINE
+workflow.add_node("competitor", competitor_node)
+workflow.add_node("voice", voice_node)
 workflow.add_node("synthesis", synthesis_node)
 
-# Set entry point
-workflow.set_entry_point("psychological")
+# Set entry point to router
+workflow.set_entry_point("router")
 
-# Update edges
-workflow.add_edge("psychological", "competitor")  # ADD THIS LINE (changed from psychological → synthesis)
-workflow.add_edge("competitor", "voice")   # CHANGE THIS LINE
-workflow.add_edge("voice", "synthesis")    # ADD THIS LINE
+# Add dynamic routing from router
+workflow.add_conditional_edges(
+    "router",
+    route_to_next_agent,
+    {
+        "psychological": "psychological",
+        "competitor": "competitor",
+        "voice": "voice",
+        "synthesis": "synthesis"
+    }
+)
+
+# After each agent, route back to check what's next
+def route_after_agent(state: ICPState) -> str:
+    """After each agent, determine next step"""
+    return route_to_next_agent(state)
+
+# Add conditional edges for each agent
+for agent in ["psychological", "competitor", "voice"]:
+    workflow.add_conditional_edges(
+        agent,
+        route_after_agent,
+        {
+            "psychological": "psychological",
+            "competitor": "competitor",
+            "voice": "voice",
+            "synthesis": "synthesis"
+        }
+    )
+
+# Synthesis always goes to END
 workflow.add_edge("synthesis", END)
 
 # Compile the graph
 graph = workflow.compile()
 
+# Test function
 if __name__ == "__main__":
     # Test with proper state structure
     state = {
-        "task": "Financial advisor ICP",
-        "context": "Financial services",
-        "business_context": "Financial advisors with 7+ years experience",
-        "master_context": "Financial advisors with 7+ years experience",
-        "current_task": {"description": "Analyze financial advisor customer psychology"},
+        "task": "Test ICP",
+        "context": "Testing",
+        "business_context": "Tech founders",
+        "master_context": "Tech founders",
+        "requested_agents": ["voice"],  # Test single agent
         "new_data": True,
-        "client_id": "test123",
-        "shared_insights": {},
-        "memory_service": None,
-        "tool_executor": None
+        "client_id": "test123"
     }
     
     result = graph.invoke(state)
-    print(f"Output: {result.get('current_output', 'No output')}")
-    print(f"Quality: {result.get('quality_score', 0.0)}")
-    print(f"Synthesis complete: {result.get('synthesis_complete', False)}")
+    print(f"Result: {result.get('result', {})}")
