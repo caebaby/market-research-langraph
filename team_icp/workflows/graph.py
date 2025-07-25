@@ -1,7 +1,6 @@
 from langgraph.graph import StateGraph, END
 from typing import Dict, Any, Optional
 
-
 class ICPState(Dict):
     task: str
     context: str
@@ -26,13 +25,9 @@ class ICPState(Dict):
 
 # Import all agents
 from ..agents.psychological import PsychologicalAgent
-from ..agents.competitor import CompetitorAgent  # ADD THIS LINE
-from src.agents.voice_agent import VoiceAgent
 
 # Create agent instances
 psychological_agent = PsychologicalAgent()
-competitor_agent = CompetitorAgent()  # ADD THIS LINE
-voice_agent = VoiceAgent()  # ADD THIS LINE
 
 # Create workflow
 workflow = StateGraph(ICPState)
@@ -58,60 +53,7 @@ def psychological_node(state: ICPState) -> ICPState:
     
     return state
 
-# ADD THIS ENTIRE SECTION - Competitor node
-def competitor_node(state: ICPState) -> ICPState:
-    """Wrapper for competitor agent"""
-    # Update task for competitor agent
-    state["current_task"] = {
-        "description": "Analyze competitive landscape and identify positioning opportunities",
-        "is_high_stakes": False
-    }
-    
-    # Call the agent
-    updated_state = competitor_agent(state)
-    
-    # Ensure critical fields are preserved
-    if isinstance(updated_state, dict):
-        for key, value in updated_state.items():
-            state[key] = value
-    
-    # Store competitor output in result
-    if "current_output" in state:
-        if "result" not in state:
-            state["result"] = {}
-        state["result"]["competitor"] = state["current_output"]
-    
-    return state
-
-def competitor_node(state: ICPState) -> ICPState:
-    # ... existing competitor code ...
-    return state
-
-# ADD THIS ENTIRE FUNCTION:
-def voice_node(state: ICPState) -> ICPState:
-    """Wrapper for voice of customer agent"""
-    # Update task for voice agent
-    state["current_task"] = {
-        "description": "Extract authentic customer language and create copy-ready phrases",
-        "is_high_stakes": False
-    }
-    
-    # Call the agent
-    updated_state = voice_agent(state)
-    
-    # Ensure critical fields are preserved
-    if isinstance(updated_state, dict):
-        for key, value in updated_state.items():
-            state[key] = value
-    
-    # Store voice output in result
-    if "current_output" in state:
-        if "result" not in state:
-            state["result"] = {}
-        state["result"]["voice"] = state["current_output"]
-    
-    return state
-
+# ============= ADD THIS SECTION START =============
 # Add synthesis node (simple for now)
 def synthesis_node(state: ICPState) -> ICPState:
     """Simple synthesis - combines all results"""
@@ -124,21 +66,18 @@ def synthesis_node(state: ICPState) -> ICPState:
         state["final_report"] = state["result"]
     
     return state
+# ============= ADD THIS SECTION END =============
 
 # Add nodes
 workflow.add_node("psychological", psychological_node)
-workflow.add_node("competitor", competitor_node)  # ADD THIS LINE
-workflow.add_node("voice", voice_node)  # ADD THIS LINE
-workflow.add_node("synthesis", synthesis_node)
+workflow.add_node("synthesis", synthesis_node)  # ADD THIS LINE
 
 # Set entry point
 workflow.set_entry_point("psychological")
 
-# Update edges
-workflow.add_edge("psychological", "competitor")  # ADD THIS LINE (changed from psychological → synthesis)
-workflow.add_edge("competitor", "voice")   # CHANGE THIS LINE
-workflow.add_edge("voice", "synthesis")    # ADD THIS LINE
-workflow.add_edge("synthesis", END)
+# Update edges - CHANGE THESE TWO LINES:
+workflow.add_edge("psychological", "synthesis")  # Changed from END
+workflow.add_edge("synthesis", END)              # Added this
 
 # Compile the graph
 graph = workflow.compile()
@@ -161,4 +100,4 @@ if __name__ == "__main__":
     result = graph.invoke(state)
     print(f"Output: {result.get('current_output', 'No output')}")
     print(f"Quality: {result.get('quality_score', 0.0)}")
-    print(f"Synthesis complete: {result.get('synthesis_complete', False)}")
+    print(f"Synthesis complete: {result.get('synthesis_complete', False)}")  # Added this
