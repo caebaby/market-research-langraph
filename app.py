@@ -7,6 +7,7 @@ import asyncio
 from datetime import datetime
 from supabase import create_client, Client
 from typing import List, Optional
+print("APP.PY LOADED - NEW VERSION")
 
 # Load environment
 load_dotenv()
