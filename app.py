@@ -547,18 +547,13 @@ async def analyze(request: Request):
             # If your graph provides these, remove this section
             try:
                 from core.memory import HybridMemory
+                from core.tools import ToolBox
                 memory_service = HybridMemory()
+                tool_executor = ToolBox()
             except ImportError:
                 memory_service = None
-                print("Warning: Memory service not available")
-
-            try:
-                from core.tools import ToolBox
-                tool_executor = ToolBox()
-                print("Tool executor initialized successfully")
-            except ImportError as e:
                 tool_executor = None
-                print(f"Warning: Tool services not available: {e}")
+                print("Warning: Memory/Tool services not available")
             
             # Generate a client_id for this analysis session
             client_id = f"{team}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
