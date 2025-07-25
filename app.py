@@ -572,6 +572,7 @@ async def analyze(request: Request):
                         "context": business_context,
                         "new_data": True,
                         "team": team,
+                        "requested_agents": agents,
                         
                         # StandardAgentNode required fields
                         "current_task": {
