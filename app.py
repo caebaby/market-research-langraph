@@ -13,7 +13,7 @@ load_dotenv()
 
 # Try to import agents - handle gracefully if fails
 try:
-    from team_icp.workflows.graph import graph
+    from src.icp.graph import graph
     GRAPH_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Could not import graph: {e}")
