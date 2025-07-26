@@ -47,7 +47,6 @@ Always ground your analysis in real market evidence, not assumptions."""
         # Store tool executor for this request
         self._temp_tool_executor = state.get("tool_executor")
         print(f"[CompetitorAgent] Tool executor available: {self._temp_tool_executor is not None}")
-        print(f"[CompetitorAgent] Tool executor type: {type(self._temp_tool_executor)}")
     
         # First, do competitor research if we have tools and valid context
         if self._temp_tool_executor and state.get("business_context", "").strip():
@@ -80,44 +79,35 @@ Always ground your analysis in real market evidence, not assumptions."""
         else:
             print(f"[CompetitorAgent] Skipping search - tool_executor: {self._temp_tool_executor is not None}, context: {bool(state.get('business_context', '').strip())}")
     
-        # Clean up temp storage
+        # Call parent's __call__ method
         result = super().__call__(state)
-        self._temp_tool_executor = None
-    
-        return result
+        
+        # CRITICAL: Ensure we return a dictionary, not a string
+        if isinstance(result, str):
+            print(f"[CompetitorAgent] WARNING: Parent returned string, converting to state dict")
+            # If parent returned a string, we need to update state properly
+            state["current_output"] = result
+            state["agent_name"] = self.agent_name
+            return state
+        elif isinstance(result, dict):
+            # Ensure all required state fields are preserved
+            for key in state:
+                if key not in result:
+                    result[key] = state[key]
+            return result
+        else:
+            print(f"[CompetitorAgent] ERROR: Unexpected result type: {type(result)}")
+            # Fallback: return the original state with the result as output
+            state["current_output"] = str(result)
+            state["agent_name"] = self.agent_name
+            return state
     
     def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
         """
-        Override to add competitor-specific analysis with tool usage
+        Override to add competitor-specific analysis
         """
-        # StandardAgentNode doesn't pass state to this method, so we need a workaround
-        # Check if we can extract shared insights from the context string itself
+        # Extract psychological insights from context
         psychological_insights = self._extract_psychological_insights_from_context(context)
-        
-        # First, check if we should use tools for research
-        research_prompt = f"""
-Based on this business context, should I search for competitors online?
-Context: {context[:500]}
-
-Respond with either:
-1. A JSON tool call: {{"tool_name": "web_search", "tool_input": "search query"}}
-2. Or proceed with analysis if you have enough information
-
-Decision:"""
-        
-        initial_response = llm.invoke(research_prompt).content
-        
-        # Check if it's a tool call
-        try:
-            tool_call = json.loads(initial_response)
-            if "tool_name" in tool_call and tool_call["tool_name"] == "web_search":
-                # Note: Without state access, we can't use tool_executor
-                # This is a limitation of StandardAgentNode not passing state
-                print("Note: Web search requested but tool_executor not accessible in current implementation")
-                context += "\n\nNote: Conducting analysis based on available information without web search"
-        except json.JSONDecodeError:
-            # Not a tool call, continue with analysis
-            pass
         
         # Enhanced prompt with competitor focus
         enhanced_prompt = f"""
@@ -142,9 +132,11 @@ Provide a strategic competitive analysis that includes:
 1. 3-5 most relevant competitors (with reasoning for selection)
 2. Their positioning and messaging analysis
 3. Market perception vs. their claims
-4. Strengths and weaknesses
+4. Strengths and weaknesses from target customer's perspective
 5. Clear opportunities for differentiation
 6. Specific positioning recommendations
+
+Be specific and name actual companies when possible.
 """
         
         response = llm.invoke(enhanced_prompt)
@@ -153,34 +145,22 @@ Provide a strategic competitive analysis that includes:
     def _extract_psychological_insights_from_context(self, context: str) -> str:
         """
         Extract psychological insights from context string
-        Since we can't access state directly, look for insights in the context
         """
         # Look for psychological insights markers in the context
         if "INSIGHTS FROM OTHER AGENTS" in context:
-            # StandardAgentNode includes shared insights in context
             try:
                 insights_section = context.split("INSIGHTS FROM OTHER AGENTS")[1]
                 if "Psychological Analyst" in insights_section:
-                    return f"Previous psychological insights detected in context"
+                    # Extract the actual psychological insights
+                    psych_start = insights_section.find("Psychological Analyst")
+                    psych_end = insights_section.find("\n\n", psych_start)
+                    if psych_end == -1:
+                        psych_insights = insights_section[psych_start:]
+                    else:
+                        psych_insights = insights_section[psych_start:psych_end]
+                    return psych_insights
             except:
                 pass
-        
-        return "No psychological insights available - conduct independent analysis"
-    
-    def _extract_psychological_insights_from_state(self, state: Dict[str, Any]) -> str:
-        """
-        Extract psychological insights from state without storing state
-        """
-        if not state:
-            return "No psychological insights available - conduct independent analysis"
-        
-        shared_insights = state.get("shared_insights", {})
-        psych_data = shared_insights.get("psychological", {})
-        
-        if psych_data:
-            summary = psych_data.get("summary", "")
-            if summary:
-                return f"Psychological Insights Available:\n{summary}"
         
         return "No psychological insights available - conduct independent analysis"
     
@@ -222,15 +202,15 @@ CRITIQUE:"""
             if score_match:
                 score = float(score_match.group(1))
             else:
-                print(f"Warning: No valid score found in: '{last_line}' - defaulting to 0.0 for strict quality control")
-                score = 0.0  # Strict quality control as Grok suggests
+                print(f"Warning: No valid score found in: '{last_line}' - defaulting to 0.0")
+                score = 0.0
             
             score = max(0.0, min(1.0, score))
             
         except (ValueError, IndexError) as e:
             print(f"Error parsing score: {e}")
             critique_text = "Error parsing critique"
-            score = 0.0  # Strict fallback
+            score = 0.0
         
         return {
             "critique": critique_text,
