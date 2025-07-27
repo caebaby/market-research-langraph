@@ -23,15 +23,27 @@ class ICPState(Dict):
     requires_human_review: Optional[bool]
     review_reason: Optional[str]
 
-# Import all agents
+# Import all agents with error handling
 from ..agents.psychological import PsychologicalAgent
-from ..agents.competitor import CompetitorAgent  # ADD THIS LINE
-from ..agents.voice_agent import VoiceAgent  # ADD THIS LINE
+
+try:
+    from ..agents.competitor import CompetitorAgent
+    COMPETITOR_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Could not import CompetitorAgent: {e}")
+    COMPETITOR_AVAILABLE = False
+
+try:
+    from ..agents.voice import VoiceAgent
+    VOICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Could not import VoiceAgent: {e}")
+    VOICE_AVAILABLE = False
 
 # Create agent instances
 psychological_agent = PsychologicalAgent()
-competitor_agent = CompetitorAgent()  # ADD THIS LINE
-voice_agent = VoiceAgent()  # ADD THIS LINE
+competitor_agent = CompetitorAgent() if COMPETITOR_AVAILABLE else None
+voice_agent = VoiceAgent() if VOICE_AVAILABLE else None
 
 # Create workflow
 workflow = StateGraph(ICPState)
@@ -39,6 +51,7 @@ workflow = StateGraph(ICPState)
 # Add the psychological node with proper state handling
 def psychological_node(state: ICPState) -> ICPState:
     """Wrapper to ensure state is properly updated"""
+    print("[Graph] Executing psychological node")
     # Call the agent
     updated_state = psychological_agent(state)
     
@@ -57,59 +70,82 @@ def psychological_node(state: ICPState) -> ICPState:
     
     return state
 
-# ADD THIS ENTIRE SECTION - Competitor node
+# Competitor node with error handling
 def competitor_node(state: ICPState) -> ICPState:
     """Wrapper for competitor agent"""
-    # Update task for competitor agent
-    state["current_task"] = {
-        "description": "Analyze competitive landscape and identify positioning opportunities",
-        "is_high_stakes": False
-    }
+    print("[Graph] Executing competitor node")
     
-    # Call the agent
-    updated_state = competitor_agent(state)
+    if not COMPETITOR_AVAILABLE or not competitor_agent:
+        print("[Graph] Competitor agent not available, skipping")
+        return state
     
-    # Ensure critical fields are preserved
-    if isinstance(updated_state, dict):
-        for key, value in updated_state.items():
-            state[key] = value
-    
-    # Store competitor output in result
-    if "current_output" in state:
-        if "result" not in state:
-            state["result"] = {}
-        state["result"]["competitor"] = state["current_output"]
-    
+    try:
+        # Update task for competitor agent
+        state["current_task"] = {
+            "description": "Analyze competitive landscape and identify positioning opportunities",
+            "is_high_stakes": False
+        }
+        
+        # Call the agent
+        updated_state = competitor_agent(state)
+        
+        # Ensure critical fields are preserved
+        if isinstance(updated_state, dict):
+            for key, value in updated_state.items():
+                state[key] = value
+        
+        # Store competitor output in result
+        if "current_output" in state:
+            if "result" not in state:
+                state["result"] = {}
+            state["result"]["competitor"] = state["current_output"]
+            
+    except Exception as e:
+        print(f"[Graph] Error in competitor node: {e}")
+        # Continue with pipeline even if competitor fails
+        
     return state
 
-# ADD THIS ENTIRE SECTION - Voice node
+# Voice node with error handling
 def voice_node(state: ICPState) -> ICPState:
     """Wrapper for voice of customer agent"""
-    # Update task for voice agent
-    state["current_task"] = {
-        "description": "Extract authentic customer language and create copy-ready phrases",
-        "is_high_stakes": False
-    }
+    print("[Graph] Executing voice node")
     
-    # Call the agent
-    updated_state = voice_agent(state)
+    if not VOICE_AVAILABLE or not voice_agent:
+        print("[Graph] Voice agent not available, skipping")
+        return state
     
-    # Ensure critical fields are preserved
-    if isinstance(updated_state, dict):
-        for key, value in updated_state.items():
-            state[key] = value
-    
-    # Store voice output in result
-    if "current_output" in state:
-        if "result" not in state:
-            state["result"] = {}
-        state["result"]["voice"] = state["current_output"]
-    
+    try:
+        # Update task for voice agent
+        state["current_task"] = {
+            "description": "Extract authentic customer language and create copy-ready phrases",
+            "is_high_stakes": False
+        }
+        
+        # Call the agent
+        updated_state = voice_agent(state)
+        
+        # Ensure critical fields are preserved
+        if isinstance(updated_state, dict):
+            for key, value in updated_state.items():
+                state[key] = value
+        
+        # Store voice output in result
+        if "current_output" in state:
+            if "result" not in state:
+                state["result"] = {}
+            state["result"]["voice"] = state["current_output"]
+            
+    except Exception as e:
+        print(f"[Graph] Error in voice node: {e}")
+        # Continue with pipeline even if voice fails
+        
     return state
 
 # Add synthesis node (simple for now)
 def synthesis_node(state: ICPState) -> ICPState:
     """Simple synthesis - combines all results"""
+    print("[Graph] Executing synthesis node")
     # For now, just pass through and mark complete
     state["synthesis_complete"] = True
     
@@ -122,17 +158,17 @@ def synthesis_node(state: ICPState) -> ICPState:
 
 # Add nodes
 workflow.add_node("psychological", psychological_node)
-workflow.add_node("competitor", competitor_node)  # ADD THIS LINE
-workflow.add_node("voice", voice_node)  # ADD THIS LINE
+workflow.add_node("competitor", competitor_node)
+workflow.add_node("voice", voice_node)
 workflow.add_node("synthesis", synthesis_node)
 
 # Set entry point
 workflow.set_entry_point("psychological")
 
-# Update edges
-workflow.add_edge("psychological", "competitor")  # CHANGE THIS LINE (was going to synthesis)
-workflow.add_edge("competitor", "voice")  # ADD THIS LINE
-workflow.add_edge("voice", "synthesis")  # ADD THIS LINE
+# Update edges - all agents in sequence
+workflow.add_edge("psychological", "competitor")
+workflow.add_edge("competitor", "voice")
+workflow.add_edge("voice", "synthesis")
 workflow.add_edge("synthesis", END)
 
 # Compile the graph
