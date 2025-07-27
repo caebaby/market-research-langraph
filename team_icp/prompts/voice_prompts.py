@@ -214,3 +214,17 @@ Remember: This isn't about what they tell surveys. This is about what they tell 
             '{business_context} "3am thoughts" OR "cant sleep" forum',
             '{business_context} "told my therapist" OR "journaling about"'
         ]
+
+    @staticmethod
+    def get_reflection_criteria():
+        """Criteria for evaluating voice analysis quality"""
+        return """Evaluate this voice analysis on journal-level accuracy:
+
+1. ICP Specificity (0-1): Is this exactly how THIS target customer talks, not generic?
+2. Private Language (0-1): Does it sound like their journal, not a survey response?
+3. Exact Phrases (0-1): Are there 20+ specific quotable phrases, not paraphrases?
+4. Emotional Accuracy (0-1): Do the emotions feel raw and real, not sanitized?
+5. Copy Readiness (0-1): Could you use these phrases directly in ads?
+6. Mind Reader Test (0-1): Would they say "were you reading my texts?"
+
+Focus on AUTHENTICITY and SPECIFICITY, not completeness."""
