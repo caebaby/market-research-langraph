@@ -81,13 +81,24 @@ class CompetitorAgent(StandardAgentNode):
         for query in search_queries:
             try:
                 print(f"[CompetitorAgent] Searching: {query}")
-                results = self._temp_tool_executor.execute("web_search", {"query": query})
                 
-                if results:
-                    search_results.append(f"Results for '{query}':\n{results}\n")
-                    print(f"[CompetitorAgent] Search successful - {len(str(results))} chars")
+                # FIX: Handle different return types from tool_executor
+                result = self._temp_tool_executor.execute("web_search", {"query": query})
+                
+                # Handle string response
+                if isinstance(result, str):
+                    search_results.append(f"Results for '{query}':\n{result}\n")
+                    print(f"[CompetitorAgent] Search successful - {len(result)} chars")
+                # Handle dict response (might have 'output' or 'result' key)
+                elif isinstance(result, dict):
+                    # Try different possible keys
+                    content = result.get('output') or result.get('result') or result.get('content') or str(result)
+                    search_results.append(f"Results for '{query}':\n{content}\n")
+                    print(f"[CompetitorAgent] Search successful - {len(str(content))} chars")
                 else:
-                    print(f"[CompetitorAgent] No results for: {query}")
+                    # Fallback for unexpected types
+                    search_results.append(f"Results for '{query}':\n{str(result)}\n")
+                    print(f"[CompetitorAgent] Search returned unexpected type: {type(result)}")
                     
             except Exception as e:
                 print(f"[CompetitorAgent] Search error for '{query}': {str(e)}")
