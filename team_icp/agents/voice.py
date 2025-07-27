@@ -1,385 +1,332 @@
-# voice_agent.py
+# team_icp/agents/voice.py
 """
-Voice of Customer Agent - Captures journal-level authentic customer language
+Level 4 Voice of Customer Agent - Journal-level accuracy with memory and learning
 """
 
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, List
 import json
-import logging
+import re
 from datetime import datetime
-
 from core.standard_agent import StandardAgentNode
-from prompts.research_prompts import ICPResearchPrompts
+from ..prompts.voice_prompts import VoicePrompts
 
-logger = logging.getLogger(__name__)
 
 class VoiceAgent(StandardAgentNode):
     """
-    Captures customer language at "read their journal" accuracy level.
-    Produces copy-ready phrases that make customers think "how did you read my mind?"
+    Level 4 Voice Agent that captures customer language at "read their journal" accuracy.
+    
+    Features:
+    - Memory integration for learning patterns
+    - Self-improvement from successful copy
+    - Real-world validation via search
+    - Inter-agent insights from psychological/competitor
+    - Reflection with ICP accuracy scoring
     """
     
     def __init__(self):
-        role_prompt = """You are a Customer Voice Specialist who achieves "mind reader" level accuracy. You combine:
-
-1. **Deep Psychological Understanding**: Using ICP profile to predict private language
-2. **Real-World Validation**: Finding actual examples when possible
-3. **Journal-Level Intimacy**: Capturing how they talk to themselves at 3am
-4. **Copy Creation Expertise**: Extracting phrases ready for ads/emails
-5. **ICP Precision**: Everything filtered through target customer profile
-
-You think like:
-- A therapist who's heard 1000 sessions with this exact customer type
-- A copywriter who's tested 10,000 headlines with this audience  
-- A best friend who's heard all their private venting
-- A researcher who's read every forum post they've written
-
-Your output makes customers say: "Were you reading my journal?" and "This is exactly what I tell my spouse!"
-
-CRITICAL: Never invent generic emotional language. Every insight must be traceable to either:
-1. Deep psychological patterns of this specific ICP
-2. Actual discovered language from real customers
-3. Logical inference from combined data
-
-You're creating a "voice bible" that a copywriter could use to write ads that convert at 10x industry standard."""
-
+        # Get role prompt from external prompts file
+        role_prompt = VoicePrompts.get_role_prompt()
+        
         super().__init__(
             agent_name="Voice of Customer Mind Reader",
             role_prompt=role_prompt,
-            target_quality=0.85  # Higher bar for accuracy
+            target_quality=0.85  # Higher bar for journal-level accuracy
         )
         
-        # ICP accuracy weighting system
+        # ICP accuracy validators
         self.icp_validators = {
             "demographic_match": 0.2,
             "psychographic_match": 0.3,
             "situational_match": 0.3,
             "language_sophistication_match": 0.2
         }
-
-    async def _execute_core_analysis(self, task_description: str) -> Tuple[str, float]:
-        """Execute voice analysis with AI + search hybrid approach"""
-        
-        # Extract all available context
-        business_context = self._extract_business_context()
-        
-        # Optional enrichment from other agents (but not required)
-        psychological_profile = self._extract_shared_insights("psychological")
-        competitor_insights = self._extract_shared_insights("competitor")
-        
-        # If no psychological profile, we can still work with business context alone
-        if not psychological_profile:
-            psychological_profile = "No psychological profile available - inferring from business context"
-        
-        if not competitor_insights:
-            competitor_insights = "No competitor analysis available - focusing on customer voice independently"
-        
-        # Step 1: Build ICP-specific language hypothesis using AI
-        language_hypothesis = self._generate_language_hypothesis(
-            business_context,
-            psychological_profile
-        )
-        
-        # Step 2: Attempt to validate/enhance with real-world data
-        validation_data = await self._validate_with_real_data(
-            business_context,
-            language_hypothesis
-        )
-        
-        # Step 3: Synthesize AI insights + real data into voice bible
-        voice_analysis_prompt = self._build_synthesis_prompt(
-            business_context,
-            psychological_profile,
-            language_hypothesis,
-            validation_data,
-            competitor_insights
-        )
-        
-        # Generate final analysis
-        response = self.llm.invoke(voice_analysis_prompt)
-        
-        # Assess quality with ICP accuracy weighting
-        quality_score = self._assess_icp_accuracy(response.content, psychological_profile)
-        
-        return response.content, quality_score
     
-    def _generate_language_hypothesis(self, business_context: str, psychological_profile: str) -> str:
-        """Use AI to hypothesize how this specific ICP talks privately"""
+    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Level 4 execution with memory and learning
+        """
+        print(f"[VoiceAgent] Starting journal-level voice analysis")
         
-        # Build prompt differently based on available context
-        if "No psychological profile available" in psychological_profile:
-            hypothesis_prompt = f"""Based on this business context alone, infer the target ICP and predict their private language:
-
-BUSINESS CONTEXT:
-{business_context}
-
-First, INFER the likely ICP from the business context:
-- Who would need this?
-- What are their likely pain points?
-- What's their probable role/situation?
-
-Then generate a HYPOTHESIS of how THIS INFERRED PERSON talks when:
-
-1. **Venting to their spouse/best friend**
-   - What exact complaints would they voice?
-   - What metaphors would they use?
-   - What curse words or intensifiers?
-
-2. **Writing in their journal at 3am**
-   - How would they describe their fear?
-   - What words for their exhaustion?
-   - How do they frame their hope?
-
-3. **Texting a trusted colleague**
-   - How do they ask for help?
-   - How do they admit failure?
-   - How do they express ambition?
-
-4. **Posting anonymously online**
-   - What confession would they make?
-   - How would they describe their situation?
-   - What help would they seek?
-
-5. **Internal monologue during crisis**
-   - What do they tell themselves?
-   - What mantras do they repeat?
-   - What fears loop in their head?
-
-For each scenario, provide:
-- EXACT phrases (not paraphrases)
-- Specific word choices that reveal their worldview
-- Language tics that identify them
-- Emotional vocabulary unique to their situation
-
-This is a HYPOTHESIS to be validated - but based on deep pattern recognition of this ICP type."""
+        # Store services for this execution
+        self._temp_memory_service = state.get("memory_service")
+        self._temp_tool_executor = state.get("tool_executor")
         
-        return self.llm.invoke(hypothesis_prompt).content
-    
-    async def _validate_with_real_data(self, business_context: str, language_hypothesis: str) -> str:
-        """Attempt to find real examples validating our hypothesis"""
-        
-        if not self.tool_executor:
-            return "No search validation available - relying on AI hypothesis"
-        
-        # Extract key phrases from hypothesis to search for
-        key_phrases = self._extract_search_phrases(language_hypothesis)
-        
-        validation_results = []
-        search_queries = []
-        
-        # Build targeted searches based on hypothesis
-        for phrase in key_phrases[:5]:  # Limit to avoid over-searching
-            queries = [
-                f'"{phrase}" {business_context} reddit',
-                f'"{phrase}" forum honest',
-                f'"{phrase}" "real talk" review'
-            ]
-            search_queries.extend(queries)
-        
-        # Also search for ICP-specific communities
-        search_queries.extend([
-            f'{business_context} "I finally admitted" OR "truth is" site:reddit.com',
-            f'{business_context} "3am thoughts" OR "cant sleep" forum',
-            f'{business_context} "told my therapist" OR "journaling about"'
-        ])
-        
-        # Execute searches with error handling
-        for query in search_queries[:8]:  # Limit total searches
+        # MEMORY RECALL - Learn from past successful voice captures
+        if self._temp_memory_service:
             try:
-                results = await self.tool_executor.execute("web_search", {"query": query})
-                validation_results.append(f"Validation search: {query}\nResults: {results}\n")
+                business_context = state.get("business_context", "")
+                past_voices = self._temp_memory_service.recall(
+                    agent_name="voice",
+                    context=business_context,
+                    limit=5
+                )
+                
+                if past_voices:
+                    print(f"[VoiceAgent] Recalled {len(past_voices)} relevant voice analyses")
+                    # Add successful patterns to context
+                    voice_patterns = self._extract_successful_patterns(past_voices)
+                    if voice_patterns:
+                        additional_context = f"\n\nSUCCESSFUL VOICE PATTERNS FROM SIMILAR ICPS:\n{voice_patterns}"
+                        state["master_context"] = state.get("master_context", "") + additional_context
+                        
             except Exception as e:
-                logger.info(f"Search skipped for {query}: {e}")
+                print(f"[VoiceAgent] Memory recall error: {e}")
         
-        if not validation_results:
-            return "Search validation unavailable - proceeding with AI hypothesis"
+        # Execute core analysis
+        result = super().__call__(state)
         
-        return "\n".join(validation_results)
+        # MEMORY STORAGE - Store successful voice captures for future learning
+        if self._temp_memory_service and isinstance(result, dict):
+            quality_score = result.get("quality_score", 0)
+            if quality_score >= 0.8:  # Only store high-quality outputs
+                try:
+                    # Extract key voice patterns for future use
+                    voice_insights = self._extract_voice_insights(result.get("current_output", ""))
+                    
+                    self._temp_memory_service.store(
+                        agent_name="voice",
+                        context=state.get("business_context", ""),
+                        insights=voice_insights,
+                        quality=quality_score
+                    )
+                    print(f"[VoiceAgent] Stored high-quality voice insights (score: {quality_score})")
+                    
+                except Exception as e:
+                    print(f"[VoiceAgent] Memory storage error: {e}")
+        
+        # Clean up
+        self._temp_memory_service = None
+        self._temp_tool_executor = None
+        
+        return self._ensure_valid_state_return(result, state)
     
-    def _extract_search_phrases(self, hypothesis: str) -> List[str]:
-        """Extract specific phrases from hypothesis to search for"""
-        # This is simplified - in production, would use NLP to extract key phrases
-        phrases = []
-        lines = hypothesis.split('\n')
-        for line in lines:
-            if '"' in line:
-                import re
-                quoted = re.findall(r'"([^"]*)"', line)
-                phrases.extend(quoted)
-        return phrases[:10]  # Top 10 phrases
+    def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
+        """
+        Generate voice analysis with memory-enhanced insights
+        """
+        # Extract insights from other agents
+        psychological_insights = self._extract_psychological_insights(context)
+        competitor_insights = self._extract_competitor_insights(context)
+        
+        # Build enhanced context
+        enhanced_context = context
+        
+        # Add psychological insights if available
+        if psychological_insights and "No psychological insights" not in psychological_insights:
+            enhanced_context += f"\n\nPSYCHOLOGICAL PROFILE:\n{psychological_insights}"
+        
+        # Add competitor insights if available
+        if competitor_insights and "No competitor insights" not in competitor_insights:
+            enhanced_context += f"\n\nCOMPETITOR CONTEXT:\n{competitor_insights}"
+        
+        # Add memory insights if available
+        if memories:
+            memory_patterns = self._format_memory_patterns(memories)
+            enhanced_context += f"\n\nLEARNED VOICE PATTERNS:\n{memory_patterns}"
+        
+        # Generate language hypothesis
+        hypothesis = self._generate_language_hypothesis(enhanced_context, llm)
+        
+        # Attempt validation if tools available
+        validation_data = "No validation available"
+        if hasattr(self, '_temp_tool_executor') and self._temp_tool_executor:
+            validation_data = self._validate_hypothesis(hypothesis, enhanced_context)
+        
+        # Build final synthesis
+        synthesis_template = VoicePrompts.get_synthesis_template()
+        final_prompt = synthesis_template.format(
+            business_context=enhanced_context,
+            psychological_profile=psychological_insights,
+            language_hypothesis=hypothesis,
+            validation_data=validation_data,
+            competitor_insights=competitor_insights
+        )
+        
+        # Generate voice bible
+        response = llm.invoke(final_prompt)
+        return response.content if hasattr(response, 'content') else str(response)
     
-    def _build_synthesis_prompt(
-        self,
-        business_context: str,
-        psychological_profile: str,
-        language_hypothesis: str,
-        validation_data: str,
-        competitor_insights: str
-    ) -> str:
-        """Synthesize AI hypothesis + real data into voice bible"""
+    def _generate_language_hypothesis(self, context: str, llm) -> str:
+        """Generate hypothesis about how target ICP speaks privately"""
+        hypothesis_template = VoicePrompts.get_language_hypothesis_prompt()
+        prompt = hypothesis_template.format(business_context=context)
         
-        return f"""Create a VOICE OF CUSTOMER BIBLE that achieves "mind reader" accuracy:
-
-BUSINESS CONTEXT:
-{business_context}
-
-TARGET ICP PROFILE:
-{psychological_profile}
-
-AI-GENERATED LANGUAGE HYPOTHESIS:
-{language_hypothesis}
-
-REAL-WORLD VALIDATION DATA:
-{validation_data}
-
-COMPETITOR CONTEXT:
-{competitor_insights}
-
-Create a COPY-READY VOICE BIBLE with journal-level accuracy:
-
-## 🧠 Voice of Customer Bible: [ICP Name/Type]
-
-### Accuracy Validation
-- ICP Match Score: [X/10] - How well does this match our exact target?
-- Source Confidence: [X/10] - How grounded is this in real data vs. hypothesis?
-- "Mind Reader" Test: [X/10] - Would they say "were you reading my journal?"
-
-### 🔥 Pain Language (Private Venting)
-**When they're at their breaking point, they say:**
-- "[Exact phrase with curse words/intensifiers]"
-- "[What they text their friend at midnight]"
-- "[How they describe it to their therapist]"
-
-**The metaphor they always use:**
-- "It's like [specific analogy from their world]"
-
-**The admission they make after 3 drinks:**
-- "[The truth they don't tell vendors]"
-
-### 💭 Inner Monologue (3am Thoughts)
-**The loop in their head:**
-- "[Exact self-talk during crisis]"
-- "[The fear they can't shake]"
-- "[The mantra they repeat]"
-
-**What they write in their journal:**
-- "[Unfiltered stream of consciousness]"
-
-**The prayer/wish they make:**
-- "[What they desperately want]"
-
-### 🎯 Desire Language (Secret Ambitions)
-**How they describe success to themselves:**
-- "[Their private definition of winning]"
-- "[The outcome they visualize]"
-- "[What 'made it' looks like to them]"
-
-**The transformation they want:**
-- "I want to go from [current identity] to [desired identity]"
-- "I want to finally be someone who [specific behavior]"
-
-### 🚨 Trigger Language (Ready to Buy)
-**The breaking point phrase:**
-- "I can't [specific thing] anymore"
-- "I'm done with [specific frustration]"
-- "It's time to [specific action]"
-
-**How they justify the investment:**
-- "[Exact words they use to rationalize spending]"
-- "[How they sell it to their spouse/boss]"
-
-### 🛡️ Objection Language (Hidden Fears)
-**What they really mean when they say "too expensive":**
-- "[The actual fear behind price objection]"
-
-**Their imposter syndrome sounds like:**
-- "[Specific self-doubt phrase]"
-
-**Past trauma language:**
-- "Last time I tried something like this, [specific failure]"
-
-### 📱 Copy-Ready Headlines (Straight from Their Mouth)
-
-**Email Subject Lines:**
-1. "[Exact phrase that would make them open]"
-2. "[Question they ask themselves]"
-3. "[Confession they relate to]"
-
-**Ad Headlines:**
-1. "[Statement that makes them stop scrolling]"
-2. "[Question that's been haunting them]"
-3. "[Promise in their exact words]"
-
-**Landing Page Opener:**
-"[The paragraph that makes them say 'this is exactly me']"
-
-### 🎪 Comparison Language (vs. Competitors)
-**How they describe competitors' solutions:**
-- "[Competitor A] is too [specific complaint in their words]"
-- "I tried [Competitor B] but [exact frustration]"
-
-**What they wish existed:**
-- "Why can't someone just [specific desire]"
-
-### ✅ Voice Accuracy Checklist
-- [ ] Would they forward this to a friend saying "this is literally me"?
-- [ ] Could you text them these phrases and have them think you're psychic?
-- [ ] Do these sound like their group chat, not a marketing team?
-- [ ] Is this how they talk at 11pm, not 9am?
-- [ ] Would they screenshot this and save it because it's so accurate?
-
-### 🚨 Copy Safety Check
-**NEVER use these phrases** (they trigger skepticism):
-- "[Corporate speak they hate]"
-- "[Overused industry terms]"
-- "[Claims that sound like BS]"
-
-### 💎 The Golden Phrase
-The ONE sentence that captures everything:
-"[The exact words that make them lean in and say 'tell me more']"
-
----
-Remember: This isn't about what they tell surveys. This is about what they tell their journal, their therapist, their 3am thoughts. If it doesn't feel uncomfortably accurate, it's not good enough."""
+        response = llm.invoke(prompt)
+        return response.content if hasattr(response, 'content') else str(response)
     
-    def _assess_icp_accuracy(self, analysis: str, psychological_profile: str) -> float:
-        """Assess accuracy against specific ICP profile"""
+    def _validate_hypothesis(self, hypothesis: str, context: str) -> str:
+        """Validate language hypothesis with real-world searches"""
+        if not self._temp_tool_executor:
+            return "No validation available - tool executor not provided"
         
-        score = 0.0
+        # Extract key phrases to validate
+        key_phrases = self._extract_key_phrases(hypothesis)
+        validation_results = []
         
-        # Check for specific, non-generic language
-        if analysis.count('"') > 30:  # Many exact phrases
-            score += 0.25
+        # Get search query templates
+        search_templates = VoicePrompts.get_search_queries()
         
-        # Check for journal-level intimacy markers
-        intimacy_markers = ["3am", "journal", "therapist", "admit", "confession", "midnight"]
-        if sum(1 for marker in intimacy_markers if marker in analysis.lower()) >= 4:
-            score += 0.25
+        # Execute targeted searches
+        for i, phrase in enumerate(key_phrases[:3]):  # Limit searches
+            for template in search_templates[:2]:  # Use first 2 templates
+                try:
+                    query = template.format(phrase=phrase, business_context=context[:50])
+                    print(f"[VoiceAgent] Validating: {query}")
+                    
+                    result = self._temp_tool_executor.execute("web_search", {"query": query})
+                    
+                    # Handle different return types
+                    if isinstance(result, str):
+                        validation_results.append(f"Found: {result[:200]}...")
+                    elif isinstance(result, dict):
+                        content = result.get('output') or result.get('result') or str(result)
+                        validation_results.append(f"Found: {content[:200]}...")
+                        
+                except Exception as e:
+                    print(f"[VoiceAgent] Validation search error: {e}")
         
-        # Check for ICP-specific validation
-        if "ICP Match Score:" in analysis and "/10" in analysis:
-            score += 0.2
-        
-        # Check for copy-ready output
-        if all(section in analysis for section in ["Email Subject Lines:", "Ad Headlines:", "Landing Page Opener:"]):
-            score += 0.2
-        
-        # Check for depth and specificity
-        if "Golden Phrase" in analysis and "Breaking point" in analysis:
-            score += 0.1
-        
-        return score
+        return "\n".join(validation_results) if validation_results else "No validation results found"
     
-    def _create_shared_insights(self, analysis: str) -> Dict[str, Any]:
-        """Create insights to share with other agents"""
+    def _extract_key_phrases(self, hypothesis: str) -> List[str]:
+        """Extract quotable phrases from hypothesis"""
+        phrases = re.findall(r'"([^"]*)"', hypothesis)
+        return [p for p in phrases if len(p) > 5 and len(p) < 50][:10]
+    
+    def _extract_psychological_insights(self, context: str) -> str:
+        """Extract psychological insights from context"""
+        if "INSIGHTS FROM OTHER AGENTS" in context:
+            try:
+                insights_section = context.split("INSIGHTS FROM OTHER AGENTS")[1]
+                if "Psychological" in insights_section:
+                    psych_start = insights_section.find("Psychological")
+                    psych_end = insights_section.find("\n\n", psych_start)
+                    return insights_section[psych_start:psych_end if psych_end != -1 else None]
+            except:
+                pass
+        
+        # Look for psychological markers
+        psych_markers = ["unconscious", "fear", "desire", "identity", "belonging"]
+        if any(marker in context.lower() for marker in psych_markers):
+            return "Psychological insights detected in context"
+        
+        return "No psychological insights available"
+    
+    def _extract_competitor_insights(self, context: str) -> str:
+        """Extract competitor insights from context"""
+        if "COMPETITIVE INTELLIGENCE" in context:
+            try:
+                comp_start = context.find("COMPETITIVE INTELLIGENCE")
+                comp_end = context.find("\n\n", comp_start + 200)
+                return context[comp_start:comp_end if comp_end != -1 else comp_start + 500]
+            except:
+                pass
+        
+        return "No competitor insights available"
+    
+    def _extract_successful_patterns(self, past_voices: List[Dict]) -> str:
+        """Extract successful patterns from past voice analyses"""
+        patterns = []
+        for memory in past_voices:
+            if memory.get("quality", 0) >= 0.85:
+                insights = memory.get("insights", {})
+                if insights.get("golden_phrase"):
+                    patterns.append(f"Golden phrase that worked: {insights['golden_phrase']}")
+                if insights.get("pain_language"):
+                    patterns.append(f"Pain language pattern: {insights['pain_language']}")
+        
+        return "\n".join(patterns) if patterns else ""
+    
+    def _extract_voice_insights(self, analysis: str) -> Dict[str, Any]:
+        """Extract key insights from voice analysis for memory storage"""
+        insights = {
+            "timestamp": datetime.now().isoformat(),
+            "golden_phrase": "",
+            "pain_language": [],
+            "trigger_phrases": [],
+            "successful_headlines": []
+        }
+        
+        # Extract golden phrase
+        if "Golden Phrase" in analysis:
+            try:
+                golden_start = analysis.find("Golden Phrase")
+                golden_line = analysis[golden_start:analysis.find("\n", golden_start + 50)]
+                golden_match = re.search(r'"([^"]+)"', golden_line)
+                if golden_match:
+                    insights["golden_phrase"] = golden_match.group(1)
+            except:
+                pass
+        
+        # Extract other patterns (simplified for brevity)
+        insights["pain_language"] = self._extract_key_phrases(analysis)[:3]
+        
+        return insights
+    
+    def _format_memory_patterns(self, memories: List[Dict]) -> str:
+        """Format memory patterns for context"""
+        patterns = []
+        for memory in memories[:3]:  # Most recent/relevant
+            content = memory.get("content", "")
+            if "golden phrase" in content.lower():
+                patterns.append(content[:200])
+        
+        return "\n---\n".join(patterns) if patterns else "No previous patterns found"
+    
+    def _reflect(self, task: str, response: str, llm) -> Dict[str, Any]:
+        """Reflect on voice capture quality with ICP accuracy focus"""
+        reflection_criteria = VoicePrompts.get_reflection_criteria()
+        
+        reflection_prompt = f"""{reflection_criteria}
+
+TASK: {task}
+
+RESPONSE TO EVALUATE:
+{response[:2000]}...
+
+Provide a detailed critique addressing each criterion.
+Then on the LAST LINE ONLY, output a score from 0.0 to 1.0.
+
+CRITIQUE:"""
+        
+        critique_response = llm.invoke(reflection_prompt)
+        critique_text = critique_response.content if hasattr(critique_response, 'content') else str(critique_response)
+        
+        # Parse score
+        try:
+            lines = critique_text.strip().split('\n')
+            last_line = lines[-1].strip() if lines else ""
+            critique_content = '\n'.join(lines[:-1]) if len(lines) > 1 else critique_text
+            
+            score_match = re.search(r'(\d*\.?\d+)', last_line)
+            if score_match:
+                score = float(score_match.group(1))
+                score = max(0.0, min(1.0, score))
+            else:
+                score = 0.0
+                
+        except Exception as e:
+            print(f"[VoiceAgent] Reflection parsing error: {e}")
+            critique_content = critique_text
+            score = 0.0
         
         return {
-            "summary": "Journal-level accurate voice of customer captured with copy-ready phrases",
-            "key_findings": {
-                "pain_language": "Exact phrases from their private venting",
-                "trigger_phrases": "Breaking point language that drives action",
-                "golden_phrase": "The one sentence that captures everything",
-                "copy_headlines": "Ready-to-use ad headlines in their voice"
-            },
-            "quality_score": self.state.get("quality_score", 0.0),
-            "timestamp": datetime.now().isoformat()
+            "critique": critique_content,
+            "score": score
         }
+    
+    def _ensure_valid_state_return(self, result: Any, original_state: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensure valid state dictionary is returned"""
+        if isinstance(result, dict):
+            # Preserve all original state fields
+            for key in original_state:
+                if key not in result:
+                    result[key] = original_state[key]
+            return result
+        elif isinstance(result, str):
+            original_state["current_output"] = result
+            original_state["agent_name"] = self.agent_name
+            return original_state
+        else:
+            original_state["current_output"] = str(result) if result else "Voice analysis completed"
+            original_state["agent_name"] = self.agent_name
+            return original_state
