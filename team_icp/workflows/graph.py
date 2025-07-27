@@ -166,8 +166,7 @@ workflow.add_node("synthesis", synthesis_node)
 workflow.set_entry_point("psychological")
 
 # Update edges - all agents in sequence
-workflow.add_edge("psychological", "competitor")
-workflow.add_edge("competitor", "voice")
+workflow.add_edge("psychological", "voice")  # Skip competitor
 workflow.add_edge("voice", "synthesis")
 workflow.add_edge("synthesis", END)
 
