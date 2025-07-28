@@ -21,14 +21,9 @@ class VoiceAgentV4(StandardAgentNodeV4):
         super().__init__(
             agent_name="Voice of Customer Specialist",
             agent_role=VoicePrompts.get_role_prompt(),
-            default_llm="anthropic/claude-3-5-sonnet-20241022"
+            default_llm="anthropic/claude-sonnet-4-20250514"  # Just for explicit config
         )
         
-        # Initialize high-quality LLM for voice extraction
-        self.llm = ChatAnthropic(
-            model_name="claude-3-5-sonnet-20241022",
-            temperature=0.3  # Lower temp for more consistent language extraction
-        )
     
     async def execute_core_analysis(self, state: Dict[str, Any]) -> str:
         """Extract voice of customer with journal-level accuracy"""
@@ -72,19 +67,20 @@ class VoiceAgentV4(StandardAgentNodeV4):
             business_context=business_context
         )
         
-        result = await self.llm.ainvoke(prompt)
+        llm = self.get_llm()
+        result = await llm.ainvoke(synthesis_prompt)
         return result.content
-    
+
     async def _create_voice_bible(self, business_context: str, hypothesis: str,
                                   psychological_insights: Dict, competitor_insights: Dict) -> str:
         """Create comprehensive voice of customer bible"""
-        
+    
         # Format psychological profile
         psych_profile = psychological_insights.get("summary", "Not available yet") if psychological_insights else "Analysis pending"
-        
+    
         # Format competitor insights  
         comp_context = competitor_insights.get("summary", "Not available yet") if competitor_insights else "Analysis pending"
-        
+    
         # Create synthesis prompt
         synthesis_prompt = VoicePrompts.get_synthesis_template().format(
             business_context=business_context,
@@ -93,8 +89,9 @@ class VoiceAgentV4(StandardAgentNodeV4):
             validation_data="AI-Inferred (real-world validation available in future updates)",
             competitor_insights=comp_context
         )
-        
-        result = await self.llm.ainvoke(synthesis_prompt)
+    
+        llm = self.get_llm()
+        result = await llm.ainvoke(synthesis_prompt)
         return result.content
     
     def _extract_key_patterns(self, voice_bible: str) -> Dict[str, List[str]]:
