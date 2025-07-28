@@ -24,6 +24,10 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
             target_quality=0.80,
             require_human_review_below=0.60
         )
+        
+        print(f"[L4 CHECK] Agent initialized: {self.agent_name}")
+        print(f"[L4 CHECK] Target quality: {self.target_quality}")
+        print(f"[L4 CHECK] HITL threshold: {self.review_threshold}")
     
     def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
         """Generate psychological analysis"""
