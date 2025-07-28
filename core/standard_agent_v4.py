@@ -344,7 +344,11 @@ IMPROVED ANALYSIS WITH COACHING APPLIED:"""
         # Last resort - create a default
         try:
             from langchain.chat_models import ChatAnthropic
-            self._llm = ChatAnthropic(model="claude-3-sonnet-20240229", temperature=0.7)
+            self._llm = ChatAnthropic(
+                model="claude-sonnet-4-20250514",  # Sonnet 4 
+                temperature=0.7
+            )
+            
             return self._llm
         except Exception as e:
             raise RuntimeError(f"No LLM available for {self.agent_name}: {e}")
