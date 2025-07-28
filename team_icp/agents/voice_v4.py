@@ -196,9 +196,10 @@ Please provide more specific business context or try again."""
             state["shared_insights"] = {}
         state["shared_insights"][agent_name] = insight
 
-    def _generate_response(self, state: Dict[str, Any]) -> str:
-        """Generate response - calls our main analysis method"""
-        return self.execute_core_analysis(state)
+    def _generate_response(self, state: Dict[str, Any], previous_response: str = None, 
+                      iteration: int = 0, max_iterations: int = 3) -> str:
+    """Generate response - calls our main analysis method"""
+    return self.execute_core_analysis(state)
 
     def _reflect(self, response: str, state: Dict[str, Any]) -> Tuple[float, str]:
         """Reflect on quality - calls our reflection method"""
