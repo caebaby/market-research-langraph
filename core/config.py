@@ -6,7 +6,7 @@ class Config:
     TEMP = 0.85  # Deep insights
 
     @staticmethod
-    def get_llm():
+    def get_llm(agent_name=None):
         key = os.getenv("ANTHROPIC_API_KEY")
         if not key:
             raise ValueError("Add ANTHROPIC_API_KEY to Railway env")
