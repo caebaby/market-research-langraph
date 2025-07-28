@@ -16,7 +16,7 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
     
     def __init__(self):
         # Get role from your existing prompts
-        role_prompt = PsychologicalPrompts.get_role_prompt()
+        role_prompt = "You are an expert psychological researcher specializing in uncovering deep customer insights that drive purchasing decisions."
         
         super().__init__(
             agent_name="Psychological Analyst V4",
@@ -39,7 +39,7 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
             enhanced_context += memory_context
         
         # Get your existing sophisticated prompt
-        analysis_prompt = PsychologicalPrompts.get_analysis_prompt()
+        analysis_prompt = PsychologicalPrompts.get_psychological_analysis_prompt()
         
         # Format with context
         formatted_prompt = f"{self.role_prompt}\n\n{analysis_prompt}\n\nCONTEXT:\n{enhanced_context}\n\nTASK:\n{task}"
@@ -50,7 +50,12 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
     
     def _reflect(self, task: str, response: str, llm) -> Dict[str, Any]:
         """Evaluate psychological analysis quality"""
-        reflection_prompt = PsychologicalPrompts.get_reflection_criteria()
+        reflection_prompt = """Evaluate this psychological analysis on these criteria:
+        1. Depth of unconscious insights (0-1)
+        2. Use of multiple frameworks (0-1)
+        3. Accuracy of voice capture (0-1)
+        4. Actionability for business (0-1)
+        Score 0.0-1.0 on last line."""
         
         critique_prompt = f"""{reflection_prompt}
 
