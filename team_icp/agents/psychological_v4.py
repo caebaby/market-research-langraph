@@ -40,9 +40,12 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
         
         # Get your existing sophisticated prompt
         analysis_prompt = PsychologicalPrompts.get_psychological_analysis_prompt()
+        print(f"[DEBUG] Analysis prompt length: {len(analysis_prompt)}")  # ADD THIS
+        print(f"[DEBUG] First 200 chars: {analysis_prompt[:200]}")  # ADD THIS
         
         # Format with context
         formatted_prompt = f"{self.role_prompt}\n\n{analysis_prompt}\n\nCONTEXT:\n{enhanced_context}\n\nTASK:\n{task}"
+        print(f"[DEBUG] Total formatted prompt length: {len(formatted_prompt)}")  # ADD THIS
         
         # Generate response
         response = llm.invoke(formatted_prompt)
