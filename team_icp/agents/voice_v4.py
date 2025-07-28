@@ -19,8 +19,7 @@ class VoiceAgentV4(StandardAgentNodeV4):
     def __init__(self):
         super().__init__(
             agent_name="Voice of Customer Specialist",
-            role_prompt=VoicePrompts.get_role_prompt(),  # Changed from agent_role to role_prompt
-            default_llm="anthropic/claude-sonnet-4-20250514"
+            role_prompt=VoicePrompts.get_role_prompt()
         )
     
     async def execute_core_analysis(self, state: Dict[str, Any]) -> str:
