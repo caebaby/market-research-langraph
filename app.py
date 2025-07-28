@@ -653,36 +653,73 @@ async def health():
 
 @app.get("/test-v4")
 async def test_v4():
-    """Test V4 agents"""
-    results = {}
-    
-    # Test 1: Foundation
+    """Test Level 4 agents independently"""
     try:
-        from core.standard_agent_v4 import StandardAgentNodeV4
-        from core.memory_adapter import MemoryAdapter
-        from core.config import Config
+        # Import V4 agents
+        from team_icp.agents.psychological_v4 import psychological_agent_v4
+        from team_icp.agents.voice_v4 import voice_agent_v4
         
-        results["foundation"] = "✅ V4 imports work"
+        # Test context - rich business description
+        test_context = """
+        AI-powered coaching platform for executive coaches who want to scale their practice 
+        without burning out. They're typically 45-55, been coaching for 10+ years, making 
+        $150-300k but working 60+ hours a week and feeling like they can't take a vacation 
+        without their business falling apart. They're secretly worried about being replaced 
+        by AI but also exhausted from being the bottleneck in their business.
+        """
         
-        llm = Config.get_llm()
-        results["llm"] = f"✅ LLM configured: {type(llm)}"
+        # Create test state
+        test_state = {
+            "business_context": test_context,
+            "master_context": test_context,
+            "current_task": {
+                "description": "Analyze customer psychology and extract voice patterns",
+                "is_high_stakes": False
+            },
+            "client_id": "test_v4_client",
+            "shared_insights": {},
+            "memory_service": None,  # We'll add this later
+            "tool_executor": None
+        }
         
-        adapter = MemoryAdapter()
-        results["memory"] = "✅ Memory adapter created"
+        # Run psychological agent first
+        psych_state = test_state.copy()
+        psych_result = psychological_agent_v4(psych_state)
+        
+        # Extract psychological insights for voice agent
+        psych_insights = psych_state.get("shared_insights", {}).get("psychological", {})
+        
+        # Run voice agent with psychological insights
+        voice_state = test_state.copy()
+        voice_state["shared_insights"] = {"psychological": psych_insights}
+        voice_result = voice_agent_v4(voice_state)
+        
+        # Format response
+        return {
+            "status": "Level 4 Agents Test",
+            "test_context": test_context,
+            "agents_tested": ["psychological_v4", "voice_v4"],
+            "results": {
+                "psychological": {
+                    "output": psych_result.get("current_output", "No output")[:1000] + "...",
+                    "quality_score": psych_result.get("quality_score", 0),
+                    "shared_insights": psych_insights
+                },
+                "voice": {
+                    "output": voice_result.get("current_output", "No output")[:1000] + "...",
+                    "quality_score": voice_result.get("quality_score", 0),
+                    "patterns_found": voice_state.get("shared_insights", {}).get("voice", {}).get("patterns", {})
+                }
+            },
+            "execution_time": "Check logs for timing"
+        }
+        
     except Exception as e:
-        results["foundation_error"] = str(e)
-    
-    # Test 2: Psychological V4 - INIT ONLY
-    try:
-        from team_icp.agents.psychological_v4 import PsychologicalAgentV4
-        
-        agent = PsychologicalAgentV4()
-        results["psych_v4"] = "✅ Agent initialized successfully (not executed)"
-        
-    except Exception as e:
-        results["psych_v4_error"] = str(e)
-    
-    return results
+        return {
+            "error": str(e),
+            "type": type(e).__name__,
+            "status": "Test failed"
+        }
 
 @app.post("/test-v4-execute")
 async def test_v4_execute(request: Request):
