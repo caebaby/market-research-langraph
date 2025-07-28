@@ -23,23 +23,9 @@ class ICPState(Dict):
     requires_human_review: Optional[bool]
     review_reason: Optional[str]
 
-# Import all agents with error handling
+# Import V4 agents
 from ..agents.psychological_v4 import PsychologicalAgentV4
 from ..agents.voice_v4 import VoiceAgentV4
-
-try:
-    from ..agents.competitor import CompetitorAgent
-    COMPETITOR_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: Could not import CompetitorAgent: {e}")
-    COMPETITOR_AVAILABLE = False
-
-try:
-    from ..agents.voice import VoiceAgent
-    VOICE_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: Could not import VoiceAgent: {e}")
-    VOICE_AVAILABLE = False
 
 # Create agent instances
 psychological_agent = PsychologicalAgentV4()
@@ -70,50 +56,10 @@ def psychological_node(state: ICPState) -> ICPState:
     
     return state
 
-# Competitor node with error handling
-def competitor_node(state: ICPState) -> ICPState:
-    """Wrapper for competitor agent"""
-    print("[Graph] Executing competitor node")
-    
-    if not COMPETITOR_AVAILABLE or not competitor_agent:
-        print("[Graph] Competitor agent not available, skipping")
-        return state
-    
-    try:
-        # Update task for competitor agent
-        state["current_task"] = {
-            "description": "Analyze competitive landscape and identify positioning opportunities",
-            "is_high_stakes": False
-        }
-        
-        # Call the agent
-        updated_state = competitor_agent(state)
-        
-        # Ensure critical fields are preserved
-        if isinstance(updated_state, dict):
-            for key, value in updated_state.items():
-                state[key] = value
-        
-        # Store competitor output in result
-        if "current_output" in state:
-            if "result" not in state:
-                state["result"] = {}
-            state["result"]["competitor"] = state["current_output"]
-            
-    except Exception as e:
-        print(f"[Graph] Error in competitor node: {e}")
-        # Continue with pipeline even if competitor fails
-        
-    return state
-
-# Voice node with error handling
+# Voice node
 def voice_node(state: ICPState) -> ICPState:
     """Wrapper for voice of customer agent"""
     print("[Graph] Executing voice node")
-    
-    if not VOICE_AVAILABLE or not voice_agent:
-        print("[Graph] Voice agent not available, skipping")
-        return state
     
     try:
         # Update task for voice agent
@@ -158,7 +104,6 @@ def synthesis_node(state: ICPState) -> ICPState:
 
 # Add nodes
 workflow.add_node("psychological", psychological_node)
-workflow.add_node("competitor", competitor_node)
 workflow.add_node("voice", voice_node)
 workflow.add_node("synthesis", synthesis_node)
 
@@ -166,7 +111,7 @@ workflow.add_node("synthesis", synthesis_node)
 workflow.set_entry_point("psychological")
 
 # Update edges - all agents in sequence
-workflow.add_edge("psychological", "voice")  # Skip competitor
+workflow.add_edge("psychological", "voice")
 workflow.add_edge("voice", "synthesis")
 workflow.add_edge("synthesis", END)
 
