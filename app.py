@@ -651,6 +651,49 @@ async def health():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.get("/test-v4")
+async def test_v4():
+    """Test V4 agents"""
+    results = {}
+    
+    # Test 1: Foundation
+    try:
+        from core.standard_agent_v4 import StandardAgentNodeV4
+        from core.memory_adapter import MemoryAdapter
+        from core.config import Config
+        
+        results["foundation"] = "✅ V4 imports work"
+        
+        llm = Config.get_llm()
+        results["llm"] = f"✅ LLM configured: {type(llm)}"
+        
+        adapter = MemoryAdapter()
+        results["memory"] = "✅ Memory adapter created"
+    except Exception as e:
+        results["foundation_error"] = str(e)
+    
+    # Test 2: Psychological V4
+    try:
+        from team_icp.agents.psychological_v4 import PsychologicalAgentV4
+        
+        agent = PsychologicalAgentV4()
+        state = {
+            "business_context": "Executive coaches at $100k/month wanting to scale",
+            "current_task": {"description": "Analyze psychological profile"},
+            "shared_insights": {}
+        }
+        
+        result = agent(state)
+        results["psych_v4"] = {
+            "quality": result.get('quality_score', 0),
+            "output_length": len(result.get('current_output', '')),
+            "needs_review": result.get('requires_human_review', False)
+        }
+    except Exception as e:
+        results["psych_v4_error"] = str(e)
+    
+    return results
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
