@@ -23,7 +23,6 @@ class VoiceAgentV4(StandardAgentNodeV4):
             agent_role=VoicePrompts.get_role_prompt(),
             default_llm="anthropic/claude-sonnet-4-20250514"  # Just for explicit config
         )
-        
     
     async def execute_core_analysis(self, state: Dict[str, Any]) -> str:
         """Extract voice of customer with journal-level accuracy"""
@@ -68,19 +67,19 @@ class VoiceAgentV4(StandardAgentNodeV4):
         )
         
         llm = self.get_llm()
-        result = await llm.ainvoke(synthesis_prompt)
+        result = await llm.ainvoke(prompt)  # FIXED: Changed from synthesis_prompt to prompt
         return result.content
 
     async def _create_voice_bible(self, business_context: str, hypothesis: str,
                                   psychological_insights: Dict, competitor_insights: Dict) -> str:
         """Create comprehensive voice of customer bible"""
-    
+        
         # Format psychological profile
         psych_profile = psychological_insights.get("summary", "Not available yet") if psychological_insights else "Analysis pending"
-    
+        
         # Format competitor insights  
         comp_context = competitor_insights.get("summary", "Not available yet") if competitor_insights else "Analysis pending"
-    
+        
         # Create synthesis prompt
         synthesis_prompt = VoicePrompts.get_synthesis_template().format(
             business_context=business_context,
@@ -89,7 +88,7 @@ class VoiceAgentV4(StandardAgentNodeV4):
             validation_data="AI-Inferred (real-world validation available in future updates)",
             competitor_insights=comp_context
         )
-    
+        
         llm = self.get_llm()
         result = await llm.ainvoke(synthesis_prompt)
         return result.content
@@ -155,7 +154,8 @@ class VoiceAgentV4(StandardAgentNodeV4):
         Provide numerical scores for each criterion and calculate total."""
         
         try:
-            result = await self.llm.ainvoke(reflection_prompt)
+            llm = self.get_llm()  # FIXED: Changed from self.llm to self.get_llm()
+            result = await llm.ainvoke(reflection_prompt)
             
             # Extract score (simple parsing - could be more robust)
             score = 0.75  # Default
