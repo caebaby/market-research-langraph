@@ -75,6 +75,29 @@ For each scenario, provide:
 - Language tics that identify them
 - Emotional vocabulary unique to their situation
 
+IMPORTANT: Also extract these specific pattern types:
+
+FRUSTRATION PATTERNS - What they say when venting:
+- "frustrated with [specific thing]"
+- "tired of [specific situation]"
+- "struggling with [specific challenge]"
+- "sick of [specific pain]"
+- "can't stand [specific issue]"
+
+ASPIRATION PATTERNS - What they say when hoping:
+- "looking for [specific solution]"
+- "need to find [specific answer]"
+- "want to achieve [specific outcome]"
+- "trying to become [specific identity]"
+- "desperate for [specific relief]"
+
+INVESTMENT READINESS - What they say when ready to buy:
+- "ready to invest in [category]"
+- "willing to pay for [specific value]"
+- "worth every penny if [specific result]"
+- "shut up and take my money if [condition]"
+- "where do I sign up for [solution]"
+
 This is a HYPOTHESIS to be validated - but based on deep pattern recognition of this ICP type."""
 
     @staticmethod
@@ -160,6 +183,29 @@ Create a COPY-READY VOICE BIBLE with journal-level accuracy:
 **Past trauma language:**
 - "Last time I tried something like this, [specific failure]"
 
+### 📊 Actionable Language Patterns (CRITICAL for Copy)
+
+#### Frustration Triggers (Use in problem-aware copy)
+- "frustrated with..." → [exact phrase they use]
+- "tired of..." → [exact phrase they use]
+- "struggling with..." → [exact phrase they use]
+- "sick of..." → [exact phrase they use]
+- "can't stand..." → [exact phrase they use]
+
+#### Aspiration Hooks (Use in solution-aware copy)
+- "looking for..." → [exact phrase they use]
+- "need to find..." → [exact phrase they use]
+- "want to achieve..." → [exact phrase they use]
+- "trying to..." → [exact phrase they use]
+- "desperate for..." → [exact phrase they use]
+
+#### Investment Ready Signals (Use in CTAs)
+- "ready to invest in..." → [exact phrase they use]
+- "willing to pay for..." → [exact phrase they use]
+- "worth it if..." → [exact phrase they use]
+- "take my money if..." → [exact phrase they use]
+- "where do I sign up for..." → [exact phrase they use]
+
 ### 📱 Copy-Ready Headlines (Straight from Their Mouth)
 
 **Email Subject Lines:**
@@ -204,19 +250,15 @@ The ONE sentence that captures everything:
 Remember: This isn't about what they tell surveys. This is about what they tell their journal, their therapist, their 3am thoughts. If it doesn't feel uncomfortably accurate, it's not good enough."""
 
     @staticmethod
-    def get_search_queries():
-        """Search queries for voice validation"""
-        return [
-            '"{phrase}" {business_context} reddit',
-            '"{phrase}" forum honest',
-            '"{phrase}" "real talk" review',
-            '{business_context} "I finally admitted" OR "truth is" site:reddit.com',
-            '{business_context} "3am thoughts" OR "cant sleep" forum',
-            '{business_context} "told my therapist" OR "journaling about"'
-        ]
-
-    @staticmethod
     def get_reflection_criteria():
         """Criteria for evaluating voice analysis quality"""
-        return "Evaluate this voice analysis on journal-level accuracy:\n\n1. ICP Specificity (0-1): Is this exactly how THIS target customer talks, not generic?\n2. Private Language (0-1): Does it sound like their journal, not a survey response?\n3. Exact Phrases (0-1): Are there 20+ specific quotable phrases, not paraphrases?\n4. Emotional Accuracy (0-1): Do the emotions feel raw and real, not sanitized?\n5. Copy Readiness (0-1): Could you use these phrases directly in ads?\n6. Mind Reader Test (0-1): Would they say 'were you reading my texts?'\n\nFocus on AUTHENTICITY and SPECIFICITY, not completeness."
+        return """Evaluate this voice analysis on journal-level accuracy:
 
+1. ICP Specificity (0.25): Is this exactly how THIS target customer talks, not generic?
+2. Private Language (0.25): Does it sound like their journal, not a survey response?
+3. Pattern Extraction (0.2): Are there 15+ specific patterns (frustrated with, looking for, etc.)?
+4. Copy Readiness (0.2): Could you use these phrases directly in ads?
+5. Mind Reader Test (0.1): Would they say 'were you reading my texts?'
+
+Score each criterion and provide total (0-1).
+Focus on AUTHENTICITY and SPECIFICITY, not completeness."""
