@@ -704,7 +704,7 @@ async def test_v4_execute(request: Request):
         import asyncio
         result = await asyncio.wait_for(
             asyncio.to_thread(agent, state),
-            timeout=60.0
+            timeout=240.0
         )
         
         return {
