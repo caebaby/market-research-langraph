@@ -710,7 +710,7 @@ async def test_v4_execute(request: Request):
         return {
             "success": True,
             "quality": result.get('quality_score', 0),
-            "output": result.get('current_output', '')[:500] + "...",  # First 500 chars
+            "output": result.get('current_output', ''),  # Full output
             "needs_review": result.get('requires_human_review', False)
         }
         
