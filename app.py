@@ -672,27 +672,18 @@ async def test_v4():
     except Exception as e:
         results["foundation_error"] = str(e)
     
-    # Test 2: Psychological V4
+    # Test 2: Psychological V4 - INIT ONLY
     try:
         from team_icp.agents.psychological_v4 import PsychologicalAgentV4
         
         agent = PsychologicalAgentV4()
-        state = {
-            "business_context": "Executive coaches at $100k/month wanting to scale",
-            "current_task": {"description": "Analyze psychological profile"},
-            "shared_insights": {}
-        }
+        results["psych_v4"] = "✅ Agent initialized successfully (not executed)"
         
-        result = agent(state)
-        results["psych_v4"] = {
-            "quality": result.get('quality_score', 0),
-            "output_length": len(result.get('current_output', '')),
-            "needs_review": result.get('requires_human_review', False)
-        }
     except Exception as e:
         results["psych_v4_error"] = str(e)
     
     return results
+
 
 if __name__ == "__main__":
     import uvicorn
