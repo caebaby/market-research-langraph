@@ -684,6 +684,41 @@ async def test_v4():
     
     return results
 
+@app.post("/test-v4-execute")
+async def test_v4_execute(request: Request):
+    """Actually execute V4 agent with small test"""
+    try:
+        data = await request.json()
+        business_context = data.get("business_context", "SaaS founders seeking growth")
+        
+        from team_icp.agents.psychological_v4 import PsychologicalAgentV4
+        
+        agent = PsychologicalAgentV4()
+        state = {
+            "business_context": business_context,
+            "current_task": {"description": "Brief analysis"},
+            "shared_insights": {}
+        }
+        
+        # Run with timeout
+        import asyncio
+        result = await asyncio.wait_for(
+            asyncio.to_thread(agent, state),
+            timeout=60.0
+        )
+        
+        return {
+            "success": True,
+            "quality": result.get('quality_score', 0),
+            "output": result.get('current_output', '')[:500] + "...",  # First 500 chars
+            "needs_review": result.get('requires_human_review', False)
+        }
+        
+    except asyncio.TimeoutError:
+        return {"success": False, "error": "Analysis timeout"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 
 if __name__ == "__main__":
     import uvicorn
