@@ -727,18 +727,14 @@ async def test_v4_execute(request: Request):
     try:
         data = await request.json()
         business_context = data.get('business_context', '')
-        requested_agents = data.get('agents', ['psychological'])  # Default to psychological if not specified
+        requested_agents = data.get('agents', ['psychological'])
         
         if not business_context:
             return {"success": False, "error": "No business context provided"}
         
-        # Import V4 agents
-        from team_icp.agents.psychological_v4 import PsychologicalAgentV4
-        from team_icp.agents.voice_v4 import VoiceAgentV4
-        
-        # Create instances
-        psychological_agent = PsychologicalAgentV4()
-        voice_agent = VoiceAgentV4()
+        # Import the instances (not the classes)
+        from team_icp.agents.psychological_v4 import psychological_agent_v4
+        from team_icp.agents.voice_v4 import voice_agent_v4
         
         # Create state
         state = {
@@ -759,7 +755,7 @@ async def test_v4_execute(request: Request):
         # Run psychological first if requested
         if 'psychological' in requested_agents:
             psych_state = state.copy()
-            psych_result = psychological_agent(psych_state)
+            psych_result = psychological_agent_v4(psych_state)  # Use the instance
             
             results['psychological'] = {
                 "output": psych_result.get("current_output", "No output")[:1000] + "...",
@@ -773,7 +769,7 @@ async def test_v4_execute(request: Request):
         # Run voice if requested
         if 'voice' in requested_agents:
             voice_state = state.copy()
-            voice_result = voice_agent(voice_state)
+            voice_result = voice_agent_v4(voice_state)  # Use the instance
             
             results['voice'] = {
                 "output": voice_result.get("current_output", "No output")[:1000] + "...",
