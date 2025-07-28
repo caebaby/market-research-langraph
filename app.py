@@ -719,6 +719,83 @@ async def test_v4_execute(request: Request):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@app.get("/dashboard-v4", response_class=HTMLResponse)
+async def dashboard_v4():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>V4 Agent Test Dashboard</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+            .container { background: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            textarea { width: 100%; height: 100px; margin: 10px 0; }
+            button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+            button:hover { background: #45a049; }
+            .results { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; }
+            .error { color: red; }
+            .success { color: green; }
+            #loading { display: none; }
+        </style>
+    </head>
+    <body>
+        <h1>🧪 V4 Agent Test Dashboard</h1>
+        
+        <div class="container">
+            <h2>Test Psychological V4 Agent</h2>
+            <textarea id="context" placeholder="Enter business context (e.g., SaaS founders seeking growth)">Executive coaches at $100k/month wanting to scale</textarea>
+            <button onclick="testAgent()">Run V4 Analysis</button>
+            <div id="loading">⏳ Running analysis... (this may take 30-60 seconds)</div>
+        </div>
+        
+        <div id="results" class="results" style="display:none;">
+            <h3>Results:</h3>
+            <div id="output"></div>
+        </div>
+        
+        <script>
+        async function testAgent() {
+            const context = document.getElementById('context').value;
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const output = document.getElementById('output');
+            
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            try {
+                const response = await fetch('/test-v4-execute', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({business_context: context})
+                });
+                
+                const data = await response.json();
+                loading.style.display = 'none';
+                results.style.display = 'block';
+                
+                if (data.success) {
+                    output.innerHTML = `
+                        <p class="success">✅ Analysis completed!</p>
+                        <p><strong>Quality Score:</strong> ${data.quality}</p>
+                        <p><strong>Needs Review:</strong> ${data.needs_review}</p>
+                        <p><strong>Output Preview:</strong></p>
+                        <pre>${data.output}</pre>
+                    `;
+                } else {
+                    output.innerHTML = `<p class="error">❌ Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                results.style.display = 'block';
+                output.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        </script>
+    </body>
+    </html>
+    """
+
 
 if __name__ == "__main__":
     import uvicorn
