@@ -24,7 +24,8 @@ class ICPState(Dict):
     review_reason: Optional[str]
 
 # Import all agents with error handling
-from ..agents.psychological import PsychologicalAgent
+from ..agents.psychological_v4 import PsychologicalAgentV4
+from ..agents.voice_v4 import VoiceAgentV4
 
 try:
     from ..agents.competitor import CompetitorAgent
@@ -41,9 +42,8 @@ except ImportError as e:
     VOICE_AVAILABLE = False
 
 # Create agent instances
-psychological_agent = PsychologicalAgent()
-competitor_agent = CompetitorAgent() if COMPETITOR_AVAILABLE else None
-voice_agent = VoiceAgent() if VOICE_AVAILABLE else None
+psychological_agent = PsychologicalAgentV4()
+voice_agent = VoiceAgentV4()
 
 # Create workflow
 workflow = StateGraph(ICPState)
