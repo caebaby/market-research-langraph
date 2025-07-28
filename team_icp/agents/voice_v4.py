@@ -197,5 +197,34 @@ Please provide more specific business context or try again."""
             state["shared_insights"] = {}
         state["shared_insights"][agent_name] = insight
 
+    def _generate_response(self, state: Dict[str, Any]) -> str:
+        """Generate response - calls our main analysis method"""
+        return self.execute_core_analysis(state)
+
+    def _reflect(self, response: str, state: Dict[str, Any]) -> Tuple[float, str]:
+        """Reflect on quality - calls our reflection method"""
+        return self.reflect_on_output(response)
+
+    def _create_shared_insights(self, state: Dict[str, Any], response: str, quality_score: float) -> Dict[str, Any]:
+        """Create insights to share with other agents"""
+        patterns = self._extract_key_patterns(response)
+        return {
+            "summary": f"Extracted {len(patterns)} authentic language patterns with {quality_score:.1%} confidence",
+            "patterns": patterns,
+            "golden_phrase": self._extract_golden_phrase(response),
+            "quality_score": quality_score
+        }
+
+    def _extract_insights_for_memory(self, state: Dict[str, Any], response: str) -> List[Dict[str, Any]]:
+        """Extract insights for memory storage"""
+        patterns = self._extract_key_patterns(response)
+        return [{
+            "insight_type": "voice_patterns",
+            "business_context": state.get("business_context", ""),
+            "patterns": patterns,
+            "golden_phrase": self._extract_golden_phrase(response),
+            "timestamp": datetime.now().isoformat()
+        }]
+
 # Create instance for use in graph
 voice_agent_v4 = VoiceAgentV4()
