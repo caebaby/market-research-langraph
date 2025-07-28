@@ -6,7 +6,7 @@ Uses new StandardAgentNodeV4 base
 
 from typing import Dict, Any, List
 from core.standard_agent_v4 import StandardAgentNodeV4
-from ..prompts.psychological_prompts import PsychologicalPrompts  # Your existing prompts
+from ..prompts.research_prompts import ICPResearchPrompts as PsychologicalPrompts
 
 
 class PsychologicalAgentV4(StandardAgentNodeV4):
