@@ -723,37 +723,71 @@ async def test_v4():
 
 @app.post("/test-v4-execute")
 async def test_v4_execute(request: Request):
-    """Actually execute V4 agent with small test"""
+    """Execute V4 agent tests with support for multiple agents"""
     try:
         data = await request.json()
-        business_context = data.get("business_context", "SaaS founders seeking growth")
+        business_context = data.get('business_context', '')
+        requested_agents = data.get('agents', ['psychological'])  # Default to psychological if not specified
         
+        if not business_context:
+            return {"success": False, "error": "No business context provided"}
+        
+        # Import V4 agents
         from team_icp.agents.psychological_v4 import PsychologicalAgentV4
+        from team_icp.agents.voice_v4 import VoiceAgentV4
         
-        agent = PsychologicalAgentV4()
+        # Create instances
+        psychological_agent = PsychologicalAgentV4()
+        voice_agent = VoiceAgentV4()
+        
+        # Create state
         state = {
             "business_context": business_context,
-            "current_task": {"description": "Brief analysis"},
-            "shared_insights": {}
+            "master_context": business_context,
+            "current_task": {
+                "description": "Analyze this business context",
+                "is_high_stakes": False
+            },
+            "shared_insights": {},
+            "client_id": "test_v4",
+            "memory_service": None,
+            "tool_executor": None
         }
         
-        # Run with timeout
-        import asyncio
-        result = await asyncio.wait_for(
-            asyncio.to_thread(agent, state),
-            timeout=240.0
-        )
+        results = {}
+        
+        # Run psychological first if requested
+        if 'psychological' in requested_agents:
+            psych_state = state.copy()
+            psych_result = psychological_agent(psych_state)
+            
+            results['psychological'] = {
+                "output": psych_result.get("current_output", "No output")[:1000] + "...",
+                "quality": psych_result.get("quality_score", 0),
+                "needs_review": psych_result.get("requires_human_review", False)
+            }
+            
+            # Update shared insights for voice agent
+            state["shared_insights"] = psych_state.get("shared_insights", {})
+        
+        # Run voice if requested
+        if 'voice' in requested_agents:
+            voice_state = state.copy()
+            voice_result = voice_agent(voice_state)
+            
+            results['voice'] = {
+                "output": voice_result.get("current_output", "No output")[:1000] + "...",
+                "quality": voice_result.get("quality_score", 0),
+                "patterns": voice_state.get("shared_insights", {}).get("voice", {}).get("patterns", {})
+            }
         
         return {
             "success": True,
-            "quality": result.get('quality_score', 0),
-            "output": result.get('current_output', ''),  # Full output
-            "needs_review": result.get('requires_human_review', False)
+            "results": results
         }
         
-    except asyncio.TimeoutError:
-        return {"success": False, "error": "Analysis timeout"}
     except Exception as e:
+        logger.error(f"V4 test error: {str(e)}")
         return {"success": False, "error": str(e)}
 
 @app.get("/dashboard-v4", response_class=HTMLResponse)
@@ -767,21 +801,36 @@ async def dashboard_v4():
             body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
             .container { background: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px 0; }
             textarea { width: 100%; height: 100px; margin: 10px 0; }
-            button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+            button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
             button:hover { background: #45a049; }
             .results { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; }
             .error { color: red; }
             .success { color: green; }
             #loading { display: none; }
+            .agent-selection { margin: 15px 0; }
+            .agent-checkbox { margin: 5px 10px 5px 0; }
+            .agent-result { margin: 15px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; }
+            .agent-result h4 { margin-top: 0; color: #333; }
+            pre { white-space: pre-wrap; word-wrap: break-word; }
         </style>
     </head>
     <body>
         <h1>🧪 V4 Agent Test Dashboard</h1>
         
         <div class="container">
-            <h2>Test Psychological V4 Agent</h2>
-            <textarea id="context" placeholder="Enter business context (e.g., SaaS founders seeking growth)">Executive coaches at $100k/month wanting to scale</textarea>
-            <button onclick="testAgent()">Run V4 Analysis</button>
+            <h2>Test Level 4 Agents</h2>
+            <textarea id="context" placeholder="Enter business context">AI-powered coaching platform for executive coaches who want to scale their practice without burning out. They're typically 45-55, been coaching for 10+ years, making $150-300k but working 60+ hours a week.</textarea>
+            
+            <div class="agent-selection">
+                <label class="agent-checkbox">
+                    <input type="checkbox" id="psychological" checked> 🧠 Psychological V4
+                </label>
+                <label class="agent-checkbox">
+                    <input type="checkbox" id="voice" checked> 🗣️ Voice V4
+                </label>
+            </div>
+            
+            <button onclick="testAgents()">Run V4 Analysis</button>
             <div id="loading">⏳ Running analysis... (this may take 30-60 seconds)</div>
         </div>
         
@@ -791,11 +840,20 @@ async def dashboard_v4():
         </div>
         
         <script>
-        async function testAgent() {
+        async function testAgents() {
             const context = document.getElementById('context').value;
             const loading = document.getElementById('loading');
             const results = document.getElementById('results');
             const output = document.getElementById('output');
+            
+            const agents = [];
+            if (document.getElementById('psychological').checked) agents.push('psychological');
+            if (document.getElementById('voice').checked) agents.push('voice');
+            
+            if (agents.length === 0) {
+                alert('Please select at least one agent');
+                return;
+            }
             
             loading.style.display = 'block';
             results.style.display = 'none';
@@ -804,7 +862,10 @@ async def dashboard_v4():
                 const response = await fetch('/test-v4-execute', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({business_context: context})
+                    body: JSON.stringify({
+                        business_context: context,
+                        agents: agents
+                    })
                 });
                 
                 const data = await response.json();
@@ -812,13 +873,22 @@ async def dashboard_v4():
                 results.style.display = 'block';
                 
                 if (data.success) {
-                    output.innerHTML = `
-                        <p class="success">✅ Analysis completed!</p>
-                        <p><strong>Quality Score:</strong> ${data.quality}</p>
-                        <p><strong>Needs Review:</strong> ${data.needs_review}</p>
-                        <p><strong>Output Preview:</strong></p>
-                        <pre>${data.output}</pre>
-                    `;
+                    let html = '<p class="success">✅ Analysis completed!</p>';
+                    
+                    // Show results for each agent
+                    for (const [agent, result] of Object.entries(data.results || {})) {
+                        html += `
+                            <div class="agent-result">
+                                <h4>${agent === 'psychological' ? '🧠 Psychological' : '🗣️ Voice'} Analysis</h4>
+                                <p><strong>Quality Score:</strong> ${result.quality || 'N/A'}</p>
+                                <p><strong>Output Preview:</strong></p>
+                                <pre>${result.output || 'No output'}</pre>
+                                ${result.patterns ? '<p><strong>Extracted Patterns:</strong></p><pre>' + JSON.stringify(result.patterns, null, 2) + '</pre>' : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    output.innerHTML = html;
                 } else {
                     output.innerHTML = `<p class="error">❌ Error: ${data.error}</p>`;
                 }
@@ -832,7 +902,6 @@ async def dashboard_v4():
     </body>
     </html>
     """
-
 
 if __name__ == "__main__":
     import uvicorn
