@@ -4,8 +4,7 @@ from typing import Dict, Any, Tuple, Optional, List
 from datetime import datetime
 import json
 import logging
-from langchain_anthropic import ChatAnthropic
-from team_icp.agents.base_agent_v4 import StandardAgentNodeV4
+from core.standard_agent_v4 import StandardAgentNodeV4
 from team_icp.prompts.voice_prompts import VoicePrompts
 
 logger = logging.getLogger(__name__)
