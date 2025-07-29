@@ -221,9 +221,9 @@ If there are multiple psychological profiles:
 Make every insight immediately actionable for marketing and sales implementation."""
 
     @staticmethod
-def get_conversion_intelligence_prompt() -> str:
-    """Prompt for applying psychological insights to conversion/marketing"""
-    return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
+    def get_conversion_intelligence_prompt() -> str:
+        """Prompt for applying psychological insights to conversion/marketing"""
+        return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
 that translates psychological insights into actionable marketing and sales applications.
 
 PSYCHOLOGICAL ANALYSIS:
@@ -290,6 +290,7 @@ If there are multiple psychological profiles:
 - Create segment-specific funnels
 
 Make every insight immediately actionable for marketing and sales implementation."""
+    
     @staticmethod
     def get_supplementary_prompts() -> dict:
         """Additional specialized prompts for specific analyses"""
