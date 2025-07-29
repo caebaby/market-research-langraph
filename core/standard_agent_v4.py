@@ -52,7 +52,8 @@ class StandardAgentNodeV4(ABC):
         try:
             # 1. MEMORY INITIALIZATION
             if state.get("memory_service"):
-                self.memory = MemoryAdapter(state["memory_service"])
+                self.memory = MemoryAdapter()
+                self.memory.service = state["memory_service"]  # Set it as an attribute instead
                 
                 # Recall relevant memories
                 memories = self._recall_relevant_memories()
