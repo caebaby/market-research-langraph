@@ -31,26 +31,29 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
     
     def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
         """Generate psychological analysis"""
-        # Build enhanced context with memories
-        enhanced_context = context
-        
+        # Build memory context
+        memory_patterns = ""
         if memories:
-            memory_context = "\n\nRELEVANT PAST ANALYSES:\n"
+            memory_patterns = "\n\nRELEVANT PAST ANALYSES:\n"
             for memory in memories[:3]:
                 content = memory.get("content", "")
                 quality = memory.get("quality", 0)
-                memory_context += f"\n[Quality: {quality:.2f}] {content[:200]}...\n"
-            enhanced_context += memory_context
-        
+                memory_patterns += f"\n[Quality: {quality:.2f}] {content[:200]}...\n"
+        else:
+            memory_patterns = "No previous patterns available"
+    
         # Get your existing sophisticated prompt
         analysis_prompt = PsychologicalPrompts.get_psychological_analysis_prompt()
-        print(f"[DEBUG] Analysis prompt length: {len(analysis_prompt)}")  # ADD THIS
-        print(f"[DEBUG] First 200 chars: {analysis_prompt[:200]}")  # ADD THIS
-        
-        # Format with context
-        formatted_prompt = f"{self.role_prompt}\n\n{analysis_prompt}\n\nCONTEXT:\n{enhanced_context}\n\nTASK:\n{task}"
-        print(f"[DEBUG] Total formatted prompt length: {len(formatted_prompt)}")  # ADD THIS
-        
+        print(f"[DEBUG] Analysis prompt length: {len(analysis_prompt)}")
+        print(f"[DEBUG] First 200 chars: {analysis_prompt[:200]}")
+    
+        # Format the prompt with the placeholders replaced
+        formatted_prompt = analysis_prompt.format(
+            business_context=context,
+            memory_patterns=memory_patterns
+        )
+        print(f"[DEBUG] Total formatted prompt length: {len(formatted_prompt)}")
+    
         # Generate response
         response = llm.invoke(formatted_prompt)
         return response.content if hasattr(response, 'content') else str(response)
