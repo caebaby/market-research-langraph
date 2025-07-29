@@ -149,11 +149,11 @@ Provide a comprehensive analysis with:
 
 Remember: You are a Level 5 agent with access to memory and patterns. Your analysis should be so psychologically accurate that the target customer would feel exposed, understood, and compelled to act. They should wonder if you've been reading their diary or eavesdropping on their therapy sessions."""
 
-@staticmethod
-def get_conversion_intelligence_prompt() -> str:
-    """Prompt for applying psychological insights to conversion/marketing"""
-    return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
-that translates psychological insights into actionable marketing and sales applications.
+    @staticmethod
+    def get_conversion_intelligence_prompt() -> str:
+        """Prompt for applying psychological insights to conversion/marketing"""
+        return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
+    that translates psychological insights into actionable marketing and sales applications.
 
 PSYCHOLOGICAL ANALYSIS:
 {psychological_analysis}
