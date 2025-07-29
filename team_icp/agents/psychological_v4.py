@@ -30,8 +30,9 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
         print(f"[L4 CHECK] HITL threshold: {self.review_threshold}")
     
     def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
-        """Generate psychological analysis"""
-        # Build memory context
+        """Generate psychological + conversion intelligence analysis"""
+    
+        # Build memory patterns
         memory_patterns = ""
         if memories:
             memory_patterns = "\n\nRELEVANT PAST ANALYSES:\n"
@@ -42,21 +43,38 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
         else:
             memory_patterns = "No previous patterns available"
     
-        # Get your existing sophisticated prompt
-        analysis_prompt = PsychologicalPrompts.get_psychological_analysis_prompt()
-        print(f"[DEBUG] Analysis prompt length: {len(analysis_prompt)}")
-        print(f"[DEBUG] First 200 chars: {analysis_prompt[:200]}")
-    
-        # Format the prompt with the placeholders replaced
-        formatted_prompt = analysis_prompt.format(
+        # FIRST: Deep psychological analysis
+        psych_prompt = PsychologicalPrompts.get_psychological_analysis_prompt()
+        formatted_psych_prompt = psych_prompt.format(
             business_context=context,
             memory_patterns=memory_patterns
         )
-        print(f"[DEBUG] Total formatted prompt length: {len(formatted_prompt)}")
     
-        # Generate response
-        response = llm.invoke(formatted_prompt)
-        return response.content if hasattr(response, 'content') else str(response)
+        print(f"[DEBUG] Running psychological analysis...")
+        psychological_result = llm.invoke(formatted_psych_prompt)
+    
+        # SECOND: Conversion intelligence using psychological insights
+        conversion_prompt = PsychologicalPrompts.get_conversion_intelligence_prompt()  # Need to add this method
+        formatted_conversion_prompt = conversion_prompt.format(
+            psychological_analysis=psychological_result.content,
+            business_context=context
+        )
+    
+        print(f"[DEBUG] Running conversion intelligence analysis...")
+        conversion_result = llm.invoke(formatted_conversion_prompt)
+    
+        # COMBINE both analyses
+        combined_analysis = f"""# DEEP PSYCHOLOGICAL INTELLIGENCE ANALYSIS
+
+    {psychological_result.content}
+
+    ---
+
+    # CONVERSION INTELLIGENCE APPLICATION
+
+    {conversion_result.content}"""
+    
+        return combined_analysis
     
     def _reflect(self, task: str, response: str, llm) -> Dict[str, Any]:
         """Evaluate psychological analysis quality"""
