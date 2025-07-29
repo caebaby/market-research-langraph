@@ -149,6 +149,147 @@ Provide a comprehensive analysis with:
 
 Remember: You are a Level 5 agent with access to memory and patterns. Your analysis should be so psychologically accurate that the target customer would feel exposed, understood, and compelled to act. They should wonder if you've been reading their diary or eavesdropping on their therapy sessions."""
 
+@staticmethod
+def get_conversion_intelligence_prompt() -> str:
+    """Prompt for applying psychological insights to conversion/marketing"""
+    return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
+that translates psychological insights into actionable marketing and sales applications.
+
+PSYCHOLOGICAL ANALYSIS:
+{psychological_analysis}
+
+BUSINESS CONTEXT:
+{business_context}
+
+PROVIDE CONVERSION INTELLIGENCE IN THESE AREAS:
+
+1. MESSAGING HIERARCHY
+Based on the psychological drivers discovered:
+- Primary message (addresses core wound/fear)
+- Supporting messages (address secondary concerns)
+- Proof messages (overcome specific doubts)
+
+2. EMOTIONAL JOURNEY MAPPING
+Design the optimal emotional progression:
+- Starting emotional state (where they are)
+- Transition emotions (bridge to solution)
+- Target emotional state (where they want to be)
+- Resistance points and how to address them
+
+3. TRUST ARCHITECTURE
+Based on their trust patterns:
+- What type of proof they need (data vs. stories vs. authority)
+- Trust-building sequence
+- Credibility markers that matter to them
+- Social proof that resonates
+
+4. OBJECTION PREEMPTION
+Address the unspoken objections:
+- Surface objections (what they'll say)
+- Real objections (what they really fear)
+- Identity objections (who they're afraid of becoming)
+- Investment objections (hidden concerns about cost/effort)
+
+5. CONVERSION TRIGGERS
+Identify specific triggers that drive action:
+- Urgency triggers (what makes them act now)
+- Identity triggers (who they want to become)
+- Social triggers (peer pressure points)
+- Loss triggers (what they're afraid of missing)
+
+6. OFFER POSITIONING
+Frame the solution to match their psychology:
+- Transformation promise (not just features)
+- Identity bridge (from current to desired self)
+- Safety mechanisms (reduce perceived risk)
+- Exclusivity elements (tribe belonging)
+
+7. COPY FRAMEWORKS
+Provide specific copy approaches:
+- Headlines that hit the core wound
+- Subheads that promise transformation
+- Body copy that tells their story
+- CTAs that feel like natural next steps
+
+8. SEGMENTATION STRATEGY
+If there are multiple psychological profiles:
+- Define distinct segments
+- Tailor messaging for each
+- Identify routing mechanisms
+- Create segment-specific funnels
+
+Make every insight immediately actionable for marketing and sales implementation."""
+
+    @staticmethod
+def get_conversion_intelligence_prompt() -> str:
+    """Prompt for applying psychological insights to conversion/marketing"""
+    return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
+that translates psychological insights into actionable marketing and sales applications.
+
+PSYCHOLOGICAL ANALYSIS:
+{psychological_analysis}
+
+BUSINESS CONTEXT:
+{business_context}
+
+PROVIDE CONVERSION INTELLIGENCE IN THESE AREAS:
+
+1. MESSAGING HIERARCHY
+Based on the psychological drivers discovered:
+- Primary message (addresses core wound/fear)
+- Supporting messages (address secondary concerns)
+- Proof messages (overcome specific doubts)
+
+2. EMOTIONAL JOURNEY MAPPING
+Design the optimal emotional progression:
+- Starting emotional state (where they are)
+- Transition emotions (bridge to solution)
+- Target emotional state (where they want to be)
+- Resistance points and how to address them
+
+3. TRUST ARCHITECTURE
+Based on their trust patterns:
+- What type of proof they need (data vs. stories vs. authority)
+- Trust-building sequence
+- Credibility markers that matter to them
+- Social proof that resonates
+
+4. OBJECTION PREEMPTION
+Address the unspoken objections:
+- Surface objections (what they'll say)
+- Real objections (what they really fear)
+- Identity objections (who they're afraid of becoming)
+- Investment objections (hidden concerns about cost/effort)
+
+5. CONVERSION TRIGGERS
+Identify specific triggers that drive action:
+- Urgency triggers (what makes them act now)
+- Identity triggers (who they want to become)
+- Social triggers (peer pressure points)
+- Loss triggers (what they're afraid of missing)
+
+6. OFFER POSITIONING
+Frame the solution to match their psychology:
+- Transformation promise (not just features)
+- Identity bridge (from current to desired self)
+- Safety mechanisms (reduce perceived risk)
+- Exclusivity elements (tribe belonging)
+
+7. COPY FRAMEWORKS
+Provide specific copy approaches:
+- Headlines that hit the core wound
+- Subheads that promise transformation
+- Body copy that tells their story
+- CTAs that feel like natural next steps
+
+8. SEGMENTATION STRATEGY
+If there are multiple psychological profiles:
+- Define distinct segments
+- Tailor messaging for each
+- Identify routing mechanisms
+- Create segment-specific funnels
+
+Make every insight immediately actionable for marketing and sales implementation."""
     @staticmethod
     def get_supplementary_prompts() -> dict:
         """Additional specialized prompts for specific analyses"""
