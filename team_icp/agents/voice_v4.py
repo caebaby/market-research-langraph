@@ -64,7 +64,7 @@ class VoiceAgentV4(StandardAgentNodeV4):
             business_context=business_context
         )
         
-        llm = self.get_llm()
+        llm = self.llm
         result = await llm.ainvoke(prompt)  # FIXED: Changed from synthesis_prompt to prompt
         return result.content
 
@@ -87,7 +87,7 @@ class VoiceAgentV4(StandardAgentNodeV4):
             competitor_insights=comp_context
         )
         
-        llm = self.get_llm()
+        llm = self.llm
         result = await llm.ainvoke(synthesis_prompt)
         return result.content
     
@@ -152,7 +152,7 @@ class VoiceAgentV4(StandardAgentNodeV4):
         Provide numerical scores for each criterion and calculate total."""
         
         try:
-            llm = self.get_llm()  # FIXED: Changed from self.llm to self.get_llm()
+            llm = self.llm  
             result = await llm.ainvoke(reflection_prompt)
             
             # Extract score (simple parsing - could be more robust)
@@ -196,35 +196,51 @@ Please provide more specific business context or try again."""
             state["shared_insights"] = {}
         state["shared_insights"][agent_name] = insight
 
-    def _generate_response(self, state: Dict[str, Any], previous_response: str = None, 
-                          iteration: int = 0, max_iterations: int = 3) -> str:
-        """Generate response - calls our main analysis method"""
-        return self.execute_core_analysis(state)
+    def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
+        """Generate response matching base class signature"""
+        # Store context in state for execute_core_analysis to use
+        self.state["business_context"] = context
+    
+        # For now, run synchronously (we'll handle async later)
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(self.execute_core_analysis(self.state))
+        loop.close()
+    
+        return result
 
-    def _reflect(self, response: str, state: Dict[str, Any]) -> Tuple[float, str]:
-        """Reflect on quality - calls our reflection method"""
-        return self.reflect_on_output(response)
-
-    def _create_shared_insights(self, state: Dict[str, Any], response: str, quality_score: float) -> Dict[str, Any]:
-        """Create insights to share with other agents"""
-        patterns = self._extract_key_patterns(response)
+    def _reflect(self, task: str, response: str, llm) -> Dict[str, Any]:
+        """Reflect on quality matching base class signature"""
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        score, critique = loop.run_until_complete(self.reflect_on_output(response))
+        loop.close()
+    
         return {
-            "summary": f"Extracted {len(patterns)} authentic language patterns with {quality_score:.1%} confidence",
-            "patterns": patterns,
-            "golden_phrase": self._extract_golden_phrase(response),
-            "quality_score": quality_score
+            "score": score,
+            "critique": critique
         }
 
-    def _extract_insights_for_memory(self, state: Dict[str, Any], response: str) -> List[Dict[str, Any]]:
-        """Extract insights for memory storage"""
+    def _extract_insights_for_memory(self, response: str) -> Dict[str, Any]:
+        """Extract insights matching base class signature"""
         patterns = self._extract_key_patterns(response)
-        return [{
-            "insight_type": "voice_patterns",
-            "business_context": state.get("business_context", ""),
+        return {
             "patterns": patterns,
             "golden_phrase": self._extract_golden_phrase(response),
             "timestamp": datetime.now().isoformat()
-        }]
+        }
+
+    def _create_shared_insights(self, response: str, quality: float) -> Dict[str, Any]:
+        """Create insights matching base class signature"""
+        patterns = self._extract_key_patterns(response)
+        return {
+            "summary": f"Extracted {len(patterns)} authentic language patterns",
+            "patterns": patterns,
+            "golden_phrase": self._extract_golden_phrase(response),
+            "quality_score": quality
+        }
 
 # Create instance for use in graph
 voice_agent_v4 = VoiceAgentV4()
