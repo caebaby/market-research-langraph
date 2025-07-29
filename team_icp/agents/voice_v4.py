@@ -26,7 +26,7 @@ class VoiceAgentV4(StandardAgentNodeV4):
         """Extract voice of customer with journal-level accuracy"""
         try:
             # Extract business context
-            business_context = self._extract_business_context(state)
+            business_context = self._extract_business_context()  # No parameters
             
             # Get shared insights from other agents
             psychological_insights = self._get_shared_insight(state, "psychological")
