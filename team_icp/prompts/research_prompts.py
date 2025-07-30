@@ -61,17 +61,7 @@ CONDUCT DEEP PSYCHOLOGICAL ANALYSIS USING ALL FRAMEWORKS:
    - Sunk Cost Fallacy: What past investments trap them?
    - Dunning-Kruger: Where do they overestimate their competence?
 
-5. VOICE OF CUSTOMER EXTRACTION:
-   Capture the EXACT phrases they would use in these scenarios:
-   - Venting to a spouse/friend: "I'm so sick of..."
-   - Google searching at 2 AM: "How to..."
-   - Justifying inaction: "I would, but..."
-   - Explaining to a colleague: "The problem is..."
-   - Internal dialogue: "I wish I could just..."
-   - Admitting defeat: "I've tried everything, but..."
-   - Expressing hope: "If only I could find..."
-
-6. BELIEF ARCHAEOLOGY:
+5.  BELIEF ARCHAEOLOGY:
    Surface beliefs vs. Deep beliefs for each area:
    - About themselves:
      * Surface: "I'm a successful professional"
@@ -86,7 +76,7 @@ CONDUCT DEEP PSYCHOLOGICAL ANALYSIS USING ALL FRAMEWORKS:
      * Surface: "I'm open to new ideas"
      * Deep: "Change means admitting I was wrong"
 
-7. IDENTITY PSYCHOLOGY ANALYSIS:
+6. IDENTITY PSYCHOLOGY ANALYSIS:
    - Current Identity Story: "I am someone who..."
    - Aspirational Identity: "I want to be someone who..."
    - Feared Identity: "I'm terrified of becoming someone who..."
@@ -95,7 +85,7 @@ CONDUCT DEEP PSYCHOLOGICAL ANALYSIS USING ALL FRAMEWORKS:
    - Identity Signals: How they signal their desired identity to others
    - Identity Conflicts: Where different identity aspects clash
 
-8. EMOTIONAL TRIGGER DEEP MAPPING:
+7. EMOTIONAL TRIGGER DEEP MAPPING:
    - Pride Triggers: 
      * Specific achievements that make them feel accomplished
      * Recognition types they crave
@@ -113,7 +103,7 @@ CONDUCT DEEP PSYCHOLOGICAL ANALYSIS USING ALL FRAMEWORKS:
      * Possibilities that excite them
      * Transformations they dream of
 
-9. CONTRADICTION DETECTION:
+8. CONTRADICTION DETECTION:
    Identify and explain these contradictions:
    - Say vs. Do: Claims they make vs. actual behavior
    - Want vs. Fear: Desires that conflict with fears
@@ -121,7 +111,7 @@ CONDUCT DEEP PSYCHOLOGICAL ANALYSIS USING ALL FRAMEWORKS:
    - Values vs. Actions: Stated values vs. daily choices
    - Logic vs. Emotion: Rational knowledge vs. emotional decisions
 
-10. HIDDEN OBJECTIONS & SECRET DOUBTS:
+9. HIDDEN OBJECTIONS & SECRET DOUBTS:
     Uncover the objections they'll never voice:
     - "This probably won't work for someone like me because..."
     - "I'm different from their other customers because..."
