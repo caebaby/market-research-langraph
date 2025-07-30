@@ -54,25 +54,26 @@ class PsychologicalAgentV4(StandardAgentNodeV4):
         psychological_result = llm.invoke(formatted_psych_prompt)
     
         # SECOND: Conversion intelligence using psychological insights
-        conversion_prompt = PsychologicalPrompts.get_conversion_intelligence_prompt()  # Need to add this method
+        conversion_prompt = PsychologicalPrompts.get_conversion_intelligence_prompt()
+        print(f"[DEBUG] Conversion prompt first 200 chars: {conversion_prompt[:200]}")  # ADD THIS LINE
         formatted_conversion_prompt = conversion_prompt.format(
             psychological_analysis=psychological_result.content,
             business_context=context
         )
-    
+
         print(f"[DEBUG] Running conversion intelligence analysis...")
         conversion_result = llm.invoke(formatted_conversion_prompt)
-    
+
         # COMBINE both analyses
         combined_analysis = f"""# DEEP PSYCHOLOGICAL INTELLIGENCE ANALYSIS
 
-    {psychological_result.content}
+        {psychological_result.content}
 
     ---
 
-    # CONVERSION INTELLIGENCE APPLICATION
+        # CONVERSION INTELLIGENCE APPLICATION
 
-    {conversion_result.content}"""
+        {conversion_result.content}"""
     
         return combined_analysis
     
