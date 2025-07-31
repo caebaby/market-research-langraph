@@ -557,58 +557,66 @@ async def analyze(request: Request):
             
             # Generate a client_id for this analysis session
             client_id = f"{team}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            shared_insights = {}  # Initialize this
             
-            # Execute actual agent analysis
-            for agent in agents:
-                try:
-                    state = {
-                        # Legacy fields for backward compatibility
-                        "task": f"{agent} analysis",
-                        "context": business_context,
-                        "new_data": True,
-                        "team": team,
-                        
-                        # StandardAgentNode required fields
-                        "current_task": {
-                            "description": f"Perform {agent} analysis for: {business_context[:200]}...",
-                            "is_high_stakes": False
-                        },
-                        "master_context": business_context,
-                        "business_context": business_context,
-                        "client_id": client_id,
-                        "shared_insights": shared_insights,
-                        
-                        # Services (if your graph doesn't provide them)
-                        "memory_service": memory_service,
-                        "tool_executor": tool_executor,
-                    }
+            print(f"[DEBUG] Starting analysis with {len(agents)} agents: {agents}")
+            print(f"[DEBUG] Client ID: {client_id}")
+            print(f"[DEBUG] Business context length: {len(business_context)} chars")
+            
+            # Execute actual agent analysis (run ONCE for all agents)
+            try:
+                state = {
+                    # Legacy fields for backward compatibility
+                    "task": f"ICP analysis",  # Changed - not specific to one agent
+                    "context": business_context,
+                    "new_data": True,
+                    "team": team,
                     
-                    result = await graph.ainvoke(state)
+                    # StandardAgentNode required fields
+                    "current_task": {
+                        "description": f"Perform ICP analysis for: {business_context[:200]}...",
+                        "is_high_stakes": False
+                    },
+                    "master_context": business_context,
+                    "business_context": business_context,
+                    "client_id": client_id,
+                    "shared_insights": shared_insights,
+                    "requested_agents": agents,  # ADD THIS LINE
                     
-                    # DEBUG: Log what we got back
-                    print(f"\n=== DEBUG: Result for {agent} ===")
-                    print(f"Keys in result: {list(result.keys())}")
-                    print(f"current_output exists: {'current_output' in result}")
-                    print(f"quality_score: {result.get('quality_score', 'NOT FOUND')}")
-                    print(f"agent_name: {result.get('agent_name', 'NOT FOUND')}")
-                    
-                    # Check for different possible output keys
-                    possible_output_keys = ['current_output', 'output', 'response', 'analysis', agent + '_analysis']
-                    for key in possible_output_keys:
-                        if key in result:
-                            print(f"Found output in key '{key}': {result[key][:200]}...")
-                            break
-                    
-                    # Extract results
+                    # Services (if your graph doesn't provide them)
+                    "memory_service": memory_service,
+                    "tool_executor": tool_executor,
+                }
+                
+                result = await graph.ainvoke(state)
+                
+                # DEBUG: Log what we got back
+                print(f"\n=== DEBUG: Result ===")
+                print(f"[DEBUG] Keys in result: {list(result.keys())}")
+                print(f"[DEBUG] current_output exists: {'current_output' in result}")
+                print(f"[DEBUG] quality_score: {result.get('quality_score', 'NOT FOUND')}")
+                print(f"[DEBUG] agent_name: {result.get('agent_name', 'NOT FOUND')}")
+                print(f"[DEBUG] shared_insights keys: {list(result.get('shared_insights', {}).keys())}")
+                print(f"[DEBUG] Requested agents: {agents}")
+                
+                # Check for different possible output keys
+                possible_output_keys = ['current_output', 'output', 'response', 'analysis', 'psychological_analysis', 'voice_analysis']
+                for key in possible_output_keys:
+                    if key in result:
+                        print(f"[DEBUG] Found output in key '{key}': {result[key][:200]}...")
+                        break
+                
+                # Process results for ALL agents
+                for agent in agents:
+                    # For now, all agents share the same output (graph runs sequentially)
+                    # In future, might need to extract agent-specific outputs
                     results[agent] = result.get("current_output", "Analysis completed but no output found")
                     overall_score = max(overall_score, result.get("quality_score", 0))
-                    
-                    # Update shared insights for next agent
-                    if "shared_insights" in result:
-                        shared_insights = result["shared_insights"]
-                    
-                except Exception as agent_error:
-                    print(f"Error executing {agent} agent: {agent_error}")
+                    print(f"[DEBUG] {agent} result length: {len(results[agent])}")
+                
+            except Exception as agent_error:
+                print(f"Error executing agents: {agent_error}")
+                for agent in agents:
                     results[agent] = f"Error during analysis: {str(agent_error)}"
         
         # Store in Supabase if available
@@ -630,6 +638,7 @@ async def analyze(request: Request):
         
         return {
             "analysis": results,
+            "agents": agents,
             "success_score": overall_score,
             "agent": f"{team} Platform",
             "timestamp": datetime.now().isoformat()
@@ -650,258 +659,6 @@ async def health():
         "supabase_connected": supabase is not None,
         "timestamp": datetime.now().isoformat()
     }
-
-@app.get("/test-v4")
-async def test_v4():
-    """Test Level 4 agents independently"""
-    try:
-        # Import V4 agents
-        from team_icp.agents.psychological_v4 import psychological_agent_v4
-        from team_icp.agents.voice_v4 import voice_agent_v4
-        
-        # Test context - rich business description
-        test_context = """
-        AI-powered coaching platform for executive coaches who want to scale their practice 
-        without burning out. They're typically 45-55, been coaching for 10+ years, making 
-        $150-300k but working 60+ hours a week and feeling like they can't take a vacation 
-        without their business falling apart. They're secretly worried about being replaced 
-        by AI but also exhausted from being the bottleneck in their business.
-        """
-        
-        # Create test state
-        test_state = {
-            "business_context": test_context,
-            "master_context": test_context,
-            "current_task": {
-                "description": "Analyze customer psychology and extract voice patterns",
-                "is_high_stakes": False
-            },
-            "client_id": "test_v4_client",
-            "shared_insights": {},
-            "memory_service": None,  # We'll add this later
-            "tool_executor": None
-        }
-        
-        # Run psychological agent first
-        psych_state = test_state.copy()
-        psych_result = psychological_agent_v4(psych_state)
-        
-        # Extract psychological insights for voice agent
-        psych_insights = psych_state.get("shared_insights", {}).get("psychological", {})
-        
-        # Run voice agent with psychological insights
-        voice_state = test_state.copy()
-        voice_state["shared_insights"] = {"psychological": psych_insights}
-        voice_result = voice_agent_v4(voice_state)
-        
-        # Format response
-        return {
-            "status": "Level 4 Agents Test",
-            "test_context": test_context,
-            "agents_tested": ["psychological_v4", "voice_v4"],
-            "results": {
-                "psychological": {
-                    "output": psych_result.get("current_output", "No output")[:1000] + "...",
-                    "quality_score": psych_result.get("quality_score", 0),
-                    "shared_insights": psych_insights
-                },
-                "voice": {
-                    "output": voice_result.get("current_output", "No output")[:1000] + "...",
-                    "quality_score": voice_result.get("quality_score", 0),
-                    "patterns_found": voice_state.get("shared_insights", {}).get("voice", {}).get("patterns", {})
-                }
-            },
-            "execution_time": "Check logs for timing"
-        }
-        
-    except Exception as e:
-        return {
-            "error": str(e),
-            "type": type(e).__name__,
-            "status": "Test failed"
-        }
-
-@app.post("/test-v4-execute")
-async def test_v4_execute(request: Request):
-    """Execute V4 agent tests with support for multiple agents"""
-    try:
-        data = await request.json()
-        business_context = data.get('business_context', '')
-        requested_agents = data.get('agents', ['psychological'])
-        
-        if not business_context:
-            return {"success": False, "error": "No business context provided"}
-        
-        # Import the classes directly since instances might not exist
-        from team_icp.agents.psychological_v4 import PsychologicalAgentV4
-        from team_icp.agents.voice_v4 import VoiceAgentV4
-        
-        # Create instances
-        psychological_agent = PsychologicalAgentV4()
-        voice_agent = VoiceAgentV4()
-        
-        # Create state
-        state = {
-            "business_context": business_context,
-            "master_context": business_context,
-            "current_task": {
-                "description": "Analyze this business context",
-                "is_high_stakes": False
-            },
-            "shared_insights": {},
-            "client_id": "test_v4",
-            "memory_service": None,
-            "tool_executor": None
-        }
-        
-        results = {}
-        
-        # Run psychological first if requested
-        if 'psychological' in requested_agents:
-            psych_state = state.copy()
-            psych_result = psychological_agent(psych_state)
-            
-            results['psychological'] = {
-                "output": psych_result.get("current_output", "No output")[:1000] + "...",
-                "quality": psych_result.get("quality_score", 0),
-                "needs_review": psych_result.get("requires_human_review", False)
-            }
-            
-            # Update shared insights for voice agent
-            state["shared_insights"] = psych_state.get("shared_insights", {})
-        
-        # Run voice if requested
-        if 'voice' in requested_agents:
-            voice_state = state.copy()
-            voice_result = voice_agent(voice_state)
-            
-            results['voice'] = {
-                "output": voice_result.get("current_output", "No output")[:1000] + "...",
-                "quality": voice_result.get("quality_score", 0),
-                "patterns": voice_state.get("shared_insights", {}).get("voice", {}).get("patterns", {})
-            }
-        
-        return {
-            "success": True,
-            "results": results
-        }
-        
-    except Exception as e:
-        print(f"V4 test error: {str(e)}")  # Changed from logger.error to print
-        return {"success": False, "error": str(e)}
-
-@app.get("/dashboard-v4", response_class=HTMLResponse)
-async def dashboard_v4():
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>V4 Agent Test Dashboard</title>
-        <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-            .container { background: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            textarea { width: 100%; height: 100px; margin: 10px 0; }
-            button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-            button:hover { background: #45a049; }
-            .results { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; }
-            .error { color: red; }
-            .success { color: green; }
-            #loading { display: none; }
-            .agent-selection { margin: 15px 0; }
-            .agent-checkbox { margin: 5px 10px 5px 0; }
-            .agent-result { margin: 15px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; }
-            .agent-result h4 { margin-top: 0; color: #333; }
-            pre { white-space: pre-wrap; word-wrap: break-word; }
-        </style>
-    </head>
-    <body>
-        <h1>🧪 V4 Agent Test Dashboard</h1>
-        
-        <div class="container">
-            <h2>Test Level 4 Agents</h2>
-            <textarea id="context" placeholder="Enter business context">AI-powered coaching platform for executive coaches who want to scale their practice without burning out. They're typically 45-55, been coaching for 10+ years, making $150-300k but working 60+ hours a week.</textarea>
-            
-            <div class="agent-selection">
-                <label class="agent-checkbox">
-                    <input type="checkbox" id="psychological" checked> 🧠 Psychological V4
-                </label>
-                <label class="agent-checkbox">
-                    <input type="checkbox" id="voice" checked> 🗣️ Voice V4
-                </label>
-            </div>
-            
-            <button onclick="testAgents()">Run V4 Analysis</button>
-            <div id="loading">⏳ Running analysis... (this may take 30-60 seconds)</div>
-        </div>
-        
-        <div id="results" class="results" style="display:none;">
-            <h3>Results:</h3>
-            <div id="output"></div>
-        </div>
-        
-        <script>
-        async function testAgents() {
-            const context = document.getElementById('context').value;
-            const loading = document.getElementById('loading');
-            const results = document.getElementById('results');
-            const output = document.getElementById('output');
-            
-            const agents = [];
-            if (document.getElementById('psychological').checked) agents.push('psychological');
-            if (document.getElementById('voice').checked) agents.push('voice');
-            
-            if (agents.length === 0) {
-                alert('Please select at least one agent');
-                return;
-            }
-            
-            loading.style.display = 'block';
-            results.style.display = 'none';
-            
-            try {
-                const response = await fetch('/test-v4-execute', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        business_context: context,
-                        agents: agents
-                    })
-                });
-                
-                const data = await response.json();
-                loading.style.display = 'none';
-                results.style.display = 'block';
-                
-                if (data.success) {
-                    let html = '<p class="success">✅ Analysis completed!</p>';
-                    
-                    // Show results for each agent
-                    for (const [agent, result] of Object.entries(data.results || {})) {
-                        html += `
-                            <div class="agent-result">
-                                <h4>${agent === 'psychological' ? '🧠 Psychological' : '🗣️ Voice'} Analysis</h4>
-                                <p><strong>Quality Score:</strong> ${result.quality || 'N/A'}</p>
-                                <p><strong>Output Preview:</strong></p>
-                                <pre>${result.output || 'No output'}</pre>
-                                ${result.patterns ? '<p><strong>Extracted Patterns:</strong></p><pre>' + JSON.stringify(result.patterns, null, 2) + '</pre>' : ''}
-                            </div>
-                        `;
-                    }
-                    
-                    output.innerHTML = html;
-                } else {
-                    output.innerHTML = `<p class="error">❌ Error: ${data.error}</p>`;
-                }
-            } catch (error) {
-                loading.style.display = 'none';
-                results.style.display = 'block';
-                output.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
-            }
-        }
-        </script>
-    </body>
-    </html>
-    """
 
 if __name__ == "__main__":
     import uvicorn
