@@ -8,9 +8,9 @@ class ICPResearchPrompts:
     """Battle-tested prompts for extracting visceral psychological insights"""
     
     @staticmethod
-def get_psychological_analysis_prompt() -> str:
-    """Main prompt for deep psychological analysis with all frameworks"""
-    return """SESSION ISOLATION: Analyze ONLY the current business context below. Do not reference or mix insights from previous business contexts.
+    def get_psychological_analysis_prompt() -> str:
+        """Main prompt for deep psychological analysis with all frameworks"""
+        return """SESSION ISOLATION: Analyze ONLY the current business context below. Do not reference or mix insights from previous business contexts.
 
 LEARNING ENHANCEMENT: Apply accumulated expertise in psychological frameworks and analysis techniques while maintaining complete separation between different business contexts.
 
