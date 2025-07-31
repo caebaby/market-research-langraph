@@ -607,12 +607,24 @@ async def analyze(request: Request):
                         break
                 
                 # Process results for ALL agents
-                for agent in agents:
-                    # For now, all agents share the same output (graph runs sequentially)
-                    # In future, might need to extract agent-specific outputs
-                    results[agent] = result.get("current_output", "Analysis completed but no output found")
-                    overall_score = max(overall_score, result.get("quality_score", 0))
-                    print(f"[DEBUG] {agent} result length: {len(results[agent])}")
+                if "result" in result and isinstance(result["result"], dict):
+                    # Extract from the result dict where each agent stores its output
+                    print(f"[DEBUG] Found 'result' dict with keys: {list(result['result'].keys())}")
+                    for agent in agents:
+                        if agent in result["result"]:
+                            results[agent] = result["result"][agent]
+                            print(f"[DEBUG] {agent} found in result dict, length: {len(results[agent])}")
+                        else:
+                            results[agent] = result.get("current_output", "No output found")
+                            print(f"[DEBUG] {agent} NOT in result dict, using current_output")
+                else:
+                    # Fallback to current_output
+                    print(f"[DEBUG] No 'result' dict found, using current_output for all agents")
+                    for agent in agents:
+                        results[agent] = result.get("current_output", "Analysis completed but no output found")
+                        print(f"[DEBUG] {agent} result length: {len(results[agent])}")
+
+                overall_score = result.get("quality_score", 0.0)
                 
             except Exception as agent_error:
                 print(f"Error executing agents: {agent_error}")
