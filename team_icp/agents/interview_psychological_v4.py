@@ -10,7 +10,7 @@ import json
 import re
 
 from core.standard_agent_v4 import StandardAgentNodeV4
-from team_icp.prompts.interview_prompts import InterviewPrompts
+from team_icp.prompts.interview_psychological_v4 import InterviewPrompts
 
 
 class PsychologicalInterviewAgentV4(StandardAgentNodeV4):
