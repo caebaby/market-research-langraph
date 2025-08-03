@@ -29,15 +29,10 @@ class PsychologicalInterviewAgentV4(StandardAgentNodeV4):
     def __init__(self):
         super().__init__(
             agent_name="Psychological Interview Specialist",
-            role_prompt="""You are an expert at conducting psychological depth interviews 
-            that reveal hidden customer truths. You create unnervingly realistic conversations 
-            where defense mechanisms drop and authentic pain emerges. Your interviews feel like 
-            actual customer research sessions, not scripted dialogues.""",
+            role_prompt="""You are an expert at conducting psychological depth interviews...""",
             target_quality=0.85,
-            require_human_review_below=0.7,
-            enable_web_search=True
+            require_human_review_below=0.7
         )
-        self.can_work_independently = True
         
     def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
         """Generate psychological interview simulations"""
