@@ -26,10 +26,12 @@ class ICPState(Dict):
 # Import V4 agents
 from ..agents.psychological_v4 import PsychologicalAgentV4
 from ..agents.voice_v4 import VoiceAgentV4
+from ..agents.interview_psychological_v4 import PsychologicalInterviewAgentV4
 
 # Create agent instances
 psychological_agent = PsychologicalAgentV4()
 voice_agent = VoiceAgentV4()
+psychological_interview_agent = PsychologicalInterviewAgentV4()
 
 # Create workflow
 workflow = StateGraph(ICPState)
@@ -88,6 +90,30 @@ def voice_node(state: ICPState) -> ICPState:
         
     return state
 
+def psychological_interview_node(state: ICPState) -> ICPState:
+    """Wrapper for psychological interview agent"""
+    # Update task
+    state["current_task"] = {
+        "description": "Create psychological depth interviews based on insights",
+        "is_high_stakes": False
+    }
+    
+    # Call the agent
+    updated_state = psychological_interview_agent(state)
+    
+    # Preserve all updates
+    if isinstance(updated_state, dict):
+        for key, value in updated_state.items():
+            state[key] = value
+    
+    # Store interview output in result
+    if "current_output" in state:
+        if "result" not in state:
+            state["result"] = {}
+        state["result"]["psychological_interviews"] = state["current_output"]
+    
+    return state
+
 # Add synthesis node (simple for now)
 def synthesis_node(state: ICPState) -> ICPState:
     """Simple synthesis - combines all results"""
@@ -105,6 +131,7 @@ def synthesis_node(state: ICPState) -> ICPState:
 # Add nodes
 workflow.add_node("psychological", psychological_node)
 workflow.add_node("voice", voice_node)
+workflow.add_node("psychological_interviews", psychological_interview_node)
 workflow.add_node("synthesis", synthesis_node)
 
 # Set entry point
@@ -112,7 +139,8 @@ workflow.set_entry_point("psychological")
 
 # Update edges - all agents in sequence
 workflow.add_edge("psychological", "voice")
-workflow.add_edge("voice", "synthesis")
+workflow.add_edge("voice", "psychological_interviews")
+workflow.add_edge("psychological_interviews", "synthesis")
 workflow.add_edge("synthesis", END)
 
 # Compile the graph
