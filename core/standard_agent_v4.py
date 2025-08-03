@@ -7,6 +7,8 @@ from typing import Dict, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod
 from datetime import datetime
 import json
+import requests  # ADD THIS
+import os       # ADD THIS (if not already there)
 
 from core.memory_adapter import MemoryAdapter
 
@@ -41,6 +43,47 @@ class StandardAgentNodeV4(ABC):
         self.state = None
         self.tools = None
         self._llm = None
+    
+    def web_search(self, query: str, num_results: int = 5) -> str:
+        """Search the web using Brave Search API"""
+        try:
+            api_key = os.getenv("BRAVE_SEARCH_API_KEY")
+            if not api_key:
+                return "Error: BRAVE_SEARCH_API_KEY not found in environment variables"
+            
+            url = "https://api.search.brave.com/res/v1/web/search"
+            headers = {
+                "Accept": "application/json",
+                "X-Subscription-Token": api_key
+            }
+            params = {
+                "q": query,
+                "count": num_results,
+                "text_decorations": False
+            }
+            
+            print(f"🔍 Searching web for: {query}")
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Format results for agent analysis
+            formatted_output = f"Web Search Results for: {query}\n\n"
+            
+            if "web" in data and "results" in data["web"]:
+                for i, result in enumerate(data["web"]["results"], 1):
+                    formatted_output += f"{i}. {result.get('title', 'No title')}\n"
+                    formatted_output += f"   URL: {result.get('url', '')}\n"
+                    formatted_output += f"   Description: {result.get('description', '')}\n\n"
+            else:
+                formatted_output += "No results found.\n"
+                
+            return formatted_output
+            
+        except Exception as e:
+            return f"Error searching web: {str(e)}"
+        
         
     def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """Main execution with Level 4 features"""
@@ -78,6 +121,24 @@ class StandardAgentNodeV4(ABC):
             
             # Generate response with memory context
             response = self._generate_response(task, business_context, memories, self.llm)
+            
+            # 2.5 CHECK FOR TOOL REQUEST (NEW!)
+            final_response = response
+            try:
+                tool_request = json.loads(response)
+                if isinstance(tool_request, dict) and tool_request.get("tool") == "web_search":
+                    print(f"🔧 {self.agent_name} requesting web search: {tool_request.get('query', '')}")
+                    
+                    # Execute web search
+                    search_results = self.web_search(tool_request.get("query", ""))
+                    
+                    # Re-generate response with search results
+                    enhanced_context = f"{business_context}\n\nWEB SEARCH RESULTS:\n{search_results}"
+                    final_response = self._generate_response(task, enhanced_context, memories, self.llm)
+                    print(f"✅ {self.agent_name} incorporated search results")
+            except (json.JSONDecodeError, TypeError):
+                # Not a tool request, use original response
+                pass
             
             # 3. QUALITY ASSESSMENT & REFLECTION
             reflection = self._reflect(task, response, self.llm)
@@ -134,7 +195,7 @@ class StandardAgentNodeV4(ABC):
             shared_insights = self._create_shared_insights(response, quality_score)
             
             # 8. UPDATE STATE
-            state["current_output"] = response
+            state["current_output"] = final_response
             state["agent_name"] = self.agent_name
             state["quality_score"] = quality_score
             state["reflection"] = reflection
