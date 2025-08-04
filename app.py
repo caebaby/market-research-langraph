@@ -567,11 +567,11 @@ async def analyze(request: Request):
             try:
                 state = {
                     # Legacy fields for backward compatibility
-                    "task": f"ICP analysis",  # Changed - not specific to one agent
+                    "task": f"ICP analysis",
                     "context": business_context,
                     "new_data": True,
                     "team": team,
-                    
+    
                     # StandardAgentNode required fields
                     "current_task": {
                         "description": f"Perform ICP analysis for: {business_context[:200]}...",
@@ -581,14 +581,14 @@ async def analyze(request: Request):
                     "business_context": business_context,
                     "client_id": client_id,
                     "shared_insights": shared_insights,
-                    "requested_agents": agents,  # ADD THIS LINE
-                    
-                    # Services (if your graph doesn't provide them)
+                    "requested_agents": agents,  # ✅ THIS IS THE KEY LINE
+    
+                    # Services
                     "memory_service": memory_service,
                     "tool_executor": tool_executor,
                 }
-                
-                result = await graph.ainvoke(state)
+
+result = await graph.ainvoke(state)
                 
                 # DEBUG: Log what we got back
                 print(f"\n=== DEBUG: Result ===")
