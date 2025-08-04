@@ -97,7 +97,8 @@ def psychological_interview_node(state: ICPState) -> ICPState:
         "description": "Create psychological depth interviews based on insights",
         "is_high_stakes": False
     }
-    
+
+
     # Call the agent
     updated_state = psychological_interview_agent(state)
     
@@ -138,10 +139,9 @@ workflow.add_node("synthesis", synthesis_node)
 workflow.set_entry_point("psychological")
 
 # Update edges - all agents in sequence
-workflow.add_edge("psychological", "voice")
-workflow.add_edge("voice", "psychological_interviews")
-workflow.add_edge("psychological_interviews", "synthesis")
-workflow.add_edge("synthesis", END)
+workflow.add_edge("psychological", "psychological_interviews")  
+workflow.add_edge("psychological_interviews", "voice")
+workflow.add_edge("voice", "synthesis")
 
 # Compile the graph
 graph = workflow.compile()
