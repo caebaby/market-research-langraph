@@ -52,13 +52,13 @@ speech patterns, emotional vulnerability, and breakthrough moments.""",
        # Format memories if available
        interview_patterns = self._format_interview_memories(memories, psychological_insights)
        
-        ## Get the prompt from research_prompts
-        try:
-            interview_prompt = InterviewPrompts.get_psychological_interviews(psychological_analysis=psychological_insights)
-            print(f"[{self.agent_name}] Using interview prompts")
-         except Exception as e:
-            print(f"[{self.agent_name}] Prompt generation error: {e}, using fallback")
-            interview_prompt = self._create_fallback_prompt(context, psychological_insights)
+       ## Get the prompt from research_prompts
+       try:
+           interview_prompt = InterviewPrompts.get_psychological_interviews(psychological_analysis=psychological_insights)
+           print(f"[{self.agent_name}] Using interview prompts")
+       except Exception as e:
+           print(f"[{self.agent_name}] Prompt generation error: {e}, using fallback")
+           interview_prompt = self._create_fallback_prompt(context, psychological_insights)
    
        # Enhance prompt with memory patterns
        enhanced_prompt = f"{interview_prompt}\n\n{interview_patterns}" if interview_patterns else interview_prompt
