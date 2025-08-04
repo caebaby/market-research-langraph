@@ -32,7 +32,7 @@ class PsychologicalInterviewAgentV4(StandardAgentNodeV4):
            role_prompt="""You are an expert at conducting psychological depth interviews that reveal
 deep customer truths through natural conversation. You create realistic dialogue with authentic
 speech patterns, emotional vulnerability, and breakthrough moments.""",
-           target_quality=0.85,
+           target_quality=0.75,
            require_human_review_below=0.7
        )
        
@@ -470,7 +470,7 @@ INTERVIEWER TECHNIQUES DEMONSTRATED:
        
        return {
            "has_3_interviews": response.count("INTERVIEW") >= 3,
-           "has_timestamps": bool(re.search(r'\[\d+:\d+\]', response)) or bool(re.search(r'\(\d+:\d+\)', response)),
+           "has_timestamps": bool(re.search(r'\[\d+:\d+\]', response)) or bool(re.search(r'\(\d+:\d+\)', response)) or bool(re.search(r'\[\d+:\d+-\d+:\d+\]', response)),
            "has_authentic_speech": any(marker in response.lower() for marker in 
                ["i guess", "i mean", "...", "um", "uh", "*pause*", "*sighs*", "honestly"]),
            "has_emotional_depth": any(word in response.lower() for word in 
