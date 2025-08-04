@@ -10,7 +10,7 @@ import json
 import re
 
 from core.standard_agent_v4 import StandardAgentNodeV4
-from team_icp.prompts.research_prompts import ICPResearchPrompts
+from team_icp.prompts.interview_psychological_v4 import InterviewPrompts
 
 
 class PsychologicalInterviewAgentV4(StandardAgentNodeV4):
@@ -54,7 +54,7 @@ speech patterns, emotional vulnerability, and breakthrough moments.""",
        
        # Get the prompt from research_prompts
        try:
-           interview_prompt = ICPResearchPrompts.get_psychological_interviews(psychological_insights)
+           interview_prompt = InterviewPrompts.get_interview_prompt(psychological_insights) # Or whatever the actual method name is in your InterviewPrompts class
            print(f"[{self.agent_name}] Using research prompts")
        except Exception as e:
            print(f"[{self.agent_name}] Prompt generation error: {e}, using fallback")
