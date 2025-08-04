@@ -104,11 +104,18 @@ def router_node(state: ICPState) -> ICPState:
 def route_to_next_agent(state: ICPState) -> str:
     requested = state.get("agents_to_run", [])
     current_index = state.get("current_agent_index", 0)
+    
+    # SAFETY CHECK - prevent infinite loops
+    if current_index >= 10:  # Maximum 10 iterations
+        logger.warning("Hit safety limit, routing to synthesis")
+        return "synthesis"
+    
     if current_index < len(requested):
         next_agent = requested[current_index]
         state["current_agent_index"] = current_index + 1
         logger.info(f"Routing to: {next_agent} (index: {current_index})")
         return next_agent
+    
     logger.info("All agents complete, routing to synthesis")
     return "synthesis"
 
