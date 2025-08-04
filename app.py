@@ -11,7 +11,7 @@ from typing import List, Optional
 # Load environment
 load_dotenv()
 
-# Try to import agents - handle gracefully if fails
+# Try to import agents
 try:
     from team_icp.workflows.graph import graph
     GRAPH_AVAILABLE = True
@@ -50,7 +50,6 @@ async def root():
 
 @app.get("/test")
 async def test():
-    """Quick test endpoint"""
     return {
         "message": "Level 5 Agent is running!",
         "graph_available": GRAPH_AVAILABLE,
@@ -144,18 +143,16 @@ async def dashboard():
                 <div class="header-stats">
                     <div class="stat"><div class="stat-value" id="totalReports">0</div><div class="stat-label">Reports</div></div>
                     <div class="stat"><div class="stat-value" id="avgQuality">0%</div><div class="stat-label">Avg Quality</div></div>
-                    <div class="stat"><div class="stat-value" id="activeAgents">0/6</div><div class="stat-label">Active Agents</div></div>
+                    <div class="stat"><div class="stat-value" id="activeAgents">0/3</div><div class="stat-label">Active Agents</div></div>
                 </div>
             </div>
         </div>
-
         <div class="container">
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('generate')">🚀 Generate</button>
                 <button class="tab" onclick="switchTab('reports')">📊 Reports</button>
                 <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
             </div>
-
             <div id="generate-tab" class="tab-content active">
                 <div class="form-section">
                     <h2>🎯 Business Intelligence Analysis</h2>
@@ -192,8 +189,6 @@ async def dashboard():
                         <div class="agent-selection">
                             <h3>Select Agents</h3>
                             <div class="agent-checkbox"><input type="checkbox" id="psychological" checked><label for="psychological">🧠 Psychological</label><span class="agent-status">Active</span></div>
-                            <div class="agent-checkbox"><input type="checkbox" id="conversion"><label for="conversion">🎯 Conversion</label><span class="agent-status">Active</span></div>
-                            <div class="agent-checkbox"><input type="checkbox" id="competitor"><label for="competitor">🔍 Competitor</label><span class="agent-status">Active</span></div>
                             <div class="agent-checkbox"><input type="checkbox" id="interview"><label for="interview">🎭 Interview</label><span class="agent-status">Active</span></div>
                             <div class="agent-checkbox"><input type="checkbox" id="voice"><label for="voice">🗣️ Voice</label><span class="agent-status">Active</span></div>
                             <div class="agent-checkbox"><input type="checkbox" id="synthesis"><label for="synthesis">📋 Synthesis</label><span class="agent-status">Active</span></div>
@@ -252,16 +247,13 @@ async def dashboard():
                 </div>
             </div>
         </div>
-
         <script src="/dashboard.js"></script>
     </body>
     </html>
     """
-   
 
 @app.get("/dashboard.js")
 async def dashboard_js():
-    """Serve the JavaScript separately to avoid string escaping issues"""
     js_content = """
 let currentReport = null;
 let reports = JSON.parse(localStorage.getItem('level5_reports') || '[]');
@@ -279,25 +271,20 @@ function switchTab(tab) {
 
 async function generateReport() {
     console.log('Generate report clicked');
-    
     const context = document.getElementById('businessContext').value.trim();
     if (!context) {
         alert('Please enter your business context to generate insights.');
         return;
     }
-    
     const team = document.getElementById('team').value;
     const agents = Array.from(document.querySelectorAll('.agent-checkbox input:checked')).map(cb => cb.id);
-    
     if (!agents.length) {
         alert('Please select at least one agent for analysis.');
         return;
     }
-
     document.getElementById('results').style.display = 'block';
     startProgress();
     document.getElementById('results').scrollIntoView({behavior: 'smooth'});
-
     try {
         const response = await fetch('/analyze', {
             method: 'POST',
@@ -310,12 +297,10 @@ async function generateReport() {
                 report_name: document.getElementById('reportName').value
             })
         });
-        
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || 'Analysis failed');
         }
-        
         const data = await response.json();
         currentReport = {
             ...data,
@@ -326,15 +311,12 @@ async function generateReport() {
             agents,
             team
         };
-        
         stopProgress();
         displayResults(currentReport);
-        
         const autoSave = document.getElementById('autoSave');
         if (autoSave && autoSave.value === 'true') {
             saveReport(true);
         }
-        
     } catch (error) {
         console.error('Error:', error);
         stopProgress();
@@ -345,22 +327,17 @@ async function generateReport() {
 function displayResults(data) {
     const score = ((data.success_score || 0) * 100).toFixed(1);
     let sections = '';
-    
     if (data.agents && data.analysis) {
         const agentIcons = {
             'psychological': '🧠',
-            'conversion': '🎯',
-            'competitor': '🔍',
             'interview': '🎭',
             'voice': '🗣️',
             'synthesis': '📋'
         };
-        
         data.agents.forEach(agent => {
             const icon = agentIcons[agent] || '📊';
             const agentName = agent.charAt(0).toUpperCase() + agent.slice(1);
-            const analysis = data.analysis[agent] || 'Analysis pending...';
-            
+            const analysis = data.analysis[agent] || data.analysis['psychological_interviews'] || 'Analysis pending...';
             sections += `
                 <div class="analysis-section">
                     <h3>${icon} ${agentName} Analysis</h3>
@@ -374,7 +351,6 @@ function displayResults(data) {
             `;
         });
     }
-    
     document.getElementById('resultsContent').innerHTML = `
         <div class="metrics-grid">
             <div class="metric-card"><div class="metric-value">${score}%</div><div class="metric-label">Quality Score</div></div>
@@ -419,7 +395,6 @@ function saveReport(silent = false) {
 
 function downloadReport() {
     if (!currentReport) return;
-    
     let content = 'ENTERPRISE INTELLIGENCE REPORT\\n';
     content += '==============================\\n';
     content += currentReport.name + '\\n';
@@ -432,14 +407,11 @@ function downloadReport() {
     content += currentReport.context + '\\n\\n';
     content += 'ANALYSIS RESULTS:\\n';
     content += '----------------\\n';
-    
     Object.entries(currentReport.analysis || {}).forEach(([agent, analysis]) => {
         content += agent.toUpperCase() + ' ANALYSIS:\\n' + analysis + '\\n\\n';
     });
-    
     content += '---\\n';
     content += 'Generated by Level 5 Enterprise Intelligence Platform\\n';
-    
     const blob = new Blob([content], {type: 'text/plain'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -484,10 +456,10 @@ function updateStats() {
     if (reports.length > 0) {
         const avgScore = (reports.reduce((sum, r) => sum + (r.success_score || 0), 0) / reports.length * 100).toFixed(1);
         document.getElementById('avgQuality').textContent = avgScore + '%';
-        document.getElementById('activeAgents').textContent = '6/6';
+        document.getElementById('activeAgents').textContent = '3/3';
     } else {
         document.getElementById('avgQuality').textContent = '0%';
-        document.getElementById('activeAgents').textContent = '0/6';
+        document.getElementById('activeAgents').textContent = '0/3';
     }
 }
 
@@ -505,7 +477,6 @@ function hitlAction(agent, action) {
     alert(action.charAt(0).toUpperCase() + action.slice(1) + 'd ' + agent + ' analysis.');
 }
 
-// Check system status on load
 fetch('/test').then(r => r.json()).then(data => {
     if (!data.graph_available) {
         console.warn('Graph system not available - running in mock mode');
@@ -531,107 +502,59 @@ async def analyze(request: Request):
         if not agents:
             raise HTTPException(status_code=400, detail="At least one agent must be selected")
         
+        # Filter valid agents
+        valid_agents = ['psychological', 'interview', 'voice', 'synthesis']
+        agents = [agent for agent in agents if agent in valid_agents]
+        
         results = {}
         overall_score = 0.0
-        shared_insights = {}  # For agent communication
+        shared_insights = {}
         
-        # Check if graph is available
         if not GRAPH_AVAILABLE:
-            # Fallback: return mock data if graph isn't available
             print("Warning: Running in mock mode - graph not available")
             for agent in agents:
                 results[agent] = f"Mock {agent} analysis for: {business_context[:100]}... (Graph system not available - this is test data)"
-                overall_score = 0.75  # Mock score
+                overall_score = 0.75
         else:
-            # Initialize services (these should be provided by your graph)
-            # If your graph provides these, remove this section
             try:
                 from core.memory import HybridMemory
-                from core.tools import ToolBox
                 memory_service = HybridMemory()
-                tool_executor = ToolBox()
             except ImportError:
                 memory_service = None
+                print("Warning: Memory service not available")
+
+            try:
+                from core.tools import ToolBox
+                tool_executor = ToolBox()
+                print("Tool executor initialized successfully")
+            except ImportError as e:
                 tool_executor = None
-                print("Warning: Memory/Tool services not available")
+                print(f"Warning: Tool services not available: {e}")
             
-            # Generate a client_id for this analysis session
             client_id = f"{team}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            shared_insights = {}  # Initialize this
+            
+            state = {
+                "task": f"ICP analysis",
+                "context": business_context,
+                "new_data": True,
+                "team": team,
+                "master_context": business_context,
+                "business_context": business_context,
+                "client_id": client_id,
+                "shared_insights": shared_insights,
+                "memory_service": memory_service,
+                "tool_executor": tool_executor,
+                "requested_agents": agents
+            }
             
             print(f"[DEBUG] Starting analysis with {len(agents)} agents: {agents}")
-            print(f"[DEBUG] Client ID: {client_id}")
-            print(f"[DEBUG] Business context length: {len(business_context)} chars")
+            result = await graph.ainvoke(state)
             
-            # Execute actual agent analysis (run ONCE for all agents)
-            try:
-                state = {
-                    # Legacy fields for backward compatibility
-                    "task": f"ICP analysis",
-                    "context": business_context,
-                    "new_data": True,
-                    "team": team,
-    
-                    # StandardAgentNode required fields
-                    "current_task": {
-                        "description": f"Perform ICP analysis for: {business_context[:200]}...",
-                        "is_high_stakes": False
-                    },
-                    "master_context": business_context,
-                    "business_context": business_context,
-                    "client_id": client_id,
-                    "shared_insights": shared_insights,
-                    "requested_agents": agents,  # ✅ THIS IS THE KEY LINE
-    
-                    # Services
-                    "memory_service": memory_service,
-                    "tool_executor": tool_executor,
-                }
-
-result = await graph.ainvoke(state)
-                
-                # DEBUG: Log what we got back
-                print(f"\n=== DEBUG: Result ===")
-                print(f"[DEBUG] Keys in result: {list(result.keys())}")
-                print(f"[DEBUG] current_output exists: {'current_output' in result}")
-                print(f"[DEBUG] quality_score: {result.get('quality_score', 'NOT FOUND')}")
-                print(f"[DEBUG] agent_name: {result.get('agent_name', 'NOT FOUND')}")
-                print(f"[DEBUG] shared_insights keys: {list(result.get('shared_insights', {}).keys())}")
-                print(f"[DEBUG] Requested agents: {agents}")
-                
-                # Check for different possible output keys
-                possible_output_keys = ['current_output', 'output', 'response', 'analysis', 'psychological_analysis', 'voice_analysis']
-                for key in possible_output_keys:
-                    if key in result:
-                        print(f"[DEBUG] Found output in key '{key}': {result[key][:200]}...")
-                        break
-                
-                # Process results for ALL agents
-                if "result" in result and isinstance(result["result"], dict):
-                    # Extract from the result dict where each agent stores its output
-                    print(f"[DEBUG] Found 'result' dict with keys: {list(result['result'].keys())}")
-                    for agent in agents:
-                        if agent in result["result"]:
-                            results[agent] = result["result"][agent]
-                            print(f"[DEBUG] {agent} found in result dict, length: {len(results[agent])}")
-                        else:
-                            results[agent] = result.get("current_output", "No output found")
-                            print(f"[DEBUG] {agent} NOT in result dict, using current_output")
-                else:
-                    # Fallback to current_output
-                    print(f"[DEBUG] No 'result' dict found, using current_output for all agents")
-                    for agent in agents:
-                        results[agent] = result.get("current_output", "Analysis completed but no output found")
-                        print(f"[DEBUG] {agent} result length: {len(results[agent])}")
-
-                overall_score = result.get("quality_score", 0.0)
-                
-            except Exception as agent_error:
-                print(f"Error executing agents: {agent_error}")
-                for agent in agents:
-                    results[agent] = f"Error during analysis: {str(agent_error)}"
+            results = result.get("result", {})
+            overall_score = result.get("quality_score", 0.75)
+            if "shared_insights" in result:
+                shared_insights = result["shared_insights"]
         
-        # Store in Supabase if available
         if supabase:
             try:
                 supabase.table("reports").insert({
@@ -642,27 +565,23 @@ result = await graph.ainvoke(state)
                     "agents": agents,
                     "results": results,
                     "success_score": overall_score,
-                    "timestamp": datetime.now().isoformat()
+                    "created_at": datetime.now().isoformat()
                 }).execute()
             except Exception as db_error:
                 print(f"Database storage failed: {db_error}")
-                # Continue anyway - don't fail the whole request
         
         return {
             "analysis": results,
-            "agents": agents,
             "success_score": overall_score,
             "agent": f"{team} Platform",
             "timestamp": datetime.now().isoformat()
         }
-        
     except HTTPException:
         raise
     except Exception as e:
         print(f"Unexpected error in analyze endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-# Health check endpoint
 @app.get("/health")
 async def health():
     return {
