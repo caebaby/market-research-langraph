@@ -110,7 +110,7 @@ def router_node(state: ICPState) -> ICPState:
     state.setdefault("result", {})
     state.setdefault("quality", 0.0)
     state.setdefault("shared_insights", {})
-    state["current_agent_index"] = 0
+    state.setdefault("current_agent_index", 0)
     state["agents_to_run"] = requested
     return state
 
