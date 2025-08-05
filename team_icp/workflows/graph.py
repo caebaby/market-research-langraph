@@ -52,6 +52,10 @@ def psychological_node(state: ICPState) -> ICPState:
                 state[key] = value
     if "current_output" in state and state["current_output"]:
         state.setdefault("result", {})["psychological"] = state["current_output"]
+
+    state["current_agent_index"] = state.get("current_agent_index", 0) + 1
+    print(f"[PSYCHOLOGICAL] Incremented index to: {state['current_agent_index']}")
+    
     return state
 
 def interview_node(state: ICPState) -> ICPState:
@@ -67,6 +71,11 @@ def interview_node(state: ICPState) -> ICPState:
                 state[key] = value
     if "current_output" in state and state["current_output"]:
         state.setdefault("result", {})["interview"] = state["current_output"]
+
+    # ADD THESE TWO LINES HERE:
+    state["current_agent_index"] = state.get("current_agent_index", 0) + 1
+    print(f"[INTERVIEW] Incremented index to: {state['current_agent_index']}")
+    
     return state
 
 def voice_node(state: ICPState) -> ICPState:
@@ -82,6 +91,10 @@ def voice_node(state: ICPState) -> ICPState:
                 state[key] = value
     if "current_output" in state and state["current_output"]:
         state.setdefault("result", {})["voice"] = state["current_output"]
+
+    state["current_agent_index"] = state.get("current_agent_index", 0) + 1
+    print(f"[VOICE] Incremented index to: {state['current_agent_index']}")
+    
     return state
 
 def synthesis_node(state: ICPState) -> ICPState:
@@ -105,14 +118,18 @@ def route_to_next_agent(state: ICPState) -> str:
     requested = state.get("agents_to_run", [])
     current_index = state.get("current_agent_index", 0)
     
-    # SAFETY CHECK - prevent infinite loops
-    if current_index >= 10:  # Maximum 10 iterations
+    print(f"[ROUTER DEBUG] Called from: {state.get('agent_name', 'unknown')}")
+    print(f"[ROUTER DEBUG] Requested agents: {requested}")
+    print(f"[ROUTER DEBUG] Current index: {current_index}")
+    
+    if current_index >= 10:
         logger.warning("Hit safety limit, routing to synthesis")
         return "synthesis"
     
     if current_index < len(requested):
         next_agent = requested[current_index]
-        state["current_agent_index"] = current_index + 1
+        # REMOVE THIS LINE - routing functions can't modify state!
+        # state["current_agent_index"] = current_index + 1
         logger.info(f"Routing to: {next_agent} (index: {current_index})")
         return next_agent
     
@@ -133,14 +150,10 @@ workflow.add_conditional_edges(
     {"psychological": "psychological", "interview": "interview", "voice": "voice", "synthesis": "synthesis"}
 )
 
-for agent in ["psychological", "interview", "voice"]:
-    workflow.add_conditional_edges(
-        agent,
-        route_to_next_agent,
-        {"psychological": "psychological", "interview": "interview", "voice": "voice", "synthesis": "synthesis"}
-    )
-
-workflow.add_edge("synthesis", END)
+# Each agent goes back to router for next decision
+workflow.add_edge("psychological", "router")
+workflow.add_edge("interview", "router")
+workflow.add_edge("voice", "router")
 
 graph = workflow.compile()
 
