@@ -1,164 +1,189 @@
-# team_icp/prompts/interview_sales_v4.py
+# team_icp/agents/interview_sales_v4.py
 """
-Sales Interview Agent Prompts - Creates realistic sales discovery interviews
+Level 4 Sales Interview Agent - Extracts buying psychology and objections through realistic interviews
 """
 
-class SalesInterviewPrompts:
-    """Prompts for sales intelligence interview simulations"""
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+import json
+import re
+
+from core.standard_agent_v4 import StandardAgentNodeV4
+from team_icp.prompts.interview_sales_v4 import SalesInterviewPrompts
+
+
+class SalesInterviewAgentV4(StandardAgentNodeV4):
+    """
+    Creates 3 sales-focused interviews revealing objections, buying criteria, and decision psychology.
+    """
     
-    @staticmethod
-    def get_sales_interviews(psychological_analysis=None, business_context=None):
-        """Create 3 sales intelligence interviews focused on objections and buying criteria"""
+    def __init__(self):
+        super().__init__(
+            agent_name="Sales Intelligence Interview Specialist",
+            role_prompt="""You are an expert at conducting sales discovery interviews that reveal
+buying psychology, objections, and decision criteria. You create realistic sales conversations
+that uncover what prospects need to know and believe to make a purchase.""",
+            target_quality=0.75,
+            require_human_review_below=0.6
+        )
         
-        base_prompt = """
-**SALES INTELLIGENCE INTERVIEW SIMULATION**
-
-**OBJECTIVE**: Create 3 realistic customer interviews that extract critical sales intelligence: current problems, pain intensity, desires, solution history, beliefs, objections, and buying criteria. Focus on uncovering what they need to know/believe to invest in change.
-
-**SALES INTELLIGENCE PRIORITIES:**
-- **Current Problems**: Specific operational and emotional challenges they face daily
-- **Pain Intensity**: How much these problems actually cost them (time, money, stress, relationships)
-- **Magic Wand Desires**: What they'd change if they could wave a magic wand
-- **Solution History**: What they've tried before and why it didn't work
-- **Beliefs About Solutions**: What they think about available options
-- **Objections**: What stops them from taking action
-- **Buying Criteria**: What they need to know/believe to invest in a solution
-
-**INTERVIEW QUALITY STANDARDS:**
-- Natural sales conversation flow
-- Gradual trust building
-- Realistic objection patterns
-- Authentic business language
-- Clear buying signals or barriers
-"""
+    def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
+        """Generate sales interview simulations"""
         
-        if psychological_analysis:
-            prompt = f"{base_prompt}\n\nPSYCHOLOGICAL FOUNDATION:\n{psychological_analysis}\n\n"
-            prompt += """Use the psychological insights to dig deeper into the emotional drivers behind objections."""
-        else:
-            prompt = f"{base_prompt}\n\nBUSINESS CONTEXT:\n{business_context}\n\n"
-        
-        prompt += """
-## INTERVIEW 1: CURRENT PROBLEMS & PAIN EXTRACTION
-
-Create a 600-800 word interview focused on understanding their current situation.
-
-**Interviewer**: I'm researching challenges that [industry professionals] face. What would you say are your biggest day-to-day problems right now?
-
-**Customer**: [Start with surface problems, then probe deeper to reveal specific pain points]
-
-Continue the conversation to uncover:
-- Specific examples of how problems manifest
-- Actual costs (time, money, stress, relationships)
-- What they'd fix with a magic wand
-- Previous solution attempts
-- Current beliefs about available solutions
-- What stops them from making changes
-- What they'd need to believe to take action
-
-## INTERVIEW 2: SOLUTION BELIEFS & OBJECTION DEEP DIVE
-
-Create a 600-800 word interview exploring their beliefs about solutions and hidden objections.
-
-**Interviewer**: You mentioned you've looked into different approaches. What's your honest opinion about [solution type]?
-
-**Customer**: [Reveal beliefs about solutions, both positive and negative]
-
-Continue probing to discover:
-- Specific concerns about the approach
-- Past experiences with similar solutions
-- What would need to be true for confidence
-- Financial vs psychological barriers
-- Proof requirements and validation needs
-
-## INTERVIEW 3: BUYING PSYCHOLOGY & DECISION CRITERIA
-
-Create a 600-800 word interview revealing how they make buying decisions.
-
-**Interviewer**: You seem thoughtful about big decisions. How do you typically evaluate major changes to your practice?
-
-**Customer**: [Reveal decision-making process based on psychological patterns]
-
-Explore:
-- What would prioritize this change
-- Ideal support structure needed
-- Questions requiring answers before investing
-- Preferred learning/buying process
-- Success metrics and expectations
-
-**DELIVERABLE REQUIREMENTS:**
-- 3 complete sales intelligence interviews
-- Specific problem identification with pain intensity
-- Solution history showing what hasn't worked
-- Belief system mapping about available solutions
-- Objection inventory with underlying drivers
-- Buying criteria for confident decision-making
-- Conversion psychology insights
-
-End with:
-
-## SALES INTELLIGENCE EXTRACTION
-
-**CURRENT PROBLEMS IDENTIFIED:**
-[List specific problems with pain ratings]
-
-**MAGIC WAND DESIRES:**
-[What they'd change if they could]
-
-**SOLUTION HISTORY & FAILURES:**
-[What they've tried and why it failed]
-
-**PRIMARY OBJECTIONS:**
-[Financial, implementation, capability, validation needs]
-
-**BUYING CRITERIA REVEALED:**
-[What they need to know/believe to buy]
-
-**CONVERSION INSIGHTS:**
-[Urgency drivers, social proof needs, risk reversal requirements]
-"""
-        
-        return prompt
+        # Extract psychological insights if available
+        psychological_insights = self._extract_psychological_insights(context)
+        if not psychological_insights:
+            psychological_insights = context
     
-    @staticmethod
-    def get_sales_reflection_prompt():
-        """Prompt for evaluating sales interview quality"""
+        # Get the sales interview prompt
+        try:
+            interview_prompt = SalesInterviewPrompts.get_sales_interviews(psychological_analysis=psychological_insights)
+            print(f"[{self.agent_name}] Using sales interview prompts")
+        except Exception as e:
+            print(f"[{self.agent_name}] Prompt error: {e}, using fallback")
+            interview_prompt = self._create_fallback_prompt(context)
+    
+        # Web search for validation if needed
+        if self.web_search and "objection" in task.lower():
+            search_query = f"{self._extract_industry(context)} sales objections buying criteria"
+            search_results = self.web_search(search_query, num_results=5)
+            if search_results and "Error" not in search_results:
+                interview_prompt += f"\n\nCOMMON OBJECTIONS FROM WEB:\n{search_results[:1000]}"
+    
+        # Generate interviews
+        print(f"[{self.agent_name}] Creating 3 sales intelligence interviews...")
+        response = llm.invoke(interview_prompt)
+        output = response.content if hasattr(response, 'content') else str(response)
         
-        return """
-Evaluate these sales interviews as an expert sales trainer would:
+        return output
+    
+    def _reflect(self, task: str, response: str, llm) -> Dict[str, Any]:
+        """Evaluate sales interview quality"""
+        
+        reflection_prompt = f"""Evaluate these sales interviews for effectiveness:
 
-1. PROBLEM DISCOVERY (0.0-1.0): How well do we understand their pain?
-   - Specific problems identified
-   - Pain intensity understood
-   - Cost of inaction clear
-   - Emotional impact revealed
+INTERVIEWS TO EVALUATE:
+{response[:4000]}...
 
-2. OBJECTION HANDLING (0.0-1.0): Are real objections uncovered?
-   - Surface objections identified
-   - Hidden concerns revealed
-   - Root causes understood
-   - Objection patterns clear
+CRITERIA:
+1. Problem/Pain Extraction - Do we understand their real problems?
+2. Objection Discovery - Are hidden objections revealed?
+3. Buying Criteria - Is decision process clear?
+4. Authenticity - Natural sales conversation flow?
+5. Actionability - Can sales team use these insights?
 
-3. BUYING CRITERIA (0.0-1.0): Is their decision process clear?
-   - What they need to know
-   - What they need to believe
-   - Proof requirements
-   - Success metrics
+End with OVERALL_SCORE: [0.0-1.0]"""
+        
+        reflection_result = llm.invoke(reflection_prompt).content
+        score = self._parse_reflection_score(reflection_result)
+        
+        return {
+            "critique": reflection_result,
+            "score": score
+        }
+    
+    def _extract_insights_for_memory(self, response: str) -> Dict[str, Any]:
+        """Extract sales patterns for future use"""
+        
+        insights = {
+            "common_objections": [],
+            "buying_triggers": [],
+            "decision_criteria": [],
+            "pain_points": [],
+            "solution_beliefs": []
+        }
+        
+        # Extract objections
+        objection_patterns = [
+            r"I need to think about it",
+            r"too expensive",
+            r"not the right time",
+            r"need to check with",
+            r"tried before and"
+        ]
+        
+        for pattern in objection_patterns:
+            if re.search(pattern, response, re.IGNORECASE):
+                insights["common_objections"].append(pattern)
+        
+        # Extract pain points
+        if "hours a week" in response:
+            insights["pain_points"].append("Time/workload issues")
+        if "can't scale" in response or "bottleneck" in response:
+            insights["pain_points"].append("Scaling challenges")
+            
+        return insights
+    
+    def _create_shared_insights(self, response: str, quality: float) -> Dict[str, Any]:
+        """Share sales intelligence with other agents"""
+        
+        return {
+            "summary": f"Conducted 3 sales interviews revealing objections and buying criteria. Quality: {quality:.2f}",
+            "key_objections": self._extract_objections(response),
+            "buying_criteria": self._extract_buying_criteria(response),
+            "pain_intensity": self._assess_pain_intensity(response),
+            "quality_score": quality
+        }
+    
+    # Helper methods
+    def _extract_psychological_insights(self, context: str) -> str:
+        """Same as psychological interview agent"""
+        if self.state and "shared_insights" in self.state:
+            shared = self.state["shared_insights"]
+            for agent_name in ["Psychological Analyst V4", "psychological"]:
+                if agent_name in shared:
+                    return str(shared[agent_name].get("summary", ""))
+        return ""
+    
+    def _extract_industry(self, context: str) -> str:
+        """Extract industry for targeted search"""
+        context_lower = context.lower()
+        if 'coach' in context_lower:
+            return 'executive coaching'
+        elif 'tech' in context_lower:
+            return 'technology'
+        return 'business'
+    
+    def _create_fallback_prompt(self, context: str) -> str:
+        """Fallback if main prompt fails"""
+        return f"""Create 3 sales discovery interviews for {context}.
+        
+Focus on:
+1. Current problems and pain intensity
+2. What they've tried before
+3. Objections and concerns
+4. What they need to believe to buy
+5. Decision-making process
 
-4. CONVERSATION QUALITY (0.0-1.0): Does it feel like a real sales call?
-   - Natural flow
-   - Trust building progression
-   - Authentic responses
-   - Realistic pacing
-
-5. ACTIONABILITY (0.0-1.0): Can a salesperson use these insights?
-   - Clear next steps
-   - Specific talking points
-   - Objection responses
-   - Positioning guidance
-
-Provide specific examples of strengths and weaknesses.
-
-CRITICAL: End your evaluation with:
-OVERALL_SCORE: [number between 0.0 and 1.0]
-"""
+Make conversations realistic with natural sales dialogue."""
+    
+    def _parse_reflection_score(self, reflection_text: str) -> float:
+        """Extract score from reflection"""
+        patterns = [
+            r'OVERALL_SCORE:\s*([0-9.]+)',
+            r'Score:\s*([0-9.]+)',
+            r'\b([0-9]\.[0-9]+)\b'
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, reflection_text, re.IGNORECASE)
+            if match:
+                try:
+                    return float(match.group(1))
+                except:
+                    continue
+        return 0.7  # Default
+    
+    def _extract_objections(self, response: str) -> List[str]:
+        """Extract main objections from interviews"""
+        objections = []
+        
+        objection_markers = [
+            "but", "however", "concern", "worry", "problem with",
+            "not sure", "hesitant", "need to think"
+        ]
+        
+        lines = response.split('\n')
+        for line in lines:
+            if any(marker in line.lower() for marker in objection_markers):
+                obj
