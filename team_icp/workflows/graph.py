@@ -31,10 +31,12 @@ class ICPState(Dict):
 # Import agents
 from ..agents.psychological import PsychologicalAgent
 from ..agents.interview_psychological_v4 import PsychologicalInterviewAgentV4
+from ..agents.interview_sales_v4 import SalesInterviewAgentV4  # ADD THIS LINE
 from ..agents.voice import VoiceAgent
 
 psychological_agent = PsychologicalAgent()
 interview_agent = PsychologicalInterviewAgentV4()
+sales_interview_agent = SalesInterviewAgentV4()  # ADD THIS LINE
 voice_agent = VoiceAgent()
 
 workflow = StateGraph(ICPState)
