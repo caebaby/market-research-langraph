@@ -189,36 +189,36 @@ Make conversations realistic with natural sales dialogue."""
                 objections.append(line.strip())
             
         return objections[:5]  # Top 5
-
-def _extract_buying_criteria(self, response: str) -> List[str]:
-    """Extract what they need to make a decision"""
-    criteria = []
     
-    criteria_patterns = [
-        r"need to (?:know|see|understand) ([^.]+)",
-        r"would (?:help|convince|need) ([^.]+)",
-        r"if (?:I could|you could|it could) ([^.]+)"
-    ]
+    def _extract_buying_criteria(self, response: str) -> List[str]:
+        """Extract what they need to make a decision"""
+        criteria = []
     
-    for pattern in criteria_patterns:
-        matches = re.findall(pattern, response, re.IGNORECASE)
-        criteria.extend(matches)
+        criteria_patterns = [
+            r"need to (?:know|see|understand) ([^.]+)",
+            r"would (?:help|convince|need) ([^.]+)",
+            r"if (?:I could|you could|it could) ([^.]+)"
+        ]
+    
+        for pattern in criteria_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            criteria.extend(matches)
         
-    return list(set(criteria))[:5]
+        return list(set(criteria))[:5]
 
-def _assess_pain_intensity(self, response: str) -> str:
-    """Assess how intense their pain is"""
-    high_pain_words = ["desperate", "killing me", "can't continue", "breaking point"]
-    medium_pain_words = ["frustrated", "challenging", "difficult", "struggling"]
+    def _assess_pain_intensity(self, response: str) -> str:
+        """Assess how intense their pain is"""
+        high_pain_words = ["desperate", "killing me", "can't continue", "breaking point"]
+        medium_pain_words = ["frustrated", "challenging", "difficult", "struggling"]
     
-    response_lower = response.lower()
+        response_lower = response.lower()
     
-    if any(word in response_lower for word in high_pain_words):
-        return "HIGH - Ready to act"
-    elif any(word in response_lower for word in medium_pain_words):
-        return "MEDIUM - Considering options"
-    else:
-        return "LOW - Still exploring"
+        if any(word in response_lower for word in high_pain_words):
+            return "HIGH - Ready to act"
+        elif any(word in response_lower for word in medium_pain_words):
+            return "MEDIUM - Considering options"
+        else:
+            return "LOW - Still exploring"
 
 
 # For testing
