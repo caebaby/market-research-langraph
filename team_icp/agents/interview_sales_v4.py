@@ -186,4 +186,57 @@ Make conversations realistic with natural sales dialogue."""
         lines = response.split('\n')
         for line in lines:
             if any(marker in line.lower() for marker in objection_markers):
-                obj
+                objections.append(line.strip())
+            
+    return objections[:5]  # Top 5
+
+def _extract_buying_criteria(self, response: str) -> List[str]:
+    """Extract what they need to make a decision"""
+    criteria = []
+    
+    criteria_patterns = [
+        r"need to (?:know|see|understand) ([^.]+)",
+        r"would (?:help|convince|need) ([^.]+)",
+        r"if (?:I could|you could|it could) ([^.]+)"
+    ]
+    
+    for pattern in criteria_patterns:
+        matches = re.findall(pattern, response, re.IGNORECASE)
+        criteria.extend(matches)
+        
+    return list(set(criteria))[:5]
+
+def _assess_pain_intensity(self, response: str) -> str:
+    """Assess how intense their pain is"""
+    high_pain_words = ["desperate", "killing me", "can't continue", "breaking point"]
+    medium_pain_words = ["frustrated", "challenging", "difficult", "struggling"]
+    
+    response_lower = response.lower()
+    
+    if any(word in response_lower for word in high_pain_words):
+        return "HIGH - Ready to act"
+    elif any(word in response_lower for word in medium_pain_words):
+        return "MEDIUM - Considering options"
+    else:
+        return "LOW - Still exploring"
+
+
+# For testing
+if __name__ == "__main__":
+    agent = SalesInterviewAgentV4()
+    
+    test_state = {
+        "business_context": "Executive coaches struggling to scale beyond 1-on-1 sessions",
+        "master_context": "Executive coaches struggling to scale beyond 1-on-1 sessions",
+        "current_task": {
+            "description": "Extract sales objections and buying criteria",
+            "is_high_stakes": False
+        },
+        "shared_insights": {},
+        "memory_service": None,
+        "tool_executor": None,
+        "client_id": "test_sales"
+    }
+    
+    result = agent(test_state)
+    print(f"\nQuality Score: {result.get('quality_score', 0)}")
