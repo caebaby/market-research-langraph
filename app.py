@@ -340,6 +340,7 @@ function displayResults(data) {
         const agentIcons = {
             'psychological': '🧠',
             'interview': '🎭',
+            'sales_interview': '💰',
             'voice': '🗣️',
             'synthesis': '📋'
         };
