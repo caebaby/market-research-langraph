@@ -277,9 +277,17 @@ async function generateReport() {
         alert('Please enter your business context to generate insights.');
         return;
     }
+    async function generateReport() {
+    console.log('Generate report clicked');
+    const context = document.getElementById('businessContext').value.trim();
+    if (!context) {
+        alert('Please enter your business context to generate insights.');
+        return;
+    }
     const team = document.getElementById('team').value;
-    console.log('Selected agents:', agents);  // ADD THIS
     const agents = Array.from(document.querySelectorAll('.agent-checkbox input:checked')).map(cb => cb.id);
+    console.log('Selected agents:', agents);  // MOVED AFTER agents is defined
+    
     if (!agents.length) {
         alert('Please select at least one agent for analysis.');
         return;
@@ -288,11 +296,16 @@ async function generateReport() {
     startProgress();
     document.getElementById('results').scrollIntoView({behavior: 'smooth'});
     try {
+        console.log('Sending to backend:', {  // MOVED OUTSIDE
+            business_context: context,
+            agents: agents,
+            team: team
+        });
+        
         const response = await fetch('/analyze', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-            console.log('Sending to backend:', {  // ADD THIS
                 business_context: context,
                 agents: agents,
                 team: team,
