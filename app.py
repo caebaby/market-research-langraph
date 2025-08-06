@@ -500,11 +500,13 @@ async def analyze(request: Request):
     try:
         # Parse request data
         data = await request.json()
+        print(f"[DEBUG] Raw request data: {data}")  # ADD THIS LINE
         business_context = data.get("business_context")
         agents = data.get("agents", [])
         team = data.get("team")
         industry = data.get("industry")
         report_name = data.get("report_name")
+        print(f"[DEBUG] Extracted agents: {agents}")  # AND THIS LINE
         
         # Validate required fields
         if not business_context:
