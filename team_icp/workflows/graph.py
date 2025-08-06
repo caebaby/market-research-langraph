@@ -125,12 +125,14 @@ def synthesis_node(state: ICPState) -> ICPState:
 
 def router_node(state: ICPState) -> ICPState:
     requested = state.get("requested_agents", [])
+    print(f"[DEBUG ROUTER NODE] Received requested_agents: {requested}")  # ADD THIS
     logger.info(f"Router: Requested agents: {requested}")
     state.setdefault("result", {})
     state.setdefault("quality", 0.0)
     state.setdefault("shared_insights", {})
     state.setdefault("current_agent_index", 0)
     state["agents_to_run"] = requested
+    print(f"[DEBUG ROUTER NODE] Set agents_to_run to: {state['agents_to_run']}")  # AND THIS
     return state
 
 def route_to_next_agent(state: ICPState) -> str:
