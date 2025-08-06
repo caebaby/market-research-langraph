@@ -188,7 +188,7 @@ Make conversations realistic with natural sales dialogue."""
             if any(marker in line.lower() for marker in objection_markers):
                 objections.append(line.strip())
             
-    return objections[:5]  # Top 5
+        return objections[:5]  # Top 5
 
 def _extract_buying_criteria(self, response: str) -> List[str]:
     """Extract what they need to make a decision"""
