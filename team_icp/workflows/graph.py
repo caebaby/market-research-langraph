@@ -167,7 +167,7 @@ workflow.set_entry_point("router")
 workflow.add_conditional_edges(
     "router",
     route_to_next_agent,
-    {"psychological": "psychological", "interview": "interview", sales_interview": "sales_interview", "voice": "voice", "synthesis": "synthesis"}
+    {"psychological": "psychological", "interview": "interview", "sales_interview": "sales_interview", "voice": "voice", "synthesis": "synthesis"}
 )
 
 # Each agent goes back to router for next decision
