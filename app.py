@@ -515,7 +515,7 @@ async def analyze(request: Request):
             raise HTTPException(status_code=400, detail="At least one agent must be selected")
         
         # Filter valid agents
-        valid_agents = ['psychological', 'interview', 'voice', 'synthesis']
+        valid_agents = ['psychological', 'interview', 'sales_interview', 'voice', 'synthesis']
         agents = [agent for agent in agents if agent in valid_agents]
         
         results = {}
