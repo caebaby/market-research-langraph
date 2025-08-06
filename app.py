@@ -278,6 +278,7 @@ async function generateReport() {
         return;
     }
     const team = document.getElementById('team').value;
+    console.log('Selected agents:', agents);  // ADD THIS
     const agents = Array.from(document.querySelectorAll('.agent-checkbox input:checked')).map(cb => cb.id);
     if (!agents.length) {
         alert('Please select at least one agent for analysis.');
@@ -291,6 +292,7 @@ async function generateReport() {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
+            console.log('Sending to backend:', {  // ADD THIS
                 business_context: context,
                 agents: agents,
                 team: team,
