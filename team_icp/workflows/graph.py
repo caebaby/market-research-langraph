@@ -80,6 +80,23 @@ def interview_node(state: ICPState) -> ICPState:
     
     return state
 
+def sales_interview_node(state: ICPState) -> ICPState:
+    logger.info("Running sales interview agent")
+    state["current_task"] = {
+        "description": "Create sales objection interviews",
+        "is_high_stakes": False
+    }
+    updated_state = sales_interview_agent(state)
+    if isinstance(updated_state, dict):
+        for key, value in updated_state.items():
+            if key not in state or value is not None:
+                state[key] = value
+    if "current_output" in state and state["current_output"]:
+        state.setdefault("result", {})["sales_interview"] = state["current_output"]
+    state["current_agent_index"] = state.get("current_agent_index", 0) + 1
+    print(f"[SALES_INTERVIEW] Incremented index to: {state['current_agent_index']}")
+    return state
+
 def voice_node(state: ICPState) -> ICPState:
     logger.info("Running voice agent")
     state["current_task"] = {
@@ -141,6 +158,7 @@ def route_to_next_agent(state: ICPState) -> str:
 workflow.add_node("router", router_node)
 workflow.add_node("psychological", psychological_node)
 workflow.add_node("interview", interview_node)
+workflow.add_node("sales_interview", sales_interview_node)  # ADD THIS LINE
 workflow.add_node("voice", voice_node)
 workflow.add_node("synthesis", synthesis_node)
 
@@ -149,12 +167,13 @@ workflow.set_entry_point("router")
 workflow.add_conditional_edges(
     "router",
     route_to_next_agent,
-    {"psychological": "psychological", "interview": "interview", "voice": "voice", "synthesis": "synthesis"}
+    {"psychological": "psychological", "interview": "interview", sales_interview": "sales_interview", "voice": "voice", "synthesis": "synthesis"}
 )
 
 # Each agent goes back to router for next decision
 workflow.add_edge("psychological", "router")
 workflow.add_edge("interview", "router")
+workflow.add_edge("sales_interview", "router")  # ADD THIS LINE
 workflow.add_edge("voice", "router")
 
 graph = workflow.compile()
