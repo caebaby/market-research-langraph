@@ -559,6 +559,7 @@ async def analyze(request: Request):
                 "requested_agents": agents
             }
             
+            print(f"[DEBUG] State being sent to graph - requested_agents: {state.get('requested_agents')}")  # ADD THIS
             print(f"[DEBUG] Starting analysis with {len(agents)} agents: {agents}")
             result = await graph.ainvoke(state)
             
