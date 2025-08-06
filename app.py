@@ -189,7 +189,8 @@ async def dashboard():
                         <div class="agent-selection">
                             <h3>Select Agents</h3>
                             <div class="agent-checkbox"><input type="checkbox" id="psychological" checked><label for="psychological">🧠 Psychological</label><span class="agent-status">Active</span></div>
-                            <div class="agent-checkbox"><input type="checkbox" id="interview"><label for="interview">🎭 Interview</label><span class="agent-status">Active</span></div>
+                            <div class="agent-checkbox"><input type="checkbox" id="interview"><label for="interview">🎭 Interview (Psychological)</label><span class="agent-status">Active</span></div>
+                            <div class="agent-checkbox"><input type="checkbox" id="sales_interview"><label for="sales_interview">💰 Interview (Sales)</label><span class="agent-status">Active</span></div>
                             <div class="agent-checkbox"><input type="checkbox" id="voice"><label for="voice">🗣️ Voice</label><span class="agent-status">Active</span></div>
                             <div class="agent-checkbox"><input type="checkbox" id="synthesis"><label for="synthesis">📋 Synthesis</label><span class="agent-status">Active</span></div>
                         </div>
