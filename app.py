@@ -270,13 +270,6 @@ function switchTab(tab) {
     if (tab === 'reports') loadReports();
 }
 
-async function generateReport() {
-    console.log('Generate report clicked');
-    const context = document.getElementById('businessContext').value.trim();
-    if (!context) {
-        alert('Please enter your business context to generate insights.');
-        return;
-    }
     async function generateReport() {
     console.log('Generate report clicked');
     const context = document.getElementById('businessContext').value.trim();
