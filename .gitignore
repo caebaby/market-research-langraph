@@ -1,0 +1,45 @@
+# Create/update .gitignore with all necessary exclusions
+@"
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# Test outputs and generated files
+*.log
+complete_6_agent_analysis_*.json
+complete_gtm_blueprint_*.txt
+integration_test_results_*.json
+gtm_blueprint_*.txt
+*_results_*.json
+*_blueprint_*.txt
+
+# Memory storage (future)
+memory_store/
+client_memories/
+memory_vectors/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep important files
+!requirements.txt
+!README.md
+!CONTEXT.md
+"@ | Out-File -FilePath ".gitignore" -Encoding UTF8
