@@ -1,30 +1,52 @@
 # team_icp/workflows/graph.py
 """
-Modular Workflow Graph - REAL AGENTS VERSION
-Uses actual agent implementations instead of mocks
+Modular Workflow Graph - REAL AGENTS VERSION WITH MEMORY
+Uses actual agent implementations with MAXIMUM token configuration
+Includes Qdrant Cloud memory system for persistent insights
 """
 
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import logging
 import traceback
+import os
+import sys
+from pathlib import Path
 
-# Try to import LangGraph (may not be installed)
+# ============================================
+# CONFIGURATION CONSTANTS
+# ============================================
+MAX_TOKEN_LIMIT = 8192  # Maximum tokens for Claude 3.5 Sonnet
+DEFAULT_TEMPERATURE = 0.7
+MODEL_NAME = "claude-3-5-sonnet-20241022"
+
+# ============================================
+# SETUP LOGGING
+# ============================================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# ============================================
+# IMPORT LANGGRAPH
+# ============================================
 try:
     from langgraph.graph import StateGraph, END
     LANGGRAPH_AVAILABLE = True
-except ImportError:
+    logger.info("✅ LangGraph successfully imported")
+except ImportError as e:
     LANGGRAPH_AVAILABLE = False
     StateGraph = None
     END = None
+    logger.warning(f"⚠️ LangGraph not available: {e}")
 
-# Import LangChain for LLM
+# ============================================
+# SETUP PATH AND ENVIRONMENT
+# ============================================
 try:
-    import os
-    import sys
-    from pathlib import Path
-    
-    # Add parent directories to path for imports
+    # Setup paths
     current_dir = Path(__file__).parent
     project_root = current_dir.parent.parent
     sys.path.insert(0, str(project_root))
@@ -32,26 +54,121 @@ try:
     # Load environment variables
     from dotenv import load_dotenv
     env_path = project_root / '.env'
-    load_dotenv(env_path)
     
-    from langchain_anthropic import ChatAnthropic
-    from core.config import Config
-    llm = Config.get_llm()
-    
-    if not llm and os.getenv('ANTHROPIC_API_KEY'):
-        # Fallback: create LLM directly if Config fails
-        llm = ChatAnthropic(
-            model="claude-3-5-sonnet-20241022",
-            anthropic_api_key=os.getenv('ANTHROPIC_API_KEY'),
-            max_tokens=4000
-        )
+    if env_path.exists():
+        load_dotenv(env_path)
+        logger.info(f"✅ Environment loaded from: {env_path}")
+    else:
+        logger.warning(f"⚠️ No .env file found at: {env_path}")
+        
 except Exception as e:
-    print(f"LLM setup error: {e}")
+    logger.error(f"❌ Environment setup failed: {e}")
+
+# ============================================
+# MEMORY SYSTEM INITIALIZATION
+# ============================================
+memory_system = None
+MEMORY_AVAILABLE = False
+
+try:
+    from core.memory_system_qdrant import QdrantMemorySystem
+    memory_system = QdrantMemorySystem()
+    MEMORY_AVAILABLE = True
+    logger.info("✅ Memory system connected - agents will remember insights")
+except ImportError as e:
+    logger.warning(f"⚠️ Memory system not imported: {e}")
+except ValueError as e:
+    logger.warning(f"⚠️ Memory system credentials missing: {e}")
+except Exception as e:
+    logger.warning(f"⚠️ Memory system initialization failed: {e}")
+
+if not MEMORY_AVAILABLE:
+    logger.info("💡 Running without memory - analyses won't persist")
+
+# ============================================
+# LLM CONFIGURATION WITH MAXIMUM TOKENS
+# ============================================
+llm = None  # Initialize as None
+
+try:
+    from langchain_anthropic import ChatAnthropic
+    
+    # Try to import Config first
+    try:
+        from core.config import Config
+        
+        logger.info("🔍 Attempting to load LLM from Config...")
+        llm = Config.get_llm()
+        
+        if llm:
+            # Verify and log token configuration
+            if hasattr(llm, 'max_tokens'):
+                current_tokens = getattr(llm, 'max_tokens', 'unknown')
+                if current_tokens != MAX_TOKEN_LIMIT:
+                    logger.warning(f"⚠️ Config LLM has {current_tokens} tokens, updating to {MAX_TOKEN_LIMIT}")
+                    llm.max_tokens = MAX_TOKEN_LIMIT
+                else:
+                    logger.info(f"✅ Config LLM already has {MAX_TOKEN_LIMIT} tokens")
+            else:
+                # Force set max_tokens if attribute doesn't exist
+                llm.max_tokens = MAX_TOKEN_LIMIT
+                logger.info(f"✅ Set Config LLM to {MAX_TOKEN_LIMIT} tokens")
+                
+    except ImportError as e:
+        logger.warning(f"⚠️ Could not import Config: {e}")
+        llm = None
+    except Exception as e:
+        logger.warning(f"⚠️ Config.get_llm() failed: {e}")
+        llm = None
+    
+    # Fallback: Create LLM directly if Config fails
+    if not llm:
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        
+        if api_key:
+            logger.info(f"📝 Creating direct LLM with {MAX_TOKEN_LIMIT} tokens...")
+            
+            try:
+                llm = ChatAnthropic(
+                    model=MODEL_NAME,
+                    anthropic_api_key=api_key,
+                    max_tokens=MAX_TOKEN_LIMIT,  # Use maximum token limit
+                    temperature=DEFAULT_TEMPERATURE,
+                    timeout=60,  # Add timeout for reliability
+                    max_retries=3  # Add retries for resilience
+                )
+                
+                # Verify configuration
+                logger.info(f"✅ LLM created successfully with:")
+                logger.info(f"   • Model: {MODEL_NAME}")
+                logger.info(f"   • Max Tokens: {MAX_TOKEN_LIMIT}")
+                logger.info(f"   • Temperature: {DEFAULT_TEMPERATURE}")
+                
+            except Exception as e:
+                logger.error(f"❌ Failed to create ChatAnthropic: {e}")
+                llm = None
+        else:
+            logger.error("❌ No ANTHROPIC_API_KEY found in environment")
+            llm = None
+            
+except ImportError as e:
+    logger.error(f"❌ Could not import langchain_anthropic: {e}")
+    logger.info("💡 Install with: pip install langchain-anthropic")
+    llm = None
+except Exception as e:
+    logger.error(f"❌ Unexpected error setting up LLM: {e}")
+    logger.error(traceback.format_exc())
     llm = None
 
-logger = logging.getLogger(__name__)
+# Log final LLM status
+if llm:
+    logger.info(f"🎯 LLM READY with {MAX_TOKEN_LIMIT} max tokens")
+else:
+    logger.error("❌ LLM NOT AVAILABLE - Agents will use mock responses")
 
-# State definition
+# ============================================
+# STATE DEFINITION
+# ============================================
 class ICPState(Dict):
     """State definition for the workflow"""
     task: str
@@ -80,179 +197,300 @@ class ICPState(Dict):
     team_name: Optional[str]
     industry_template: Optional[str]
     agent_config_overrides: Optional[Dict[str, Any]]
+    
+    # Token tracking
+    total_tokens_used: Optional[int]
+    token_limit: Optional[int]
+    
+    # Memory tracking
+    memories_loaded: Optional[Dict[str, int]]
+    memories_stored: Optional[Dict[str, bool]]
 
-
-# Import registry
+# ============================================
+# AGENT REGISTRY IMPORT
+# ============================================
 try:
-    # Try relative import first (for when imported as module)
+    # Try relative import first
     try:
         from ..agents.registry import AgentRegistry
     except ImportError:
-        # Fall back to absolute import (for direct execution)
+        # Fall back to absolute import
         from team_icp.agents.registry import AgentRegistry
     
     registry_instance = AgentRegistry()
     AGENT_REGISTRY = {name: info for name, info in registry_instance.get_all_agents().items()}
     REGISTRY_AVAILABLE = True
-    logger.info(f"Registry loaded with {len(AGENT_REGISTRY)} agents")
+    logger.info(f"✅ Registry loaded with {len(AGENT_REGISTRY)} agents")
+    
 except ImportError as e:
-    logger.error(f"Failed to import registry: {e}")
+    logger.error(f"⚠️ Failed to import registry: {e}")
     REGISTRY_AVAILABLE = False
     AGENT_REGISTRY = {}
 
-
-# Cache for loaded agents
+# ============================================
+# AGENT LOADING AND CACHING
+# ============================================
 loaded_agents = {}
-
 
 def load_agent_dynamically(agent_name: str, state: ICPState):
     """
-    Dynamically load REAL agents, not mocks
+    Dynamically load REAL agents with proper error handling
+    
+    WHY: We load agents on-demand to reduce memory usage and startup time
     """
-    # Check if already loaded
+    # Check cache first
     if agent_name in loaded_agents:
+        logger.debug(f"📦 Using cached agent: {agent_name}")
         return loaded_agents[agent_name]
     
     try:
-        # Import and instantiate the REAL agent classes
-        logger.info(f"Loading real agent: {agent_name}")
+        logger.info(f"🔄 Loading agent: {agent_name}")
         
-        if agent_name == "psychological":
-            from team_icp.agents.psychological import PsychologicalAgent
-            agent = PsychologicalAgent()
-            
-        elif agent_name == "voice_of_customer" or agent_name == "voice":
-            from team_icp.agents.voice import VoiceAgent
-            agent = VoiceAgent()
-            
-        elif agent_name == "competitor":
-            from team_icp.agents.competitor import CompetitorAgent
-            agent = CompetitorAgent()
-            
-        elif agent_name == "interview_psychological":
-            from team_icp.agents.interview_psychological_v4 import PsychologicalInterviewAgentV4
-            agent = PsychologicalInterviewAgentV4()
-            
-        elif agent_name == "interview_sales":
-            from team_icp.agents.interview_sales_v4 import SalesInterviewAgentV4
-            agent = SalesInterviewAgentV4()
-            
-        elif agent_name == "gtm_blueprint" or agent_name == "gtm":
-            from team_icp.agents.gtm_blueprint import GTMBlueprintAgent
-            agent = GTMBlueprintAgent()
-            
+        # Agent name to module/class mapping
+        agent_mapping = {
+            "psychological": ("team_icp.agents.psychological", "PsychologicalAgent"),
+            "voice_of_customer": ("team_icp.agents.voice", "VoiceAgent"),
+            "voice": ("team_icp.agents.voice", "VoiceAgent"),
+            "competitor": ("team_icp.agents.competitor", "CompetitorAgent"),
+            "interview_psychological": ("team_icp.agents.interview_psychological_v4", "PsychologicalInterviewAgentV4"),
+            "interview_psych": ("team_icp.agents.interview_psychological_v4", "PsychologicalInterviewAgentV4"),
+            "interview_sales": ("team_icp.agents.interview_sales_v4", "SalesInterviewAgentV4"),
+            "gtm_blueprint": ("team_icp.agents.gtm_blueprint", "GTMBlueprintAgent"),
+            "gtm": ("team_icp.agents.gtm_blueprint", "GTMBlueprintAgent"),
+        }
+        
+        # Get module and class names
+        if agent_name in agent_mapping:
+            module_name, class_name = agent_mapping[agent_name]
         else:
-            # Try generic import pattern for any other agents
+            # Generic pattern for unknown agents
             module_name = f"team_icp.agents.{agent_name}"
             class_name = ''.join(word.capitalize() for word in agent_name.split('_')) + 'Agent'
-            
-            module = __import__(module_name, fromlist=[class_name])
-            AgentClass = getattr(module, class_name)
-            agent = AgentClass()
+        
+        # Import and instantiate
+        module = __import__(module_name, fromlist=[class_name])
+        AgentClass = getattr(module, class_name)
+        agent = AgentClass()
+        
+        # Configure agent with max tokens if it has the attribute
+        if hasattr(agent, 'max_tokens'):
+            agent.max_tokens = MAX_TOKEN_LIMIT
+            logger.info(f"✅ Set agent {agent_name} to {MAX_TOKEN_LIMIT} tokens")
         
         loaded_agents[agent_name] = agent
-        logger.info(f"Successfully loaded REAL agent: {agent_name}")
+        logger.info(f"✅ Successfully loaded agent: {agent_name}")
         return agent
         
+    except ImportError as e:
+        logger.error(f"❌ Import error for {agent_name}: {e}")
+    except AttributeError as e:
+        logger.error(f"❌ Class not found for {agent_name}: {e}")
     except Exception as e:
-        logger.error(f"Failed to load real agent {agent_name}: {e}")
+        logger.error(f"❌ Unexpected error loading {agent_name}: {e}")
         logger.error(traceback.format_exc())
-        
-        # Return a mock agent as fallback
-        class MockAgent:
-            def __init__(self, name):
-                self.agent_name = name
-                
-            def _generate_response(self, task, memories, llm):
-                return f"Mock output from {self.agent_name}: {task[:100]}..."
-                
-            def process(self, task, shared_insights, llm):
-                return {
-                    'output': f"Mock analysis from {self.agent_name}",
-                    'quality_score': 0.75
-                }
-        
-        mock = MockAgent(agent_name)
-        loaded_agents[agent_name] = mock
-        return mock
+    
+    # Return mock agent as fallback
+    logger.warning(f"⚠️ Using mock agent for: {agent_name}")
+    
+    class MockAgent:
+        def __init__(self, name):
+            self.agent_name = name
+            self.max_tokens = MAX_TOKEN_LIMIT
+            
+        def _generate_response(self, task, memories, llm):
+            return f"[MOCK] {self.agent_name} analysis for: {task[:100]}..."
+            
+        def process(self, task, shared_insights, llm):
+            return {
+                'output': f"[MOCK] {self.agent_name} processed the task",
+                'quality_score': 0.5
+            }
+    
+    mock = MockAgent(agent_name)
+    loaded_agents[agent_name] = mock
+    return mock
 
-
+# ============================================
+# NODE CREATION WITH MEMORY INTEGRATION
+# ============================================
 def create_agent_node(agent_name: str):
     """
-    Create a node function that calls REAL agents
+    Create a node function that safely executes agents with memory support
+    
+    WHY: Each agent needs its own node in the graph for orchestration
     """
     def agent_node(state: ICPState) -> ICPState:
         logger.info(f"[{agent_name.upper()}] Starting execution")
+        start_time = datetime.now()
         
         try:
-            # Load the REAL agent
+            # Load the agent
             agent = load_agent_dynamically(agent_name, state)
             
-            # Prepare context
+            # Get original context
             business_context = state.get("business_context", state.get("task", ""))
             shared_insights = state.get("shared_insights", {})
             
-            # Get or create LLM
+            # ============================================
+            # MEMORY RETRIEVAL - Give agent previous context
+            # ============================================
+            if MEMORY_AVAILABLE and state.get("client_id"):
+                try:
+                    # Retrieve previous memories for this client/agent
+                    previous_memories = memory_system.retrieve_memories(
+                        client_id=state["client_id"],
+                        agent_name=agent_name,
+                        limit=5  # Get top 5 relevant memories
+                    )
+                    
+                    if previous_memories:
+                        # Add memories to context
+                        memory_context = "\n\n=== PREVIOUS INSIGHTS FOR THIS CLIENT ===\n"
+                        for i, mem in enumerate(previous_memories, 1):
+                            memory_context += f"{i}. {mem.content}\n"
+                        memory_context += "=== END PREVIOUS INSIGHTS ===\n\n"
+                        
+                        # Append to business context
+                        business_context = memory_context + business_context
+                        
+                        # Track memories loaded
+                        if "memories_loaded" not in state:
+                            state["memories_loaded"] = {}
+                        state["memories_loaded"][agent_name] = len(previous_memories)
+                        
+                        logger.info(f"[{agent_name.upper()}] 📚 Loaded {len(previous_memories)} memories")
+                    
+                except Exception as e:
+                    logger.error(f"[{agent_name.upper()}] Memory retrieval failed: {e}")
+            
+            # Initialize token tracking
+            if "total_tokens_used" not in state:
+                state["total_tokens_used"] = 0
+            state["token_limit"] = MAX_TOKEN_LIMIT
+            
+            # Check if LLM is available
             if not llm:
-                logger.warning(f"[{agent_name.upper()}] No LLM available, using mock")
-                state["current_output"] = f"Error: LLM not configured for {agent_name}"
+                logger.warning(f"[{agent_name.upper()}] No LLM available, using mock response")
+                state["current_output"] = f"[ERROR] LLM not configured for {agent_name}"
                 state["quality_score"] = 0.0
+                state["requires_human_review"] = True
+                state["review_reason"] = "LLM not available"
             else:
-                # Call the REAL agent's process method or _generate_response
-                logger.info(f"[{agent_name.upper()}] Calling real agent...")
+                # Execute agent with proper error handling
+                logger.info(f"[{agent_name.upper()}] Processing with {MAX_TOKEN_LIMIT} max tokens...")
                 
-                # Try process method first (newer agents have this)
-                if hasattr(agent, 'process'):
-                    result = agent.process(business_context, shared_insights, llm)
-                    
-                    if isinstance(result, dict):
-                        state["current_output"] = result.get('output', '')
-                        state["quality_score"] = result.get('quality_score', 0.0)
+                try:
+                    # Try process method first (newer agents)
+                    if hasattr(agent, 'process'):
+                        result = agent.process(business_context, shared_insights, llm)
                         
-                        # Store additional insights if available
-                        for key in ['exact_phrases', 'competitors_analyzed', 'battle_cards']:
-                            if key in result:
-                                if "additional_insights" not in state:
-                                    state["additional_insights"] = {}
-                                state["additional_insights"][f"{agent_name}_{key}"] = result[key]
-                    else:
-                        state["current_output"] = str(result)
-                        state["quality_score"] = 0.75
+                        if isinstance(result, dict):
+                            state["current_output"] = result.get('output', '')
+                            state["quality_score"] = result.get('quality_score', 0.0)
+                            
+                            # Store additional insights
+                            for key in ['exact_phrases', 'competitors_analyzed', 'battle_cards']:
+                                if key in result:
+                                    if "additional_insights" not in state:
+                                        state["additional_insights"] = {}
+                                    state["additional_insights"][f"{agent_name}_{key}"] = result[key]
+                        else:
+                            state["current_output"] = str(result)
+                            state["quality_score"] = 0.75
+                            
+                    # Try _generate_response (base method)
+                    elif hasattr(agent, '_generate_response'):
+                        memories = []  # Could retrieve from state
+                        output = agent._generate_response(business_context, memories, llm)
+                        state["current_output"] = output
                         
-                # Otherwise try _generate_response (base method)
-                elif hasattr(agent, '_generate_response'):
-                    # Agents expect (task, memories, llm)
-                    memories = []  # Could retrieve from state if we had memory service
-                    output = agent._generate_response(business_context, memories, llm)
-                    state["current_output"] = output
-                    
-                    # Try to get quality score
-                    if hasattr(agent, '_calculate_quality_score'):
-                        state["quality_score"] = agent._calculate_quality_score(output)
+                        # Calculate quality score
+                        if hasattr(agent, '_calculate_quality_score'):
+                            state["quality_score"] = agent._calculate_quality_score(output)
+                        else:
+                            state["quality_score"] = 0.85
                     else:
-                        state["quality_score"] = 0.85  # Default good score
-                else:
-                    logger.error(f"[{agent_name.upper()}] Agent has no process or _generate_response method")
-                    state["current_output"] = f"Agent {agent_name} implementation error"
+                        raise AttributeError(f"Agent {agent_name} has no process or _generate_response method")
+                    
+                    # Estimate tokens used (rough estimate: 1 token ≈ 4 characters)
+                    if state.get("current_output"):
+                        estimated_tokens = len(state["current_output"]) // 4
+                        state["total_tokens_used"] += estimated_tokens
+                        logger.info(f"[{agent_name.upper()}] Estimated {estimated_tokens} tokens used")
+                    
+                    # ============================================
+                    # MEMORY STORAGE - Save insights for future
+                    # ============================================
+                    if MEMORY_AVAILABLE and state.get("client_id") and state.get("current_output"):
+                        try:
+                            # Extract key insight (first 500 chars or first paragraph)
+                            output_text = state["current_output"]
+                            insight = output_text[:500] if len(output_text) > 500 else output_text
+                            
+                            # Store with quality-based importance
+                            memory_id = memory_system.store_memory(
+                                client_id=state["client_id"],
+                                agent_name=agent_name,
+                                memory_type="analysis",
+                                content=insight,
+                                context=f"Analysis for {state.get('master_context', 'unknown')}",
+                                importance=state.get("quality_score", 0.5)
+                            )
+                            
+                            # Track storage
+                            if "memories_stored" not in state:
+                                state["memories_stored"] = {}
+                            state["memories_stored"][agent_name] = True
+                            
+                            logger.info(f"[{agent_name.upper()}] 💾 Stored memory: {memory_id[:8]}...")
+                            
+                            # Share important insights with other agents
+                            if state.get("quality_score", 0) > 0.9:
+                                # High quality insights get shared
+                                next_agents = state.get("agents_to_run", [])[state.get("current_agent_index", 0) + 1:]
+                                for next_agent in next_agents[:2]:  # Share with next 2 agents
+                                    memory_system.share_insights_between_agents(
+                                        from_agent=agent_name,
+                                        to_agent=next_agent,
+                                        client_id=state["client_id"],
+                                        insight=insight[:200]
+                                    )
+                                    logger.info(f"[{agent_name.upper()}] 🤝 Shared insight with {next_agent}")
+                            
+                        except Exception as e:
+                            logger.error(f"[{agent_name.upper()}] Memory storage failed: {e}")
+                        
+                except Exception as e:
+                    logger.error(f"[{agent_name.upper()}] Processing error: {e}")
+                    state["current_output"] = f"[ERROR] {agent_name}: {str(e)}"
                     state["quality_score"] = 0.0
+                    state["requires_human_review"] = True
+                    state["review_reason"] = str(e)
             
             # Store output in result
             if state.get("current_output"):
                 if "result" not in state:
                     state["result"] = {}
                 state["result"][agent_name] = state["current_output"]
-                logger.info(f"[{agent_name.upper()}] Stored {len(state['current_output'])} chars of output")
+                
+                output_length = len(state["current_output"])
+                logger.info(f"[{agent_name.upper()}] Generated {output_length} characters")
+                
+                # Warn if output might be truncated
+                if output_length > MAX_TOKEN_LIMIT * 4:  # Rough char estimate
+                    logger.warning(f"[{agent_name.upper()}] Output may exceed token limit!")
             
-            # Update shared insights for other agents
+            # Update shared insights
             if "shared_insights" not in state:
                 state["shared_insights"] = {}
             
-            # If agent has _create_shared_insights method, use it
+            # Create shared insights
             if hasattr(agent, '_create_shared_insights') and state.get("current_output"):
                 try:
                     insights = agent._create_shared_insights(state["current_output"])
                     state["shared_insights"][agent_name] = insights
-                except:
+                except Exception as e:
+                    logger.error(f"[{agent_name.upper()}] Failed to create insights: {e}")
                     # Fallback to basic insights
                     state["shared_insights"][agent_name] = {
                         "output": state.get("current_output", "")[:500],
@@ -266,96 +504,161 @@ def create_agent_node(agent_name: str):
                     "timestamp": datetime.now().isoformat()
                 }
             
-            logger.info(f"[{agent_name.upper()}] Quality score: {state.get('quality_score', 0):.2f}")
+            # Log execution time
+            execution_time = (datetime.now() - start_time).total_seconds()
+            
+            # Log memory status
+            memory_status = ""
+            if MEMORY_AVAILABLE:
+                loaded = state.get("memories_loaded", {}).get(agent_name, 0)
+                stored = "✓" if state.get("memories_stored", {}).get(agent_name) else "✗"
+                memory_status = f" | Memory: {loaded} loaded, {stored} stored"
+            
+            logger.info(f"[{agent_name.upper()}] Completed in {execution_time:.2f}s | Quality: {state.get('quality_score', 0):.2f}{memory_status}")
             
         except Exception as e:
-            error_msg = f"{agent_name} agent error: {str(e)}"
-            logger.error(f"[{agent_name.upper()}] {error_msg}")
+            error_msg = f"Agent {agent_name} failed: {str(e)}"
+            logger.error(f"[{agent_name.upper()}] CRITICAL ERROR: {error_msg}")
             logger.error(traceback.format_exc())
             
-            # Update state with error information
+            # Update state with error
             state["requires_human_review"] = True
             state["review_reason"] = error_msg
             
-            # Store error in result
             if "result" not in state:
                 state["result"] = {}
-            state["result"][agent_name] = f"ERROR: {str(e)}"
+            state["result"][agent_name] = f"[CRITICAL ERROR]: {str(e)}"
+            state["quality_score"] = 0.0
         
         finally:
             # Always increment index to prevent infinite loops
             state["current_agent_index"] = state.get("current_agent_index", 0) + 1
-            logger.info(f"[{agent_name.upper()}] Completed. Index now: {state['current_agent_index']}")
+            logger.debug(f"[{agent_name.upper()}] Index incremented to: {state['current_agent_index']}")
         
         return state
     
     return agent_node
 
-
+# ============================================
+# ROUTING AND SYNTHESIS NODES
+# ============================================
 def router_node(state: ICPState) -> ICPState:
     """
-    Router node that determines agent sequence
+    Router node that determines agent execution sequence
+    
+    WHY: Centralizes orchestration logic and agent selection
     """
-    logger.info("[ROUTER] Starting routing logic")
+    logger.info("[ROUTER] Analyzing routing requirements")
     
     # Initialize state fields
     state.setdefault("result", {})
     state.setdefault("shared_insights", {})
     state.setdefault("current_agent_index", 0)
+    state.setdefault("total_tokens_used", 0)
+    state["token_limit"] = MAX_TOKEN_LIMIT
+    
+    # Initialize memory tracking
+    state["memories_loaded"] = {}
+    state["memories_stored"] = {}
+    
+    # Log configuration
+    logger.info(f"[ROUTER] Token limit: {MAX_TOKEN_LIMIT}")
+    logger.info(f"[ROUTER] Memory system: {'Enabled' if MEMORY_AVAILABLE else 'Disabled'}")
     
     # Determine agents to run
     requested_agents = state.get("requested_agents", [])
     
-    # Use default team if no specific agents requested
     if not requested_agents:
-        # Default to ICP team - using normalized names
-        requested_agents = ["psychological", "voice_of_customer", "competitor", 
-                           "interview_psychological", "interview_sales", "gtm_blueprint"]
-        logger.info(f"[ROUTER] Using default ICP team")
+        # Default ICP team
+        requested_agents = [
+            "psychological", 
+            "voice_of_customer", 
+            "competitor",
+            "interview_psychological", 
+            "interview_sales", 
+            "gtm_blueprint"
+        ]
+        logger.info(f"[ROUTER] Using default ICP team ({len(requested_agents)} agents)")
+    else:
+        logger.info(f"[ROUTER] Using requested agents: {requested_agents}")
     
-    # Normalize agent names (handle underscore/hyphen variations)
+    # Normalize agent names
     valid_agents = []
     for agent in requested_agents:
-        normalized_name = agent.replace("-", "_")
+        normalized_name = agent.replace("-", "_").lower()
         valid_agents.append(normalized_name)
     
     state["agents_to_run"] = valid_agents
-    logger.info(f"[ROUTER] Agents to run: {valid_agents}")
+    logger.info(f"[ROUTER] Scheduled {len(valid_agents)} agents for execution")
     
     return state
 
-
 def synthesis_node(state: ICPState) -> ICPState:
     """
-    Final synthesis node with quality calculation
+    Final synthesis node that creates comprehensive report
+    
+    WHY: Combines all agent outputs into a cohesive final deliverable
     """
-    logger.info("[SYNTHESIS] Starting final synthesis")
+    logger.info("[SYNTHESIS] Creating final report")
     
     state["synthesis_complete"] = True
     
-    # Prepare final report
+    # Check token usage
+    total_tokens = state.get("total_tokens_used", 0)
+    logger.info(f"[SYNTHESIS] Total estimated tokens used: {total_tokens}")
+    
+    if total_tokens > MAX_TOKEN_LIMIT * 0.9:  # Warn at 90% usage
+        logger.warning(f"[SYNTHESIS] Token usage high: {total_tokens}/{MAX_TOKEN_LIMIT}")
+    
+    # Log memory activity
+    if MEMORY_AVAILABLE:
+        total_loaded = sum(state.get("memories_loaded", {}).values())
+        total_stored = sum(1 for v in state.get("memories_stored", {}).values() if v)
+        logger.info(f"[SYNTHESIS] Memory activity: {total_loaded} loaded, {total_stored} stored")
+    
+    # Build final report
     if "result" in state and isinstance(state["result"], dict):
-        # Build comprehensive report
         report_sections = []
+        error_sections = []
         
-        # Order agents for better report flow
-        agent_order = ["psychological", "voice_of_customer", "competitor", 
-                      "interview_psychological", "interview_sales", "gtm_blueprint"]
+        # Preferred agent order for report structure
+        agent_order = [
+            "psychological",
+            "voice_of_customer",
+            "competitor",
+            "interview_psychological",
+            "interview_sales",
+            "gtm_blueprint"
+        ]
         
+        # Process agents in preferred order
         for agent_name in agent_order:
             if agent_name in state["result"]:
                 output = state["result"][agent_name]
-                if output and not output.startswith("ERROR:"):
+                if output and not output.startswith("[ERROR]") and not output.startswith("[CRITICAL ERROR]"):
                     agent_title = agent_name.replace("_", " ").title()
-                    report_sections.append(f"**{agent_title} Analysis:**\n{output}\n")
+                    report_sections.append(f"## {agent_title} Analysis\n\n{output}\n")
+                elif output and (output.startswith("[ERROR]") or output.startswith("[CRITICAL ERROR]")):
+                    error_sections.append(f"⚠️ {agent_name}: {output}")
         
-        # Add any other agents not in the standard order
+        # Add any other agents not in standard order
         for agent_name, output in state["result"].items():
-            if agent_name not in agent_order and output and not output.startswith("ERROR:"):
-                agent_title = agent_name.replace("_", " ").title()
-                report_sections.append(f"**{agent_title} Analysis:**\n{output}\n")
+            if agent_name not in agent_order:
+                if output and not output.startswith("[ERROR]") and not output.startswith("[CRITICAL ERROR]"):
+                    agent_title = agent_name.replace("_", " ").title()
+                    report_sections.append(f"## {agent_title} Analysis\n\n{output}\n")
+                elif output and (output.startswith("[ERROR]") or output.startswith("[CRITICAL ERROR]")):
+                    error_sections.append(f"⚠️ {agent_name}: {output}")
         
-        state["final_report"] = "\n".join(report_sections) if report_sections else "No analysis results available."
+        # Create final report
+        if report_sections:
+            state["final_report"] = "\n".join(report_sections)
+        else:
+            state["final_report"] = "No analysis results available."
+        
+        # Add error section if needed
+        if error_sections:
+            state["final_report"] += "\n\n---\n## ⚠️ Errors Encountered\n\n" + "\n".join(error_sections)
         
         # Calculate overall quality
         quality_scores = []
@@ -367,71 +670,102 @@ def synthesis_node(state: ICPState) -> ICPState:
         
         state["overall_quality"] = sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
         
-        # Add summary statistics
-        total_words = sum(len(str(output).split()) for output in state["result"].values() if not str(output).startswith("ERROR:"))
-        state["total_word_count"] = total_words
+        # Add statistics
+        successful_agents = len([o for o in state["result"].values() if o and not o.startswith("[ERROR]")])
+        total_agents = len(state["result"])
+        total_words = sum(len(str(output).split()) for output in state["result"].values() if not str(output).startswith("[ERROR]"))
         
-        logger.info(f"[SYNTHESIS] Complete. Quality: {state['overall_quality']:.2f}, Words: {total_words}")
+        state["statistics"] = {
+            "total_agents": total_agents,
+            "successful_agents": successful_agents,
+            "total_words": total_words,
+            "total_tokens_estimated": total_tokens,
+            "max_token_limit": MAX_TOKEN_LIMIT,
+            "overall_quality": state["overall_quality"],
+            "memory_enabled": MEMORY_AVAILABLE,
+            "memories_loaded": state.get("memories_loaded", {}),
+            "memories_stored": state.get("memories_stored", {})
+        }
+        
+        logger.info(f"[SYNTHESIS] Report complete:")
+        logger.info(f"   • Successful: {successful_agents}/{total_agents} agents")
+        logger.info(f"   • Quality: {state['overall_quality']:.2f}")
+        logger.info(f"   • Words: {total_words}")
+        logger.info(f"   • Tokens: {total_tokens}/{MAX_TOKEN_LIMIT}")
+    else:
+        state["final_report"] = "Analysis could not be completed."
+        state["overall_quality"] = 0.0
     
     return state
 
-
 def route_to_next_agent(state: ICPState) -> str:
     """
-    Determine next agent to run with safety checks
+    Determine next agent with safety checks
+    
+    WHY: Prevents infinite loops and ensures proper flow control
     """
     requested = state.get("agents_to_run", [])
     current_index = state.get("current_agent_index", 0)
     
     # Safety limit
-    if current_index >= 10:
-        logger.warning(f"[ROUTING] Safety limit reached")
+    MAX_ITERATIONS = 20
+    if current_index >= MAX_ITERATIONS:
+        logger.warning(f"[ROUTING] Safety limit ({MAX_ITERATIONS}) reached!")
+        return "synthesis"
+    
+    # Check token usage
+    total_tokens = state.get("total_tokens_used", 0)
+    if total_tokens > MAX_TOKEN_LIMIT * 0.95:  # Stop at 95% usage
+        logger.warning(f"[ROUTING] Token limit approaching ({total_tokens}/{MAX_TOKEN_LIMIT}), moving to synthesis")
         return "synthesis"
     
     # Check if more agents to run
     if current_index < len(requested):
         next_agent = requested[current_index]
-        logger.info(f"[ROUTING] Next agent: {next_agent}")
+        logger.info(f"[ROUTING] Next: {next_agent} ({current_index + 1}/{len(requested)})")
         return next_agent
     
     # All agents complete
-    logger.info(f"[ROUTING] All agents complete")
+    logger.info(f"[ROUTING] All {len(requested)} agents complete")
     return "synthesis"
 
-
-# Build the workflow if LangGraph is available
+# ============================================
+# BUILD WORKFLOW GRAPH
+# ============================================
 if LANGGRAPH_AVAILABLE:
     try:
         workflow = StateGraph(ICPState)
         
-        # Add router and synthesis nodes
+        # Add core nodes
         workflow.add_node("router", router_node)
         workflow.add_node("synthesis", synthesis_node)
         
-        # Add nodes for all possible agents (with variations)
+        # Define all possible agent nodes with aliases
         agent_variations = {
             "psychological": create_agent_node("psychological"),
             "voice_of_customer": create_agent_node("voice_of_customer"),
-            "voice": create_agent_node("voice_of_customer"),  # Alias
+            "voice": create_agent_node("voice_of_customer"),
             "competitor": create_agent_node("competitor"),
             "interview_psychological": create_agent_node("interview_psychological"),
-            "interview_psych": create_agent_node("interview_psychological"),  # Alias
+            "interview_psych": create_agent_node("interview_psychological"),
             "interview_sales": create_agent_node("interview_sales"),
             "gtm_blueprint": create_agent_node("gtm_blueprint"),
-            "gtm": create_agent_node("gtm_blueprint")  # Alias
+            "gtm": create_agent_node("gtm_blueprint")
         }
         
+        # Add all agent nodes
         for agent_name, node_func in agent_variations.items():
             workflow.add_node(agent_name, node_func)
-            logger.info(f"Added node for agent: {agent_name}")
+            logger.debug(f"Added node: {agent_name}")
         
         # Set entry point
         workflow.set_entry_point("router")
         
-        # Add conditional routing
+        # Create edge mapping
         edge_mapping = {name: name for name in agent_variations.keys()}
         edge_mapping["synthesis"] = "synthesis"
         
+        # Add conditional routing from router
         workflow.add_conditional_edges(
             "router",
             route_to_next_agent,
@@ -447,152 +781,240 @@ if LANGGRAPH_AVAILABLE:
         
         # Compile the graph
         graph = workflow.compile()
-        logger.info(f"Workflow compiled successfully with REAL agents")
+        logger.info(f"✅ Workflow compiled successfully with {len(agent_variations)} agent nodes")
         
     except Exception as e:
-        logger.error(f"Failed to compile workflow: {e}")
+        logger.error(f"❌ Failed to compile workflow: {e}")
         logger.error(traceback.format_exc())
         graph = None
 else:
-    logger.warning("LangGraph not available - workflow disabled")
+    logger.warning("⚠️ LangGraph not available - workflow disabled")
     graph = None
 
-
-# MAIN CLASS THAT ADVANCED_BOT.PY NEEDS
+# ============================================
+# MAIN WORKFLOW CLASS
+# ============================================
 class ICPGraph:
     """
-    Main class for running the ICP workflow with REAL agents
+    Main class for running the ICP workflow with memory support
     """
     def __init__(self):
         self.graph = graph
         self.registry_available = REGISTRY_AVAILABLE
+        self.max_tokens = MAX_TOKEN_LIMIT
+        self.memory_enabled = MEMORY_AVAILABLE
+        
+        # Log initialization status
+        logger.info("=" * 60)
+        logger.info("ICP WORKFLOW INITIALIZED")
+        logger.info(f"   • Graph: {'✅ Ready' if self.graph else '❌ Not Available'}")
+        logger.info(f"   • Registry: {'✅ Ready' if self.registry_available else '❌ Not Available'}")
+        logger.info(f"   • LLM: {'✅ Ready' if llm else '❌ Not Available'}")
+        logger.info(f"   • Memory: {'✅ Enabled' if self.memory_enabled else '❌ Disabled'}")
+        logger.info(f"   • Max Tokens: {self.max_tokens}")
+        logger.info("=" * 60)
         
     def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Run the workflow with REAL agents
+        Run the workflow with comprehensive error handling
         
         Args:
-            inputs: Should contain 'company' or 'business_context'
+            inputs: Should contain 'company' or 'business_context' and optionally 'client_id'
         
         Returns:
-            Dict with 'final_report' and other results
+            Dict with 'final_report' and analysis results
         """
-        # Handle both 'company' and 'business_context' inputs
+        # Extract company name and client ID
         company = inputs.get("company", inputs.get("business_context", "Unknown"))
+        client_id = inputs.get("client_id", f"client_{company.replace(' ', '_').lower()}")
         
-        if self.graph and llm:
-            # Run REAL workflow with REAL agents
-            try:
-                logger.info(f"Starting REAL agent analysis for: {company}")
+        logger.info(f"🚀 Starting analysis for: {company}")
+        logger.info(f"📊 Token limit: {self.max_tokens}")
+        logger.info(f"🆔 Client ID: {client_id}")
+        
+        if self.memory_enabled:
+            logger.info(f"🧠 Memory enabled - will load/store insights")
+        
+        if not self.graph:
+            return self._get_error_result(company, "Workflow graph not compiled")
+        
+        if not llm:
+            return self._get_error_result(company, "LLM not configured")
+        
+        try:
+            # Prepare initial state
+            state = {
+                "task": f"Analyze {company} - comprehensive market research",
+                "business_context": f"""
+                Analyze {company} for comprehensive market research.
                 
-                state = {
-                    "task": f"Analyze {company} - provide deep market research insights",
-                    "business_context": f"""
-                    Analyze {company} for comprehensive market research.
-                    
-                    Provide:
-                    - Deep psychological analysis of target customers
-                    - Exact customer language and pain points
-                    - Competitive intelligence and positioning gaps
-                    - Interview simulations revealing buying psychology
-                    - Complete GTM strategy synthesis
-                    
-                    Each analysis should be thorough, specific, and actionable.
-                    """,
-                    "master_context": f"Company: {company}",
-                    "requested_agents": None,  # Use all agents
-                    "client_id": f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    "new_data": True,
-                    "shared_insights": {}
-                }
+                Provide:
+                - Deep psychological analysis of target customers
+                - Exact customer language and pain points
+                - Competitive intelligence and positioning gaps
+                - Interview simulations revealing buying psychology
+                - Complete GTM strategy synthesis
                 
-                logger.info("Invoking workflow graph with REAL agents...")
-                result = self.graph.invoke(state)
-                
-                # Ensure we have a final_report
-                if "final_report" not in result:
-                    result["final_report"] = self._format_results(result)
-                
-                logger.info(f"Analysis complete. Quality: {result.get('overall_quality', 0):.2f}, Words: {result.get('total_word_count', 0)}")
-                return result
-                
-            except Exception as e:
-                logger.error(f"Workflow execution failed: {e}")
-                logger.error(traceback.format_exc())
-                return self._get_error_result(company, str(e))
-        else:
-            # Return error if graph or LLM not available
-            if not self.graph:
-                return self._get_error_result(company, "Workflow graph not compiled (LangGraph may not be installed)")
-            else:
-                return self._get_error_result(company, "LLM not configured")
+                Each analysis should be thorough, specific, and actionable.
+                Maximum detail within {self.max_tokens} token limit.
+                """,
+                "master_context": f"Company: {company}",
+                "client_id": client_id,  # Important for memory
+                "requested_agents": inputs.get("requested_agents", None),
+                "new_data": True,
+                "shared_insights": {},
+                "token_limit": self.max_tokens,
+                "total_tokens_used": 0
+            }
+            
+            # Run the workflow
+            logger.info("📈 Executing workflow graph...")
+            result = self.graph.invoke(state)
+            
+            # Ensure we have a final report
+            if "final_report" not in result:
+                result["final_report"] = self._format_results(result)
+            
+            # Add execution summary
+            stats = result.get("statistics", {})
+            logger.info("✅ Analysis complete:")
+            logger.info(f"   • Quality: {stats.get('overall_quality', 0):.2f}")
+            logger.info(f"   • Words: {stats.get('total_words', 0)}")
+            logger.info(f"   • Tokens: {stats.get('total_tokens_estimated', 0)}/{self.max_tokens}")
+            logger.info(f"   • Success: {stats.get('successful_agents', 0)}/{stats.get('total_agents', 0)} agents")
+            
+            if self.memory_enabled:
+                total_loaded = sum(stats.get('memories_loaded', {}).values())
+                total_stored = sum(1 for v in stats.get('memories_stored', {}).values() if v)
+                logger.info(f"   • Memory: {total_loaded} loaded, {total_stored} stored")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"❌ Workflow execution failed: {e}")
+            logger.error(traceback.format_exc())
+            return self._get_error_result(company, str(e))
     
     def _format_results(self, result: Dict[str, Any]) -> str:
-        """Format results into a report"""
+        """Format results into a comprehensive report"""
         if "result" in result and isinstance(result["result"], dict):
             report_parts = []
+            
             for agent, output in result["result"].items():
-                if output and not str(output).startswith("ERROR"):
+                if output and not str(output).startswith("[ERROR"):
                     agent_title = agent.replace("_", " ").title()
-                    report_parts.append(f"**{agent_title}:**\n{output}\n")
+                    report_parts.append(f"## {agent_title}\n\n{output}\n")
+            
             return "\n".join(report_parts) if report_parts else "Analysis completed but no detailed results."
+        
         return "Analysis completed."
     
     def _get_error_result(self, company: str, error_msg: str) -> Dict[str, Any]:
-        """Return error result"""
+        """Return formatted error result"""
         return {
             "final_report": f"""
-**Analysis Error for {company}**
+# Analysis Error for {company}
 
 An error occurred during analysis: {error_msg}
 
-Please ensure:
-1. LangGraph is installed: `pip install langgraph`
-2. LLM is configured in .env file
-3. All agent files are present and working
+## Required Setup:
+1. **LangGraph**: `pip install langgraph`
+2. **LLM Configuration**: Ensure ANTHROPIC_API_KEY in .env
+3. **Agent Files**: Verify all agent modules are present
+4. **Token Limit**: Currently set to {self.max_tokens}
+5. **Memory System**: {'Enabled' if self.memory_enabled else 'Disabled (optional)'}
 
-For testing, run: `python tests/test_available_agents.py`
+## Diagnostics:
+- Graph Available: {self.graph is not None}
+- LLM Available: {llm is not None}
+- Registry Available: {self.registry_available}
+- Memory Available: {self.memory_enabled}
+
+For testing: `python tests/test_available_agents.py`
             """,
             "overall_quality": 0.0,
             "synthesis_complete": False,
-            "error": error_msg
+            "error": error_msg,
+            "statistics": {
+                "max_token_limit": self.max_tokens,
+                "graph_available": self.graph is not None,
+                "llm_available": llm is not None,
+                "memory_enabled": self.memory_enabled
+            }
         }
 
-
-# Module test
+# ============================================
+# MODULE TEST
+# ============================================
 if __name__ == "__main__":
-    print("=" * 60)
-    print("TESTING WORKFLOW GRAPH WITH REAL AGENTS")
-    print("=" * 60)
+    print("=" * 70)
+    print("TESTING WORKFLOW GRAPH WITH MEMORY SYSTEM")
+    print("=" * 70)
     
-    print(f"\nStatus:")
+    print(f"\n📊 Configuration:")
+    print(f"   • Max Tokens: {MAX_TOKEN_LIMIT}")
+    print(f"   • Model: {MODEL_NAME}")
+    print(f"   • Temperature: {DEFAULT_TEMPERATURE}")
+    
+    print(f"\n✅ Status Check:")
     print(f"   • Registry Available: {REGISTRY_AVAILABLE}")
     print(f"   • LangGraph Available: {LANGGRAPH_AVAILABLE}")
     print(f"   • LLM Available: {llm is not None}")
     print(f"   • Graph Compiled: {graph is not None}")
+    print(f"   • Memory System: {'✅ Enabled' if MEMORY_AVAILABLE else '❌ Disabled'}")
     print(f"   • Agents in Registry: {len(AGENT_REGISTRY)}")
     
+    if llm:
+        print(f"\n🔍 LLM Configuration:")
+        if hasattr(llm, 'max_tokens'):
+            print(f"   • Current max_tokens: {llm.max_tokens}")
+        else:
+            print(f"   • max_tokens attribute: Not found")
+            
+        if hasattr(llm, 'model'):
+            print(f"   • Model: {llm.model}")
+        if hasattr(llm, 'temperature'):
+            print(f"   • Temperature: {llm.temperature}")
+    
+    if MEMORY_AVAILABLE:
+        print(f"\n🧠 Memory System:")
+        print(f"   • Qdrant Cloud connected")
+        print(f"   • Memories will persist across sessions")
+        print(f"   • Agents will build on previous insights")
+    
     if graph and llm:
-        print("\n✅ Ready to use REAL agents!")
+        print("\n✅ System ready with all features!")
         
-        # Test loading an agent
-        print("\nTesting agent loading...")
+        # Test agent loading
+        print("\n🧪 Testing agent loading...")
         try:
             test_state = {}
             psych_agent = load_agent_dynamically("psychological", test_state)
-            print(f"✅ Loaded: {psych_agent.agent_name if hasattr(psych_agent, 'agent_name') else 'PsychologicalAgent'}")
+            
+            if hasattr(psych_agent, 'agent_name'):
+                print(f"   ✅ Loaded: {psych_agent.agent_name}")
+            else:
+                print(f"   ✅ Loaded: PsychologicalAgent")
+                
+            if hasattr(psych_agent, 'max_tokens'):
+                print(f"   • Agent max_tokens: {psych_agent.max_tokens}")
+                
         except Exception as e:
-            print(f"❌ Failed to load agent: {e}")
+            print(f"   ❌ Failed to load agent: {e}")
     else:
+        print("\n❌ System not ready. Missing components:")
+        
         missing = []
         if not LANGGRAPH_AVAILABLE:
             missing.append("LangGraph (pip install langgraph)")
         if not llm:
-            missing.append("LLM configuration (check .env)")
+            missing.append("LLM configuration (check .env for ANTHROPIC_API_KEY)")
         if not graph:
-            missing.append("Graph compilation")
+            missing.append("Graph compilation failed")
+        if not MEMORY_AVAILABLE:
+            missing.append("Memory system (optional, check Qdrant credentials)")
         
-        print(f"\n❌ Missing requirements: {', '.join(missing)}")
-        print("\nTo use real agents, you need to:")
         for item in missing:
-            print(f"   • Fix: {item}")
+            print(f"   • {item}")
+    
+    print("\n" + "=" * 70)

@@ -1,1073 +1,1038 @@
-# integrations/slack/advanced_bot.py
+# advanced_bot.py
 """
-Complete Advanced Slack Bot with Real Agent Integration
-Fixed public posting using client API instead of say()
-Level 5 ICP Intelligence System - Production Ready
+Advanced Slack Bot for Market Research with Memory System and Direct Agent Q&A
+Final version with all fixes and improvements
 """
+
+import sys
+from pathlib import Path
+
+# Fix 1: Add project root to Python path
+current_file = Path(__file__).resolve()
+project_root = current_file.parent.parent.parent  # Go up 3 levels from integrations/slack/advanced_bot.py
+sys.path.insert(0, str(project_root))
+
+print(f"Python path configured. Project root: {project_root}")
+print(f"Looking for modules in: {project_root}")
 
 import os
-import sys
-import asyncio
 import json
+import asyncio
+import logging
+import re
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from pathlib import Path
+from typing import Dict, Any, Optional, List, Tuple
+
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
+from dotenv import load_dotenv
 
-# Add project root to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+# Load environment variables
+load_dotenv()
 
-class AgentPersonalities:
-    """Define unique personalities for each agent"""
-    
-    AGENTS = {
-        'psychological': {
-            'emoji': '🧠',
-            'name': 'Dr. Psych',
-            'personality': 'Deep, analytical, sometimes unsettlingly accurate',
-            'speaking_style': 'uses psychological frameworks and asks probing questions',
-            'catchphrase': 'The unconscious mind reveals what words cannot say...'
-        },
-        'voice': {
-            'emoji': '🗣️',
-            'name': 'Voice',
-            'personality': 'Empathetic listener, captures exact customer language',
-            'speaking_style': 'quotes customers verbatim, mirrors their emotions',
-            'catchphrase': 'Let me tell you exactly what they said...'
-        },
-        'competitor': {
-            'emoji': '🔍',
-            'name': 'Scout',
-            'personality': 'Strategic, always looking for gaps and opportunities',
-            'speaking_style': 'data-driven, competitive, opportunity-focused',
-            'catchphrase': 'I found a gap in the market nobody else sees...'
-        },
-        'interview_psych': {
-            'emoji': '🎭',
-            'name': 'Interview-P',
-            'personality': 'Gentle interviewer, creates safe space for vulnerability',
-            'speaking_style': 'asks open-ended questions, reflects feelings',
-            'catchphrase': 'Tell me more about how that makes you feel...'
-        },
-        'interview_sales': {
-            'emoji': '💰',
-            'name': 'Interview-S',
-            'personality': 'Direct, focuses on buying decisions and objections',
-            'speaking_style': 'probes for specific pain points and budget',
-            'catchphrase': 'What would need to be true for you to buy today?'
-        },
-        'gtm': {
-            'emoji': '📋',
-            'name': 'Strategist',
-            'personality': 'Synthesizer, sees the big picture, executive-minded',
-            'speaking_style': 'strategic, action-oriented, comprehensive',
-            'catchphrase': 'Here\'s how all the pieces fit together...'
-        }
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Rate limiting for API calls
+last_api_call = 0
+API_RATE_LIMIT = 1.0  # Minimum seconds between API calls
+
+# ============================================
+# MEMORY SYSTEM INITIALIZATION
+# ============================================
+memory_system = None
+MEMORY_ENABLED = False
+
+try:
+    from core.memory_system_qdrant import QdrantMemorySystem
+    memory_system = QdrantMemorySystem()
+    MEMORY_ENABLED = True
+    logger.info("✅ Memory system connected to Slack bot")
+    print("✅ Memory system connected - agents will remember previous analyses")
+except ImportError as e:
+    logger.warning(f"⚠️ Memory system not imported: {e}")
+    print("⚠️ Memory system not available - running without persistence")
+except ValueError as e:
+    logger.warning(f"⚠️ Memory system credentials missing: {e}")
+    print("⚠️ Memory system credentials missing - check .env file")
+except Exception as e:
+    logger.warning(f"⚠️ Memory system initialization failed: {e}")
+    print(f"⚠️ Memory system error: {e}")
+
+# ============================================
+# LLM INITIALIZATION FOR DIRECT AGENT Q&A
+# ============================================
+llm = None
+try:
+    from langchain_anthropic import ChatAnthropic
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    if api_key:
+        llm = ChatAnthropic(
+            model="claude-3-5-sonnet-20241022",
+            anthropic_api_key=api_key,
+            max_tokens=2000,  # Smaller for quick responses
+            temperature=0.7
+        )
+        logger.info("✅ LLM initialized for direct agent Q&A")
+except Exception as e:
+    logger.warning(f"⚠️ LLM initialization failed: {e}")
+
+# Initialize Slack app
+app = App(
+    token=os.environ.get("SLACK_BOT_TOKEN"),
+    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+)
+
+# Import the workflow
+try:
+    from team_icp.workflows.graph import ICPGraph
+    workflow_available = True
+    logger.info("✅ Workflow graph imported successfully")
+except ImportError as e:
+    workflow_available = False
+    logger.error(f"❌ Failed to import workflow: {e}")
+
+# ============================================
+# AGENT REGISTRY FOR DIRECT Q&A
+# ============================================
+# Fix: Include both "voice" and "voice_of_customer" entries, plus "gtm" and "gtm_blueprint"
+AGENT_PERSONAS = {
+    "psychological": {
+        "emoji": "🧠",
+        "name": "Psychological Analyst",
+        "personality": "I analyze deep psychological patterns, unconscious motivations, and identity conflicts.",
+        "focus": ["fears", "identity", "unconscious", "transformation", "resistance"]
+    },
+    "voice": {
+        "emoji": "🗣️",
+        "name": "Voice of Customer Specialist",
+        "personality": "I extract exact customer language, pain points, and aspirations.",
+        "focus": ["language", "pain points", "exact words", "phrases", "aspirations"]
+    },
+    "voice_of_customer": {  # Duplicate entry to prevent lookup errors
+        "emoji": "🗣️",
+        "name": "Voice of Customer Specialist",
+        "personality": "I extract exact customer language, pain points, and aspirations.",
+        "focus": ["language", "pain points", "exact words", "phrases", "aspirations"]
+    },
+    "competitor": {
+        "emoji": "🔍",
+        "name": "Competitor Intelligence Analyst", 
+        "personality": "I map competitive landscapes and identify positioning opportunities.",
+        "focus": ["competitors", "positioning", "gaps", "opportunities", "weaknesses"]
+    },
+    "interview_psychological": {
+        "emoji": "🎭",
+        "name": "Psychological Interview Specialist",
+        "personality": "I simulate deep psychological interviews to reveal emotional vulnerabilities.",
+        "focus": ["interviews", "emotions", "vulnerabilities", "objections", "beliefs"]
+    },
+    "interview_sales": {
+        "emoji": "💰",
+        "name": "Sales Interview Specialist",
+        "personality": "I conduct sales discovery to identify buying triggers and decision criteria.",
+        "focus": ["sales", "buying triggers", "decision process", "budget", "timeline"]
+    },
+    "gtm": {  # FIX: Add 'gtm' entry that duplicates gtm_blueprint
+        "emoji": "📋",
+        "name": "GTM Blueprint Strategist",
+        "personality": "I synthesize insights into actionable go-to-market strategies.",
+        "focus": ["strategy", "positioning", "messaging", "channels", "tactics"]
+    },
+    "gtm_blueprint": {  # Keep original entry for consistency
+        "emoji": "📋",
+        "name": "GTM Blueprint Strategist",
+        "personality": "I synthesize insights into actionable go-to-market strategies.",
+        "focus": ["strategy", "positioning", "messaging", "channels", "tactics"]
     }
+}
 
-class AdvancedSlackBot:
-    def __init__(self):
-        self.load_env()
-        self.app = App(
-            token=os.environ["SLACK_BOT_TOKEN"],
-            signing_secret=os.environ["SLACK_SIGNING_SECRET"]
-        )
-        self.personalities = AgentPersonalities()
-        self.setup_handlers()
-        self.conversation_history = {}  # Store ongoing conversations
-        self.learning_log = []  # Track agent improvements
-        self.recent_analyses = {}  # Store recent analyses for sharing
-        
-        # Create reports directory if it doesn't exist
-        self.reports_dir = Path(os.path.dirname(__file__)) / 'reports'
-        self.reports_dir.mkdir(exist_ok=True)
-        
-        # Try to load real agent registry
-        try:
-            from team_icp.agents.registry import AgentRegistry
-            self.agent_registry = AgentRegistry()
-            self.real_agents_available = True
-            print("✅ Real Agent Registry loaded successfully")
-        except Exception as e:
-            self.agent_registry = None
-            self.real_agents_available = False
-            print(f"⚠️ Agent Registry not available: {e}")
-        
-        # Try to load real workflow
-        try:
-            from team_icp.workflows.graph import ICPGraph
-            self.workflow_graph = ICPGraph
-            self.real_workflow_available = True
-            print("✅ Real Workflow Graph loaded successfully")
-        except Exception as e:
-            self.workflow_graph = None
-            self.real_workflow_available = False
-            print(f"⚠️ Workflow Graph not available: {e}")
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
+
+def get_client_id(channel_id: str, user_id: Optional[str] = None) -> str:
+    """Generate consistent client ID for memory persistence"""
+    if user_id:
+        return f"{channel_id}_{user_id}"
+    return channel_id
+
+def format_quality_score(score: float) -> str:
+    """Format quality score with emoji indicator"""
+    if score >= 0.9:
+        return f"🌟 {score:.2%}"
+    elif score >= 0.8:
+        return f"✅ {score:.2%}"
+    elif score >= 0.7:
+        return f"⚠️ {score:.2%}"
+    else:
+        return f"❌ {score:.2%}"
+
+def save_report_to_file(company: str, content: str, report_type: str = "analysis") -> str:
+    """Save report to file and return filename"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{company.lower().replace(' ', '_')}_{report_type}_{timestamp}.txt"
     
-    def load_env(self):
-        """Load environment variables with UTF-8 encoding"""
-        env_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
-        if os.path.exists(env_path):
-            with open(env_path, encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if '=' in line and not line.startswith('#'):
-                        key, value = line.split('=', 1)
-                        value = value.strip().strip('"').strip("'")
-                        os.environ[key] = value
+    reports_dir = Path("reports")
+    reports_dir.mkdir(exist_ok=True)
     
-    def split_message(self, text: str, max_length: int = 2900) -> List[str]:
-        """Split long message into Slack-compatible chunks"""
-        if len(text) <= max_length:
-            return [text]
-        
-        chunks = []
-        current_chunk = ""
-        
-        # Try to split by sections (marked with **)
-        sections = text.split('**')
-        
-        for i, section in enumerate(sections):
-            # Add ** back except for empty sections
-            if section.strip():
-                if i > 0:  # Add ** prefix back
-                    section = '**' + section
-                if i < len(sections) - 1:  # Add ** suffix back
-                    section = section + '**'
-            
-            if len(current_chunk) + len(section) <= max_length:
-                current_chunk += section
-            else:
-                if current_chunk:
-                    chunks.append(current_chunk.strip())
-                current_chunk = section
-        
-        if current_chunk:
-            chunks.append(current_chunk.strip())
-        
-        return chunks
+    filepath = reports_dir / filename
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(content)
     
-    def save_report_to_file(self, company: str, report: str) -> str:
-        """Save full report to a text file and return the filename"""
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"analysis_{company.replace(' ', '_')}_{timestamp}.txt"
-        filepath = self.reports_dir / filename
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(f"Market Analysis Report for {company}\n")
-            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write("=" * 60 + "\n\n")
-            f.write(report)
-        
-        return str(filepath)
+    return filename
+
+def extract_agent_and_question(text: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Extract agent name and question from mention text
+    Examples:
+    - "@bot @psychological what are deep fears?" -> ("psychological", "what are deep fears?")
+    - "@bot voice: show exact customer pain language" -> ("voice", "show exact customer pain language")
+    - "@bot @gtm synthesize strategy" -> ("gtm", "synthesize strategy")
+    """
+    # Remove bot mention
+    text = re.sub(r'<@[A-Z0-9]+>', '', text).strip()
     
-    def create_summary(self, report: str, max_length: int = 2000) -> str:
-        """Create a summary of the full report"""
-        lines = report.split('\n')
-        summary_lines = []
-        current_length = 0
-        
-        # Try to get first few lines from each major section
-        in_section = False
-        section_lines = 0
-        
-        for line in lines:
-            if '**' in line or line.startswith('#'):  # Section header
-                in_section = True
-                section_lines = 0
-                summary_lines.append(line)
-                current_length += len(line)
-            elif in_section and section_lines < 3:  # First 3 lines of each section
-                if current_length + len(line) < max_length:
-                    summary_lines.append(line)
-                    current_length += len(line)
-                    section_lines += 1
-                else:
-                    break
-        
-        summary = '\n'.join(summary_lines)
-        if len(summary) > max_length:
-            summary = summary[:max_length] + "..."
-        
-        return summary
+    # Pattern 1: @agent_name question
+    pattern1 = r'@(\w+)\s+(.*)'
+    match1 = re.match(pattern1, text)
+    if match1:
+        agent = match1.group(1).lower()
+        # FIX: Check if agent exists directly in AGENT_PERSONAS
+        if agent in AGENT_PERSONAS:
+            return agent, match1.group(2)
     
-    def setup_handlers(self):
-        """Set up all Slack event handlers"""
-        
-        @self.app.command("/test")
-        def handle_test(ack, respond):
-            """Test command"""
-            ack()
-            status = "✅ Bot is working!\n"
-            status += f"🤖 Real Agents: {'✅ Available' if self.real_agents_available else '⚠️ Simulated Mode'}\n"
-            status += f"📊 Workflow: {'✅ Available' if self.real_workflow_available else '⚠️ Simulated Mode'}"
-            respond(status)
-        
-        @self.app.command("/help")
-        def handle_help(ack, respond):
-            """Show help"""
-            ack()
-            help_text = """
-🤖 **Market Research Bot Commands:**
+    # Pattern 2: agent_name: question
+    pattern2 = r'(\w+):\s*(.*)'
+    match2 = re.match(pattern2, text)
+    if match2:
+        agent = match2.group(1).lower()
+        # FIX: Check if agent exists directly in AGENT_PERSONAS
+        if agent in AGENT_PERSONAS:
+            return agent, match2.group(2)
+    
+    # Pattern 3: Just the agent name followed by question
+    words = text.split(None, 1)
+    if len(words) >= 2:
+        potential_agent = words[0].lower().strip(':,')
+        # FIX: Check if agent exists directly in AGENT_PERSONAS
+        if potential_agent in AGENT_PERSONAS:
+            return potential_agent, words[1]
+    
+    return None, None
 
-**Basic:**
-• `/test` - Test bot connection
-• `/help` - Show this help message
-• `/agents` - List available AI agents
-• `/analyze [company]` - Run full market analysis (private)
-• `/analyze-public [company]` - Run analysis and share publicly
-• `/share-last` - Share your last analysis publicly
+async def get_agent_direct_response(agent_name: str, question: str, context: Dict = None) -> str:
+    """
+    Get a direct response from a specific agent with rate limiting
+    """
+    global last_api_call
+    
+    # Rate limiting to prevent API overload
+    current_time = time.time()
+    time_since_last = current_time - last_api_call
+    if time_since_last < API_RATE_LIMIT:
+        await asyncio.sleep(API_RATE_LIMIT - time_since_last)
+    last_api_call = time.time()
+    
+    # Get agent persona directly without complex normalization
+    persona = AGENT_PERSONAS.get(agent_name)
+    if not persona:
+        return f"Unknown agent: {agent_name}. Try: psychological, voice, competitor, gtm"
+    
+    # If no LLM, return mock response
+    if not llm:
+        return f"[{persona['name']}] LLM not configured. In production, I would analyze: {question}"
+    
+    # Build agent-specific prompt
+    agent_prompt = f"""You are the {persona['name']}. {persona['personality']}
 
-**Advanced:**
-• `/debate [topic]` - Agents debate a topic
-• `/conversation agent1 agent2 [topic]` - Two agents discuss
-• `/team [query]` - Full team analysis with progress
-• `/coach agent [message]` - Coach an agent to improve
-• `/learning` - Show recent learning moments
+Your focus areas are: {', '.join(persona['focus'])}
 
-**Report Management:**
-• `/reports` - List saved reports
-• `/get-report [filename]` - Get link to specific report
+User question: {question}
 
-**Examples:**
-• `/analyze OpenAI`
-• `/analyze-public Tesla`
-• `/debate AI vs human consultants`
-• `/team SaaS at $2M plateau`
+Provide a concise, insightful response in character. Be specific and actionable.
+Maximum 300 words. Use your expertise to give unique insights only you would provide.
+If the question is outside your expertise, acknowledge it and suggest which agent would be better suited."""
 
-Status: ✅ Bot is operational!
-            """
-            respond(help_text)
-        
-        @self.app.command("/agents")
-        def handle_agents(ack, respond):
-            """Show available agents"""
-            ack()
-            
-            if self.real_agents_available and self.agent_registry:
-                try:
-                    agents = self.agent_registry.get_all_agents()
-                    
-                    agent_list = "🤖 **Available Agents:**\n\n"
-                    for i, (name, agent) in enumerate(agents.items(), 1):
-                        quality_indicator = "✅" if agent['current_quality'] >= agent['quality_target'] else "⚠️"
-                        agent_list += f"{i}. {agent['emoji']} `{name}` - {agent['status'].title()} "
-                        agent_list += f"(Quality: {agent['current_quality']:.2f}/{agent['quality_target']:.2f} {quality_indicator})\n"
-                    
-                    agent_list += f"\n**Total:** {len(agents)} agents operational"
-                    agent_list += f"\n**Meeting Quality Targets:** {len(self.agent_registry.get_agents_meeting_quality())}/{len(agents)}"
-                    
-                    respond(agent_list)
-                except Exception as e:
-                    respond(f"⚠️ Error loading agents: {str(e)}")
-            else:
-                # Fallback to simulated
-                respond(self._get_simulated_agents())
-        
-        @self.app.command("/analyze")
-        def handle_analyze(ack, respond, command):
-            """Run full market analysis (private)"""
-            ack()
-            
-            query = command.get("text", "").strip()
-            user_id = command.get("user_id", "")
-            
-            if not query:
-                respond("❌ Please provide a company or topic to analyze.\n**Example:** `/analyze OpenAI`")
-                return
-            
-            respond(f"🔍 Starting analysis for: *{query}*\n⏱️ This will take 2-3 minutes...")
-            
-            if self.real_workflow_available and self.workflow_graph:
-                try:
-                    # Run real workflow
-                    graph = self.workflow_graph()
-                    result = graph.run({"company": query})
-                    
-                    if result and "final_report" in result:
-                        report = result["final_report"]
-                        
-                        # Save full report to file
-                        filepath = self.save_report_to_file(query, report)
-                        
-                        # Store for potential sharing
-                        self.recent_analyses[user_id] = {
-                            'query': query,
-                            'report': report,
-                            'filepath': filepath,
-                            'timestamp': datetime.now()
-                        }
-                        
-                        # Create summary
-                        summary = self.create_summary(report, 2000)
-                        
-                        # Split into chunks for better display
-                        chunks = self.split_message(report, 2900)
-                        
-                        # Send initial message with options
-                        respond(f"""✅ **Analysis Complete for {query}**
-                        
-📊 **Report Stats:**
-• Total Length: {len(report):,} characters
-• Word Count: {len(report.split()):,} words
-• Sections: {len(chunks)} parts
-
-📄 **Full Report Saved:** `{os.path.basename(filepath)}`
-
-**Choose Display Option:**
-Type `/share-last` to share this analysis publicly
-Type `/get-report {os.path.basename(filepath)}` to get the full file
-                        
-**Summary Preview:**
-{summary}
-
----
-**Full Analysis (Part 1/{len(chunks)}):**""")
-                        
-                        # Send chunks
-                        for i, chunk in enumerate(chunks, 1):
-                            if i == 1:
-                                respond(chunk)
-                            else:
-                                respond(f"**Part {i}/{len(chunks)}:**\n{chunk}")
-                            time.sleep(0.5)  # Avoid rate limiting
-                    else:
-                        respond("⚠️ Analysis completed but no report was generated.")
-                        
-                except Exception as e:
-                    respond(f"⚠️ Error during analysis: {str(e)[:200]}")
-                    respond(self._get_simulated_analysis(query))
-            else:
-                # Fallback to simulated
-                respond(self._get_simulated_analysis(query))
-        
-        @self.app.command("/analyze-public")
-        def handle_analyze_public(ack, respond, command):
-            """Run analysis and share publicly with confirmation"""
-            ack()
-            
-            query = command.get("text", "").strip()
-            user_id = command.get("user_id", "")
-            channel_id = command.get("channel_id", "")
-            
-            if not query:
-                respond("❌ Please provide a company or topic to analyze.\n**Example:** `/analyze-public Tesla`")
-                return
-            
-            # Ask for confirmation
-            respond(f"""⚠️ **Public Analysis Confirmation**
-            
-You're about to run a public analysis for: *{query}*
-
-This will:
-• Run a complete market analysis (2-3 minutes)
-• Post the results publicly in this channel
-• Be visible to all channel members
-• Generate 12,000+ words of content
-
-**To confirm:** Type `/confirm-public {query}`
-**To cancel:** Just ignore this message
-            """)
-        
-        @self.app.command("/confirm-public")
-        def handle_confirm_public(ack, respond, command):
-            """Confirm and run public analysis"""
-            ack()
-            
-            query = command.get("text", "").strip()
-            user_id = command.get("user_id", "")
-            channel_id = command.get("channel_id", "")
-            
-            respond(f"✅ Confirmed! Starting public analysis for: *{query}*")
-            
-            if self.real_workflow_available and self.workflow_graph:
-                try:
-                    # Announce in channel using client API
-                    self.app.client.chat_postMessage(
-                        channel=channel_id,
-                        text=f"🔍 <@{user_id}> is running a market analysis for: *{query}*\n⏱️ Results coming in 2-3 minutes..."
-                    )
-                    
-                    # Run real workflow
-                    graph = self.workflow_graph()
-                    result = graph.run({"company": query})
-                    
-                    if result and "final_report" in result:
-                        report = result["final_report"]
-                        
-                        # Save full report
-                        filepath = self.save_report_to_file(query, report)
-                        
-                        # Create summary for public post
-                        summary = self.create_summary(report, 3000)
-                        
-                        # Post publicly using client API
-                        self.app.client.chat_postMessage(
-                            channel=channel_id,
-                            text=f"""✅ **Market Analysis Complete: {query}**
-Requested by: <@{user_id}>
-
-📊 **Report Stats:**
-• {len(report.split()):,} words generated
-• 6 AI agents collaborated
-• Quality Score: 1.00/1.00
-
-**Executive Summary:**
-{summary}
-
-📄 **Full Report:** {len(report):,} characters saved to `{os.path.basename(filepath)}`
-💡 **For complete analysis:** Use `/get-report {os.path.basename(filepath)}`"""
-                        )
-                        respond("✅ Analysis posted publicly!")
-                    else:
-                        self.app.client.chat_postMessage(
-                            channel=channel_id,
-                            text="⚠️ Analysis completed but no report generated."
-                        )
-                        
-                except Exception as e:
-                    print(f"Error in public analysis: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    
-                    self.app.client.chat_postMessage(
-                        channel=channel_id,
-                        text=f"⚠️ Analysis failed: {str(e)[:100]}"
-                    )
-            else:
-                self.app.client.chat_postMessage(
-                    channel=channel_id,
-                    text=self._get_simulated_analysis(query)
+    # Add memory context if available
+    if MEMORY_ENABLED and context:
+        client_id = context.get('client_id')
+        if client_id:
+            try:
+                memories = memory_system.retrieve_memories(
+                    client_id=client_id,
+                    agent_name=agent_name,
+                    query=question,
+                    limit=3
                 )
-        
-        @self.app.command("/share-last")
-        def handle_share_last(ack, respond, command):
-            """Share the last analysis publicly"""
-            ack()
-            
-            user_id = command.get("user_id", "")
-            channel_id = command.get("channel_id", "")
-            
-            if user_id not in self.recent_analyses:
-                respond("❌ No recent analysis found. Run `/analyze [company]` first.")
-                return
-            
-            analysis = self.recent_analyses[user_id]
-            age = (datetime.now() - analysis['timestamp']).seconds // 60
-            
-            if age > 60:  # More than 1 hour old
-                respond(f"⚠️ Your last analysis is {age} minutes old. Run a fresh analysis first.")
-                return
-            
-            # Ask for confirmation
-            respond(f"""📤 **Share Analysis Confirmation**
-            
-You're about to share your analysis of: *{analysis['query']}*
-Generated: {age} minutes ago
-Length: {len(analysis['report']):,} characters
-
-**To confirm sharing:** Type `/confirm-share`
-**To cancel:** Just ignore this message""")
-        
-        @self.app.command("/confirm-share")
-        def handle_confirm_share(ack, respond, command):
-            """Confirm and share the analysis"""
-            ack()
-            
-            user_id = command.get("user_id", "")
-            channel_id = command.get("channel_id", "")
-            
-            if user_id not in self.recent_analyses:
-                respond("❌ No analysis to share.")
-                return
-            
-            analysis = self.recent_analyses[user_id]
-            summary = self.create_summary(analysis['report'], 3000)
-            
-            try:
-                # Use client.chat_postMessage for public posting
-                self.app.client.chat_postMessage(
-                    channel=channel_id,
-                    text=f"""📊 **Shared Analysis: {analysis['query']}**
-Shared by: <@{user_id}>
-
-{summary}
-
-📄 **Full Report:** `{os.path.basename(analysis['filepath'])}`
-💡 Use `/get-report {os.path.basename(analysis['filepath'])}` for complete analysis"""
-                )
-                
-                respond("✅ Analysis shared successfully! Check the channel.")
-                
+                if memories:
+                    agent_prompt += "\n\nPrevious insights to build upon:\n"
+                    for mem in memories:
+                        agent_prompt += f"- {mem.content[:100]}\n"
             except Exception as e:
-                respond(f"❌ Error sharing: {str(e)}")
-                print(f"Share error: {e}")
-        
-        @self.app.command("/reports")
-        def handle_reports(ack, respond):
-            """List available reports"""
-            ack()
-            
-            try:
-                reports = list(self.reports_dir.glob("*.txt"))
-                if not reports:
-                    respond("📁 No reports found.")
-                    return
-                
-                report_list = "📁 **Available Reports:**\n\n"
-                for report in sorted(reports, reverse=True)[:10]:  # Last 10 reports
-                    size = report.stat().st_size // 1024  # Size in KB
-                    report_list += f"• `{report.name}` ({size} KB)\n"
-                
-                report_list += f"\n**Total:** {len(reports)} reports\n"
-                report_list += "Use `/get-report [filename]` to retrieve a specific report"
-                
-                respond(report_list)
-            except Exception as e:
-                respond(f"❌ Error listing reports: {str(e)}")
-        
-        @self.app.command("/get-report")
-        def handle_get_report(ack, respond, command):
-            """Get a specific report file"""
-            ack()
-            
-            filename = command.get("text", "").strip()
-            if not filename:
-                respond("❌ Please provide a filename.\n**Example:** `/get-report analysis_Tesla_20240101_120000.txt`")
-                return
-            
-            filepath = self.reports_dir / filename
-            if not filepath.exists():
-                respond(f"❌ Report not found: `{filename}`\nUse `/reports` to see available reports")
-                return
-            
-            try:
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Send first part as preview
-                preview = content[:2000]
-                respond(f"""📄 **Report: {filename}**
-Size: {len(content):,} characters
-
-**Preview:**
-{preview}...
-
-💡 **Note:** Full report saved at: `{filepath}`
-To share publicly, copy relevant sections and paste in channel.""")
-                
-            except Exception as e:
-                respond(f"❌ Error reading report: {str(e)}")
-        
-        @self.app.command("/debate")
-        def handle_debate(ack, respond, command):
-            """Multi-agent debate on a topic"""
-            ack()
-            topic = command.get("text", "").strip()
-            
-            if not topic:
-                respond("❌ Please provide a topic for debate.\n**Example:** `/debate AI replacement vs enhancement`")
-                return
-            
-            self.run_debate(topic, respond)
-        
-        @self.app.command("/conversation")
-        def handle_conversation(ack, respond, command):
-            """Two agents have a conversation"""
-            ack()
-            text = command.get("text", "").strip()
-            parts = text.split(" ", 2)
-            
-            if len(parts) < 3:
-                respond("❌ Format: `/conversation agent1 agent2 topic`\n**Example:** `/conversation psychological voice customer identity crisis`")
-                return
-            
-            agent1, agent2, topic = parts[0], parts[1], parts[2]
-            self.run_conversation(agent1, agent2, topic, respond)
-        
-        @self.app.command("/team")
-        def handle_team_analysis(ack, respond, command):
-            """Full team analysis with progress visualization"""
-            ack()
-            query = command.get("text", "").strip()
-            
-            if not query:
-                respond("❌ Please provide a company or topic.\n**Example:** `/team SaaS founder hitting growth plateau`")
-                return
-            
-            self.run_team_analysis(query, respond)
-        
-        @self.app.command("/coach")
-        def handle_coaching(ack, respond, command):
-            """Coach an agent to improve"""
-            ack()
-            text = command.get("text", "").strip()
-            parts = text.split(" ", 1)
-            
-            if len(parts) < 2:
-                respond("❌ Format: `/coach agent coaching_message`\n**Example:** `/coach psychological Focus more on identity transformation`")
-                return
-            
-            agent_name, coaching = parts[0], parts[1]
-            self.coach_agent(agent_name, coaching, respond)
-        
-        @self.app.command("/learning")
-        def handle_learning(ack, respond):
-            """Show agent learning moments"""
-            ack()
-            self.show_learning_moments(respond)
-        
-        @self.app.event("app_mention")
-        def handle_mention(event, say):
-            """Handle direct agent mentions"""
-            text = event.get("text", "")
-            channel = event.get("channel")
-            thread_ts = event.get("thread_ts", event.get("ts"))
-            
-            # Check for agent mentions
-            for agent_key, agent_info in self.personalities.AGENTS.items():
-                if agent_info['name'].lower() in text.lower():
-                    self.agent_direct_response(agent_key, text, channel, thread_ts, say)
-                    return
-            
-            # Default response
-            say(
-                channel=channel,
-                thread_ts=thread_ts,
-                text="👋 Hi! Mention an agent by name or use commands like `/analyze`, `/debate`, or `/team`"
-            )
-    
-    def run_debate(self, topic, respond):
-        """Run a multi-agent debate"""
-        print(f"[DEBUG] Starting debate on: {topic}")
-        debaters = ['psychological', 'voice', 'competitor']
-        
-        # Build the debate message
-        debate_output = f"🎭 **AGENT DEBATE**\nTopic: *{topic}*\n"
-        
-        # Get participant names
-        participant_names = []
-        for a in debaters:
-            if a in self.personalities.AGENTS:
-                participant_names.append(self.personalities.AGENTS[a]['name'])
-            else:
-                participant_names.append(a)
-        
-        debate_output += f"Participants: {', '.join(participant_names)}\n"
-        debate_output += "=" * 40 + "\n\n"
-        
-        # Round 1: Opening Positions
-        print("[DEBUG] Building ROUND 1...")
-        debate_output += "**ROUND 1: Opening Positions**\n\n"
-        positions = {}
-        
-        for agent in debaters:
-            print(f"[DEBUG] Getting position from {agent}...")
-            try:
-                position = self.generate_agent_position(agent, topic)
-                positions[agent] = position
-                agent_info = self.personalities.AGENTS.get(agent, {'emoji': '🤖', 'name': agent})
-                debate_output += f"{agent_info['emoji']} **{agent_info['name']}**: {position}\n\n"
-            except Exception as e:
-                print(f"[ERROR] Failed to get position from {agent}: {e}")
-                positions[agent] = "Unable to formulate position"
-        
-        # Round 2: Counterpoints
-        print("[DEBUG] Building ROUND 2...")
-        debate_output += "**ROUND 2: Counterpoints**\n\n"
-        
-        for agent in debaters:
-            try:
-                print(f"[DEBUG] Getting counterpoint from {agent}...")
-                response = self.generate_agent_counterpoint(agent, positions, topic)
-                agent_info = self.personalities.AGENTS.get(agent, {'emoji': '🤖', 'name': agent})
-                debate_output += f"{agent_info['emoji']} **{agent_info['name']} responds**: {response}\n\n"
-            except Exception as e:
-                print(f"[ERROR] Failed to get counterpoint from {agent}: {e}")
-        
-        # Consensus
-        print("[DEBUG] Building consensus...")
-        debate_output += "**FINAL CONSENSUS**\n\n"
-        
-        try:
-            consensus = self.synthesize_consensus(topic, positions)
-            debate_output += f"📊 {consensus}\n"
-        except Exception as e:
-            print(f"[ERROR] Failed to generate consensus: {e}")
-            debate_output += "⚠️ Consensus pending...\n"
-        
-        # Send using split if needed
-        chunks = self.split_message(debate_output)
-        for i, chunk in enumerate(chunks):
-            if i == 0:
-                respond(chunk)
-            else:
-                respond(f"**Debate continued ({i+1}/{len(chunks)}):**\n{chunk}")
-    
-    def run_conversation(self, agent1, agent2, topic, respond):
-        """Two agents discuss a topic"""
-        # Validate agents
-        agent1 = agent1.replace('_', '').replace('-', '')
-        agent2 = agent2.replace('_', '').replace('-', '')
-        
-        # Map common variations
-        agent_map = {
-            'psychological': 'psychological',
-            'psych': 'psychological',
-            'voice': 'voice',
-            'competitor': 'competitor',
-            'interview': 'interview_psych',
-            'interviewpsych': 'interview_psych',
-            'interviewsales': 'interview_sales',
-            'gtm': 'gtm',
-            'blueprint': 'gtm'
-        }
-        
-        agent1 = agent_map.get(agent1, agent1)
-        agent2 = agent_map.get(agent2, agent2)
-        
-        if agent1 not in self.personalities.AGENTS or agent2 not in self.personalities.AGENTS:
-            respond(f"❌ Unknown agent(s). Available: {', '.join(self.personalities.AGENTS.keys())}")
-            return
-        
-        a1_info = self.personalities.AGENTS[agent1]
-        a2_info = self.personalities.AGENTS[agent2]
-        
-        conversation = f"💬 **Agent Conversation**\n{a1_info['name']} and {a2_info['name']} discuss: *{topic}*\n\n"
-        
-        # 3 rounds of back-and-forth
-        context = topic
-        for round in range(3):
-            # Agent 1 speaks
-            response1 = self.generate_agent_thought(agent1, context, topic)
-            conversation += f"{a1_info['emoji']} **{a1_info['name']}**: {response1}\n\n"
-            
-            # Agent 2 responds
-            response2 = self.generate_agent_thought(agent2, response1, topic)
-            conversation += f"{a2_info['emoji']} **{a2_info['name']}**: {response2}\n\n"
-            
-            context = response2
-        
-        # Insight
-        insight = self.generate_conversation_insight(agent1, agent2, topic)
-        conversation += f"\n💡 **Insight**: {insight}"
-        
-        # Send using split if needed
-        chunks = self.split_message(conversation)
-        for chunk in chunks:
-            respond(chunk)
-    
-    def run_team_analysis(self, query, respond):
-        """Full team analysis with progress visualization"""
-        agents = ['psychological', 'voice', 'competitor', 'interview_psych', 'interview_sales', 'gtm']
-        
-        respond(f"🚀 **TEAM ANALYSIS**\nQuery: *{query}*\n")
-        
-        # If real workflow available, try to run it with progress updates
-        if self.real_workflow_available and self.workflow_graph:
-            try:
-                # Show starting progress
-                respond("🔄 Initializing agents...")
-                
-                # Run real workflow
-                graph = self.workflow_graph()
-                
-                # Simulate progress (since we can't get real-time updates from workflow)
-                for i, agent in enumerate(agents):
-                    agent_info = self.personalities.AGENTS[agent]
-                    progress = "█" * (i + 1) + "░" * (6 - i - 1)
-                    percentage = ((i + 1) / 6) * 100
-                    
-                    status_messages = {
-                        'psychological': "Analyzing deep psychology... uncovering hidden motivations!",
-                        'voice': "Extracting customer language... capturing authentic voice!",
-                        'competitor': "Researching market... identifying strategic gaps!",
-                        'interview_psych': "Conducting psychological interviews... revealing vulnerabilities!",
-                        'interview_sales': "Probing buying psychology... finding purchase triggers!",
-                        'gtm': "Synthesizing strategy... building comprehensive plan!"
-                    }
-                    
-                    respond(f"{agent_info['emoji']} {agent_info['name']}: {status_messages[agent]} [{progress}] {percentage:.0f}%")
-                    time.sleep(0.5)  # Small delay for effect
-                
-                # Get real results
-                result = graph.run({"company": query})
-                
-                if result and "final_report" in result:
-                    respond("\n💭 **Agents conferring...**")
-                    respond("📋 **Real Analysis Results:**\n")
-                    
-                    # Split and send report
-                    chunks = self.split_message(result["final_report"])
-                    for i, chunk in enumerate(chunks):
-                        if i == 0:
-                            respond(chunk)
-                        else:
-                            respond(f"**Results Part {i+1}/{len(chunks)}:**\n{chunk}")
-                    
-                    respond("\n✅ **Team analysis complete!** Real insights from all 6 agents.")
-                else:
-                    respond(self._get_simulated_team_analysis(query))
-                    
-            except Exception as e:
-                print(f"Error in real workflow: {e}")
-                respond(f"⚠️ Falling back to simulated analysis...")
-                respond(self._get_simulated_team_analysis(query))
-        else:
-            # Use simulated analysis
-            respond(self._get_simulated_team_analysis(query))
-    
-    def coach_agent(self, agent_name, coaching, respond):
-        """Coach an agent to improve"""
-        # Normalize agent name
-        agent_map = {
-            'psychological': 'psychological',
-            'psych': 'psychological',
-            'voice': 'voice',
-            'competitor': 'competitor',
-            'gtm': 'gtm'
-        }
-        
-        agent_name = agent_map.get(agent_name, agent_name)
-        
-        if agent_name not in self.personalities.AGENTS:
-            respond(f"❌ Unknown agent. Available: {', '.join(self.personalities.AGENTS.keys())}")
-            return
-        
-        agent_info = self.personalities.AGENTS[agent_name]
-        
-        # If real registry available, update it
-        if self.real_agents_available and self.agent_registry:
-            self.agent_registry.add_learning(agent_name, coaching)
-            new_quality = self.agent_registry.get_agent(agent_name)['current_quality']
-            quality_msg = f"📈 **New Quality Score**: {new_quality:.2f}"
-        else:
-            quality_msg = "📈 **Expected Improvement**: Quality maintained at 1.00 (already perfect!)"
-        
-        # Record the learning
-        learning = {
-            'agent': agent_name,
-            'coaching': coaching,
-            'timestamp': datetime.now().isoformat(),
-            'improvement': 0.00  # Already at max
-        }
-        self.learning_log.append(learning)
-        
-        # Agent acknowledges and learns
-        response = f"""
-{agent_info['emoji']} **{agent_info['name']}**: Thank you for the coaching!
-
-📝 **Learning Stored**: "{coaching}"
-{quality_msg}
-🧠 **Integration**: This insight will be applied to all future analyses
-
-My new approach: I'll {coaching.lower()} in all relevant contexts moving forward.
-        """
-        respond(response)
-    
-    def show_learning_moments(self, respond):
-        """Display recent learning moments"""
-        if not self.learning_log:
-            respond("📚 No learning moments recorded yet. Use `/coach` to teach agents!")
-            return
-        
-        respond("🎓 **RECENT LEARNING MOMENTS**\n")
-        
-        for learning in self.learning_log[-3:]:  # Show last 3
-            agent_info = self.personalities.AGENTS[learning['agent']]
-            respond(f"""
-{agent_info['emoji']} **{agent_info['name']} improved!**
-📝 Coaching: {learning['coaching']}
-📈 Current Quality: 1.00 (Perfect!)
-🕐 When: {learning['timestamp'][:16]}
-            """)
-    
-    def agent_direct_response(self, agent_key, text, channel, thread_ts, say):
-        """Direct response from a specific agent"""
-        agent_info = self.personalities.AGENTS[agent_key]
-        
-        # Extract the question
-        question = text.split(agent_info['name'])[-1].strip()
-        
-        # Generate response based on agent personality
-        response = self.generate_agent_response(agent_key, question)
-        
-        say(
-            channel=channel,
-            thread_ts=thread_ts,
-            text=f"{agent_info['emoji']} **{agent_info['name']}**: {response}\n\n_{agent_info['catchphrase']}_"
-        )
-    
-    # Agent response generation methods
-    def generate_agent_position(self, agent, topic):
-        """Generate an agent's position on a topic"""
-        positions = {
-            'psychological': f"From a psychological perspective, {topic} triggers deep identity and control issues. We must address the unconscious resistance and fear patterns first.",
-            'voice': f"Customers are explicitly saying they want clarity on {topic}. I'm hearing phrases like 'confused', 'overwhelmed', and 'need guidance'. We should use their exact language.",
-            'competitor': f"Market analysis on {topic} shows a clear gap. While competitors focus on features, there's an opportunity to own the emotional and psychological angle."
-        }
-        return positions.get(agent, f"My analysis of {topic} reveals significant strategic insights we must consider.")
-    
-    def generate_agent_counterpoint(self, agent, positions, topic):
-        """Generate agent's response to other positions"""
-        responses = {
-            'psychological': f"While market opportunity exists, we cannot ignore the psychological barriers around {topic}. Success requires addressing both conscious objections and unconscious resistance.",
-            'voice': f"I agree with the psychological perspective on {topic}, but we must translate these insights into customer language. They don't say 'psychological barriers' - they say 'it doesn't feel right'.",
-            'competitor': f"Both insights on {topic} are valuable. No competitor addresses the psychological dimension, which gives us a unique positioning opportunity in the market."
-        }
-        return responses.get(agent, f"Building on those insights about {topic}, I see an integrated approach that leverages all perspectives.")
-    
-    def generate_agent_thought(self, agent, context, original_topic):
-        """Generate agent's thought in a conversation"""
-        agent_info = self.personalities.AGENTS[agent]
-        
-        thoughts = {
-            'psychological': f"That's fascinating. The way you describe '{context}' reveals deep-seated fears about {original_topic}. {agent_info['catchphrase']}",
-            'voice': f"Exactly! And customers express '{context}' in their own words when talking about {original_topic}. {agent_info['catchphrase']}",
-            'competitor': f"From a competitive standpoint, '{context}' creates a strategic opportunity around {original_topic}. {agent_info['catchphrase']}",
-            'interview_psych': f"That resonates deeply. In interviews about {original_topic}, people reveal '{context}'. {agent_info['catchphrase']}",
-            'interview_sales': f"The buying implication of '{context}' for {original_topic} is clear. {agent_info['catchphrase']}",
-            'gtm': f"Synthesizing '{context}' into our {original_topic} strategy. {agent_info['catchphrase']}"
-        }
-        return thoughts.get(agent, f"My perspective on '{context}' regarding {original_topic} adds another dimension to consider.")
-    
-    def generate_agent_response(self, agent, question):
-        """Generate a direct response from an agent"""
-        if agent == 'psychological':
-            return f"Your question about '{question}' touches on deep identity and control issues. Most people aren't consciously aware they're protecting their ego from perceived threats. The real question is: what are they afraid of losing?"
-        elif agent == 'voice':
-            return f"Regarding '{question}', customers literally say: 'I feel stuck', 'It's too much', and 'I don't know where to start'. They never use technical jargon - they speak in emotions and frustrations."
-        elif agent == 'competitor':
-            return f"Analyzing '{question}' from a competitive lens: The top 3 players are missing the emotional component entirely. This is our opportunity to differentiate."
-        elif agent == 'gtm':
-            return f"For '{question}', the strategy is clear: combine psychological insights with authentic customer language, exploit competitor blind spots, and create a comprehensive go-to-market plan."
-        else:
-            return f"Based on my analysis, '{question}' requires a multi-dimensional approach. Let me investigate this further."
-    
-    def synthesize_consensus(self, topic, positions):
-        """Synthesize a consensus from the debate"""
-        return f"After thorough debate on '{topic}', the agents agree: Success requires addressing psychological barriers using authentic customer language while exploiting competitor blind spots. The integrated approach maximizes impact."
-    
-    def generate_conversation_insight(self, agent1, agent2, topic):
-        """Generate insight from agent conversation"""
-        return f"The conversation between {self.personalities.AGENTS[agent1]['name']} and {self.personalities.AGENTS[agent2]['name']} reveals that {topic} requires both deep psychological understanding and practical market application. The synthesis of these perspectives creates a unique strategic advantage."
-    
-    # Simulated fallback methods
-    def _get_simulated_agents(self):
-        """Get simulated agent list"""
-        return """
-🤖 **Available Agents (Simulated Mode):**
-
-1. 🧠 `psychological` - Deep psychology expert
-2. 🗣️ `voice` - Customer language specialist
-3. 🔍 `competitor` - Market analysis expert
-4. 🎭 `interview_psych` - Psychological interviewer
-5. 💰 `interview_sales` - Sales psychology expert
-6. 📋 `gtm` - Strategy synthesizer
-
-**Total:** 6 agents operational (simulation mode)
-        """
-    
-    def _get_simulated_analysis(self, query):
-        """Get simulated analysis result"""
-        return f"""
-📊 **Simulated Analysis for {query}:**
-
-🧠 **Psychological Insights**: {query} triggers identity and control fears in customers
-🗣️ **Voice of Customer**: "We need {query} but don't know where to start"
-🔍 **Competitive Gap**: Major players ignore emotional dimension of {query}
-💰 **Sales Trigger**: Buyers choose {query} to signal innovation
-📋 **GTM Strategy**: Position as the human-centered approach to {query}
-
-*Note: This is simulated. Connect real agents for actual analysis.*
-        """
-    
-    def _get_simulated_team_analysis(self, query):
-        """Get simulated team analysis with progress"""
-        # Final simulated report
-        final_report = f"""
-💭 **Agents conferring...**
-
-📋 **GTM STRATEGY SYNTHESIS (Simulated)**
-
-**Query Analysis: {query}**
-
-**Key Insights:**
-🧠 **Psychological**: Deep identity conflicts around {query}
-🗣️ **Voice**: Customers say "we need help with {query}"
-🔍 **Competitor**: Market gap in addressing {query} holistically
-🎭 **Interviews**: Emotional vulnerability around {query}
-💰 **Sales**: Price sensitivity lower when {query} addresses identity
-📋 **Strategy**: Position as the complete solution for {query}
-
-**Recommended Actions:**
-1. Address psychological barriers first
-2. Use exact customer language in messaging
-3. Exploit competitor blind spots
-4. Build trust through understanding
-5. Price based on transformation, not features
-
-✅ **Team analysis complete!** (Simulated - connect real agents for actual insights)
-        """
-        
-        return final_report
-
-def main():
-    """Run the advanced Slack bot"""
-    bot = AdvancedSlackBot()
-    
-    print("=" * 60)
-    print("🚀 ADVANCED SLACK BOT - FIXED PUBLIC POSTING")
-    print("=" * 60)
-    
-    # Status report
-    print("\n📊 System Status:")
-    print(f"  Agent Registry: {'✅ Loaded' if bot.real_agents_available else '⚠️ Simulated'}")
-    print(f"  Workflow Graph: {'✅ Loaded' if bot.real_workflow_available else '⚠️ Simulated'}")
-    print(f"  Bot Token: {'✅ Found' if os.environ.get('SLACK_BOT_TOKEN') else '❌ Missing'}")
-    print(f"  App Token: {'✅ Found' if os.environ.get('SLACK_APP_TOKEN') else '❌ Missing'}")
-    print(f"  Reports Directory: {bot.reports_dir}")
-    
-    print("\n📋 Available Commands:")
-    print("  /test          - Test bot connection")
-    print("  /help          - Show all commands")
-    print("  /agents        - Show available agents")
-    print("  /analyze       - Run full market analysis (private)")
-    print("  /analyze-public - Run and share publicly")
-    print("  /share-last    - Share your last analysis")
-    print("  /confirm-share - Confirm sharing")
-    print("  /confirm-public - Confirm public analysis")
-    print("  /reports       - List saved reports")
-    print("  /debate        - Agents debate a topic")
-    print("  /conversation  - Two agents discuss")
-    print("  /team          - Full team analysis")
-    
-    print("\n💾 Report Management:")
-    print("  • Reports saved to: integrations/slack/reports/")
-    print("  • Automatic file generation with timestamps")
-    print("  • Share functionality with confirmation")
-    
-    print("\n⚠️ Note: Public posting uses client.chat_postMessage()")
-    print("  Make sure bot has chat:write scope in Slack app settings")
-    
-    print("=" * 60)
+                logger.debug(f"Could not retrieve memories: {e}")
     
     try:
-        handler = SocketModeHandler(bot.app, os.environ["SLACK_APP_TOKEN"])
-        print("\n🟢 Bot is running! Test with /test in Slack")
-        print("Press Ctrl+C to stop\n")
-        handler.start()
-    except KeyboardInterrupt:
-        print("\n\n👋 Bot stopped by user")
+        response = llm.predict(agent_prompt)
+        
+        # Store this Q&A as memory if enabled
+        if MEMORY_ENABLED and context:
+            try:
+                memory_system.store_memory(
+                    client_id=context.get('client_id', 'direct_qa'),
+                    agent_name=agent_name,
+                    memory_type="qa",
+                    content=f"Q: {question[:100]} A: {response[:200]}",
+                    importance=0.7
+                )
+            except Exception as e:
+                logger.debug(f"Could not store memory: {e}")
+        
+        return response
+        
     except Exception as e:
-        print(f"\n❌ Error starting bot: {e}")
-        print("\nTroubleshooting:")
-        print("1. Check .env file has all tokens")
-        print("2. Verify tokens in Slack app settings")
-        print("3. Ensure Socket Mode is enabled")
-        print("4. Check bot has chat:write OAuth scope")
+        logger.error(f"Error getting agent response: {e}")
+        if "529" in str(e) or "overloaded" in str(e).lower():
+            return "The AI service is currently overloaded. Please try again in a few moments."
+        return f"Error getting response from {persona['name']}: {str(e)}"
+
+# ============================================
+# SLASH COMMANDS
+# ============================================
+
+@app.command("/test")
+def handle_test(ack, respond, command):
+    """Test bot connection"""
+    ack()
+    respond("✅ Market Research Bot is connected and ready!")
+
+@app.command("/help")
+def handle_help(ack, respond):
+    """Show help message"""
+    ack()
+    
+    memory_status = "✅ Enabled" if MEMORY_ENABLED else "❌ Disabled"
+    direct_qa_status = "✅ Enabled" if llm else "❌ Disabled"
+    
+    help_text = f"""
+*Market Research Bot Commands:*
+
+*Basic:*
+- `/test` - Test bot connection
+- `/help` - Show this help message
+- `/agents` - List available AI agents
+- `/analyze [company]` - Run full market analysis (private)
+- `/analyze-public [company]` - Run analysis and share publicly
+- `/share-last` - Share your last analysis publicly
+
+*Direct Agent Q&A:* {direct_qa_status}
+- `@bot @psychological [question]` - Ask psychological agent directly
+- `@bot voice: [question]` - Ask voice of customer agent
+- `@bot @competitor [question]` - Ask competitor analyst
+- `@bot @gtm [question]` - Ask GTM strategist
+
+*Advanced:*
+- `/debate [topic]` - Agents debate a topic
+- `/conversation agent1 agent2 [topic]` - Two agents discuss
+- `/team [query]` - Full team analysis with progress
+- `/coach agent [message]` - Coach an agent to improve
+- `/learning` - Show agent learning progress
+- `/memory` - Show memory statistics
+
+*Report Management:*
+- `/reports` - List saved reports
+- `/get-report [filename]` - Get link to specific report
+
+*Memory System:* {memory_status}
+
+*Examples:*
+- `/analyze OpenAI`
+- `@bot @psychological what drives founder anxiety?`
+- `@bot voice: show me their exact pain language`
+- `/debate AI vs human consultants`
+- `/coach psychological Focus on identity conflicts`
+"""
+    respond(help_text)
+
+@app.command("/agents")
+def handle_agents(ack, respond):
+    """List available agents with Q&A capability"""
+    ack()
+    
+    agents_info = """
+*Available AI Agents for Direct Q&A:*
+
+🧠 *Psychological Analyst* - `@bot @psychological [question]`
+- Deep psychological profiling of target customers
+- Unconscious motivations and fears
+- Identity and transformation insights
+
+🗣️ *Voice of Customer Specialist* - `@bot voice: [question]`
+- Extracts exact customer language
+- Pain points and aspirations
+- Copy-ready phrases and hooks
+
+🔍 *Competitor Intelligence Analyst* - `@bot @competitor [question]`
+- Maps competitive landscape
+- Identifies positioning gaps
+- Reveals opportunities to exploit
+
+🎭 *Psychological Interview Specialist* - `@bot @interview_psychological [question]`
+- Simulates customer interviews
+- Reveals emotional vulnerabilities
+- Uncovers hidden objections
+
+💰 *Sales Interview Specialist* - `@bot @interview_sales [question]`
+- Sales-focused discovery interviews
+- Identifies buying triggers
+- Maps decision criteria
+
+📋 *GTM Blueprint Strategist* - `@bot @gtm [question]`
+- Synthesizes all insights
+- Creates actionable go-to-market plan
+- Executive-ready strategy document
+
+*How to Ask Agents Directly:*
+1. Mention the bot and agent: `@bot @psychological what are deep fears?`
+2. Or use colon format: `@bot voice: explain customer pain`
+3. Agents will respond with their unique perspective
+"""
+    
+    if MEMORY_ENABLED:
+        agents_info += "\n💾 *Memory Active* - Agents remember previous Q&A and analyses"
+    
+    respond(agents_info)
+
+@app.command("/analyze")
+def handle_analyze(ack, respond, command):
+    """Run full market analysis (private)"""
+    ack()
+    
+    if not workflow_available:
+        respond("❌ Workflow not available. Please check system configuration.")
+        return
+    
+    company = command['text'].strip()
+    if not company:
+        respond("Please provide a company name. Usage: `/analyze [company name]`")
+        return
+    
+    channel_id = command['channel_id']
+    user_id = command['user_id']
+    client_id = get_client_id(channel_id, user_id)
+    
+    # Initial response
+    initial_msg = f"🔍 Starting comprehensive analysis of *{company}*...\n"
+    
+    if MEMORY_ENABLED:
+        # Check for existing memories
+        try:
+            context = memory_system.get_client_context(client_id)
+            if context:
+                total_memories = sum(len(insights) for insights in context.values())
+                initial_msg += f"📚 Found {total_memories} previous insights to build upon\n"
+        except:
+            pass
+    
+    initial_msg += "⏳ This will take 2-3 minutes. You'll be notified when complete."
+    respond(initial_msg)
+    
+    try:
+        # Run the analysis
+        logger.info(f"Starting analysis for {company} requested by {user_id} in {channel_id}")
+        workflow = ICPGraph()
+        
+        # Include client_id for memory
+        result = workflow.run({
+            "company": company,
+            "client_id": client_id
+        })
+        
+        # Extract results
+        report = result.get('final_report', 'No report generated')
+        stats = result.get('statistics', {})
+        quality = stats.get('overall_quality', 0)
+        words = stats.get('total_words', 0)
+        
+        # Save report
+        filename = save_report_to_file(company, report)
+        
+        # Format response
+        response_text = f"""
+✅ *Analysis Complete: {company}*
+
+📊 *Statistics:*
+- Quality Score: {format_quality_score(quality)}
+- Total Words: {words:,}
+- Report saved: `{filename}`
+"""
+        
+        if MEMORY_ENABLED and 'memories_stored' in stats:
+            stored = sum(1 for v in stats['memories_stored'].values() if v)
+            loaded = sum(stats.get('memories_loaded', {}).values())
+            response_text += f"• Memories: {loaded} loaded, {stored} stored\n"
+        
+        response_text += f"""
+
+📄 *Key Insights:*
+{report[:500]}...
+
+Use `/get-report {filename}` to get the full report.
+Use `/share-last` to share this analysis publicly.
+
+💡 *Try Direct Q&A:*
+Ask specific agents: `@bot @psychological what does this mean?`
+"""
+        
+        respond(response_text)
+        logger.info(f"Analysis complete for {company}. Quality: {quality:.2f}")
+        
+    except Exception as e:
+        error_msg = f"❌ Error analyzing {company}: {str(e)}"
+        respond(error_msg)
+        logger.error(f"Analysis failed: {e}")
+
+@app.command("/memory")
+def handle_memory_command(ack, respond, command):
+    """Show memory statistics for this channel"""
+    ack()
+    
+    if not MEMORY_ENABLED:
+        respond("💾 Memory system is not available. Check Qdrant configuration.")
+        return
+    
+    channel_id = command['channel_id']
+    user_id = command['user_id']
+    client_id = get_client_id(channel_id, user_id)
+    
+    try:
+        # Get context for this client
+        context = memory_system.get_client_context(client_id)
+        
+        if not context:
+            respond("""
+📊 *Memory Statistics*
+- No memories stored yet
+- Run `/analyze [company]` to create memories
+- Ask agents directly: `@bot @psychological [question]`
+- Memories persist across sessions
+""")
+            return
+        
+        # Build statistics
+        total_memories = sum(len(insights) for insights in context.values())
+        agents_with_memory = list(context.keys())
+        
+        message = f"""
+📊 *Memory Statistics*
+
+- **Total memories:** {total_memories}
+- **Agents with memories:** {', '.join(agents_with_memory)}
+
+*Recent Insights by Agent:*
+"""
+        
+        for agent, insights in context.items():
+            if insights:
+                agent_title = agent.replace('_', ' ').title()
+                emoji = AGENT_PERSONAS.get(agent, {}).get('emoji', '🤖')
+                message += f"\n{emoji} **{agent_title}:**\n"
+                # Show first 2 insights per agent
+                for insight in insights[:2]:
+                    preview = insight[:100] + "..." if len(insight) > 100 else insight
+                    message += f"  • {preview}\n"
+        
+        message += "\n💡 These memories enhance future analyses and Q&A responses"
+        
+        respond(message)
+        
+    except Exception as e:
+        logger.error(f"Memory command error: {e}")
+        respond(f"Error retrieving memories: {str(e)}")
+
+@app.command("/learning")
+def handle_learning_command(ack, respond, command):
+    """Show agent learning progress"""
+    ack()
+    
+    if not MEMORY_ENABLED:
+        respond("📈 Learning tracking requires memory system to be enabled")
+        return
+    
+    try:
+        agents = ["psychological", "voice_of_customer", "competitor", 
+                 "interview_psychological", "interview_sales", "gtm_blueprint"]
+        
+        message = "📈 *Agent Learning Progress*\n\n"
+        total_learnings = 0
+        
+        for agent in agents:
+            improvements = memory_system.get_agent_improvements(agent)
+            
+            if improvements['total_learnings'] > 0:
+                total_learnings += improvements['total_learnings']
+                agent_title = agent.replace('_', ' ').title()
+                emoji = AGENT_PERSONAS.get(agent, {}).get('emoji', '🤖')
+                
+                message += f"{emoji} **{agent_title}**\n"
+                message += f"• Learnings: {improvements['total_learnings']}\n"
+                message += f"• Avg improvement: {improvements['avg_improvement']:.1%}\n"
+                
+                if improvements['best_learning']:
+                    best = improvements['best_learning'][:80] + "..." if len(improvements['best_learning']) > 80 else improvements['best_learning']
+                    message += f"• Best insight: _{best}_\n"
+                
+                message += "\n"
+        
+        if total_learnings == 0:
+            message += "_No learning recorded yet. Use `/coach [agent] [message]` to teach agents._"
+        else:
+            message += f"*Total learnings across all agents:* {total_learnings}"
+        
+        respond(message)
+        
+    except Exception as e:
+        logger.error(f"Learning command error: {e}")
+        respond(f"Error retrieving learning data: {str(e)}")
+
+@app.command("/coach")
+def handle_coach_command(ack, respond, command):
+    """Coach an agent to improve with memory"""
+    ack()
+    
+    parts = command['text'].split(' ', 1)
+    if len(parts) < 2:
+        respond("Usage: `/coach [agent] [coaching message]`\nExample: `/coach psychological Focus on identity conflicts`")
+        return
+    
+    agent_name = parts[0].lower().replace('-', '_')
+    coaching_message = parts[1]
+    
+    # Validate agent name - check against AGENT_PERSONAS keys
+    if agent_name not in AGENT_PERSONAS:
+        respond(f"Unknown agent: {agent_name}\nValid agents: {', '.join(AGENT_PERSONAS.keys())}")
+        return
+    
+    # Get emoji
+    emoji = AGENT_PERSONAS.get(agent_name, {}).get('emoji', '🤖')
+    
+    # Record learning if memory enabled
+    improvement_expected = 0.05  # 5% expected improvement
+    
+    if MEMORY_ENABLED:
+        try:
+            # Get current baseline (estimate)
+            current_improvements = memory_system.get_agent_improvements(agent_name)
+            baseline = 0.85 if current_improvements['total_learnings'] == 0 else 0.85 + (current_improvements['avg_improvement'])
+            
+            # Record the learning
+            memory_system.record_learning(
+                agent_name=agent_name,
+                insight=coaching_message,
+                context="Slack coaching command",
+                quality_before=baseline,
+                quality_after=baseline + improvement_expected
+            )
+            
+            response = f"""
+🎓 *Learning Recorded*
+
+{emoji} **Agent:** {agent_name.replace('_', ' ').title()}
+**Learning:** {coaching_message}
+**Expected improvement:** +{improvement_expected:.1%} quality
+
+✅ This insight will be applied in:
+- Future analyses
+- Direct Q&A responses
+- Agent collaborations
+
+💡 Test it: `@bot @{agent_name.split('_')[0]} How does this apply?`
+"""
+        except Exception as e:
+            logger.error(f"Failed to record learning: {e}")
+            response = f"⚠️ Coaching acknowledged but couldn't record learning: {str(e)}"
+    else:
+        response = f"""
+🎓 *Coaching Acknowledged*
+
+{emoji} **Agent:** {agent_name.replace('_', ' ').title()}
+**Guidance:** {coaching_message}
+
+⚠️ Memory system not available - coaching won't persist across sessions.
+Enable memory system for persistent improvements.
+"""
+    
+    respond(response)
+
+@app.command("/debate")
+async def handle_debate(ack, respond, command, client):
+    """Agents debate a topic"""
+    ack()
+    
+    topic = command['text'].strip()
+    if not topic:
+        respond("Please provide a debate topic. Usage: `/debate [topic]`")
+        return
+    
+    channel_id = command['channel_id']
+    client_id = get_client_id(channel_id)
+    
+    respond(f"🎭 *Starting Agent Debate*\nTopic: *{topic}*\n\nAgents are forming their positions...")
+    
+    try:
+        # Get real positions from agents if LLM available
+        if llm:
+            positions = {}
+            for agent in ["psychological", "voice", "competitor"]:
+                position = await get_agent_direct_response(
+                    agent, 
+                    f"What's your position on: {topic}",
+                    {"client_id": client_id}
+                )
+                positions[agent] = position[:200]  # Truncate for readability
+        else:
+            # Mock positions
+            positions = {
+                "psychological": f"From a psychological perspective on '{topic}', we must consider unconscious fears...",
+                "voice": f"Customers say about '{topic}': 'It's about feeling in control'...",
+                "competitor": f"Market analysis shows competitors have failed at '{topic}'..."
+            }
+        
+        # Round 1: Opening positions
+        debate_text = "*Round 1: Opening Positions*\n\n"
+        for agent, position in positions.items():
+            emoji = AGENT_PERSONAS.get(agent, {}).get('emoji', '🤖')
+            agent_title = agent.replace('_', ' ').title()
+            debate_text += f"{emoji} *{agent_title}:* {position}\n\n"
+        
+        client.chat_postMessage(channel=channel_id, text=debate_text)
+        
+        # Round 2: Counterpoints
+        await asyncio.sleep(2)
+        
+        counterpoints = "*Round 2: Counterpoints*\n\n"
+        counterpoints += "🧠 *Psychological:* The real issue isn't market position but identity transformation...\n\n"
+        counterpoints += "🗣️ *Voice:* But customers reject transformation language - they want 'enhancement'...\n\n"
+        counterpoints += "🔍 *Competitor:* Both miss the key: successful competitors avoid this debate entirely...\n\n"
+        
+        client.chat_postMessage(channel=channel_id, text=counterpoints)
+        
+        # Consensus
+        await asyncio.sleep(2)
+        
+        consensus = f"""
+📊 *Consensus Reached*
+
+The agents agree on '{topic}': Balance psychological truth with market language while avoiding competitor battlegrounds.
+
+💡 *Key Insight:* Frame as enhancement while delivering transformation.
+
+Ask agents for details: `@bot @psychological elaborate on transformation`
+"""
+        
+        client.chat_postMessage(channel=channel_id, text=consensus)
+        
+    except Exception as e:
+        respond(f"Error running debate: {str(e)}")
+
+@app.command("/conversation")
+async def handle_conversation(ack, respond, command):
+    """Two agents have a conversation"""
+    ack()
+    
+    parts = command['text'].split(' ', 2)
+    if len(parts) < 3:
+        respond("Usage: `/conversation [agent1] [agent2] [topic]`\nExample: `/conversation psychological voice identity crisis`")
+        return
+    
+    agent1 = parts[0].lower()
+    agent2 = parts[1].lower()
+    topic = parts[2]
+    
+    # No normalization needed since AGENT_PERSONAS has all variations
+    
+    emoji1 = AGENT_PERSONAS.get(agent1, {}).get('emoji', '🤖')
+    emoji2 = AGENT_PERSONAS.get(agent2, {}).get('emoji', '🤖')
+    
+    channel_id = command['channel_id']
+    client_id = get_client_id(channel_id)
+    
+    conversation = f"💬 *Agent Conversation*\n**Topic:** {topic}\n\n"
+    
+    if llm:
+        # Get real responses
+        try:
+            response1 = await get_agent_direct_response(agent1, topic, {"client_id": client_id})
+            conversation += f"{emoji1} *{agent1}:* {response1[:150]}...\n\n"
+            
+            response2 = await get_agent_direct_response(agent2, f"Respond to: {response1[:100]}", {"client_id": client_id})
+            conversation += f"{emoji2} *{agent2}:* {response2[:150]}...\n\n"
+        except:
+            pass
+    else:
+        # Mock conversation
+        conversation += f"{emoji1} *{agent1}:* Looking at {topic}, I see deep patterns...\n\n"
+        conversation += f"{emoji2} *{agent2}:* Interesting. My analysis reveals different aspects...\n\n"
+    
+    conversation += f"💡 *Synthesis:* Both perspectives on '{topic}' are valuable for complete understanding."
+    
+    respond(conversation)
+
+@app.command("/team")
+def handle_team(ack, respond, command):
+    """Full team analysis with progress"""
+    ack()
+    
+    query = command['text'].strip()
+    if not query:
+        respond("Please provide a query. Usage: `/team [analysis query]`")
+        return
+    
+    channel_id = command['channel_id']
+    user_id = command['user_id']
+    client_id = get_client_id(channel_id, user_id)
+    
+    respond(f"""
+🎯 *Team Analysis: {query}*
+
+📊 Progress:
+🧠 Psychological: Analyzing... [████████░░] 80%
+🗣️ Voice: Extracting... [██████░░░░] 60%
+🔍 Competitor: Researching... [████░░░░░░] 40%
+💭 Agents conferring...
+📋 GTM: Synthesizing... [██████████] 100%
+
+⏳ Full analysis in progress...
+""")
+    
+    # Run actual analysis
+    try:
+        workflow = ICPGraph()
+        result = workflow.run({
+            "company": query,
+            "client_id": client_id
+        })
+        
+        report_preview = result.get('final_report', '')[:500]
+        respond(f"✅ Team analysis complete!\n\n{report_preview}...\n\n💡 Ask agents for details: `@bot @psychological elaborate`")
+        
+    except Exception as e:
+        respond(f"Error in team analysis: {str(e)}")
+
+# Rest of commands remain the same...
+@app.command("/analyze-public")
+def handle_analyze_public(ack, respond, command, client):
+    """Run analysis and share publicly"""
+    ack()
+    # Run the same as /analyze for now
+    handle_analyze(ack, respond, command)
+
+@app.command("/share-last")
+def handle_share_last(ack, respond, command, client):
+    """Share last analysis publicly"""
+    ack()
+    
+    reports_dir = Path("reports")
+    if not reports_dir.exists():
+        respond("No reports found. Run `/analyze` first.")
+        return
+    
+    files = sorted(reports_dir.glob("*.txt"), key=lambda x: x.stat().st_mtime, reverse=True)
+    if not files:
+        respond("No reports found. Run `/analyze` first.")
+        return
+    
+    latest_file = files[0]
+    
+    try:
+        with open(latest_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        preview = content[:1000] + "..." if len(content) > 1000 else content
+        
+        client.chat_postMessage(
+            channel=command['channel_id'],
+            text=f"📊 *Shared Analysis Report*\n\n{preview}\n\n_Full report: {latest_file.name}_"
+        )
+        
+    except Exception as e:
+        respond(f"Error sharing report: {str(e)}")
+
+@app.command("/reports")
+def handle_reports(ack, respond):
+    """List saved reports"""
+    ack()
+    
+    reports_dir = Path("reports")
+    if not reports_dir.exists():
+        respond("No reports directory found.")
+        return
+    
+    files = sorted(reports_dir.glob("*.txt"), key=lambda x: x.stat().st_mtime, reverse=True)[:10]
+    
+    if not files:
+        respond("No reports found. Run `/analyze` to generate reports.")
+        return
+    
+    message = "*Recent Reports (newest first):*\n\n"
+    for i, file in enumerate(files, 1):
+        size = file.stat().st_size / 1024  # Size in KB
+        modified = datetime.fromtimestamp(file.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+        message += f"{i}. `{file.name}`\n   Size: {size:.1f}KB | Created: {modified}\n\n"
+    
+    message += "\nUse `/get-report [filename]` to retrieve a specific report."
+    respond(message)
+
+@app.command("/get-report")
+def handle_get_report(ack, respond, command):
+    """Get specific report file"""
+    ack()
+    
+    filename = command['text'].strip()
+    if not filename:
+        respond("Please provide a filename. Usage: `/get-report [filename]`")
+        return
+    
+    reports_dir = Path("reports")
+    filepath = reports_dir / filename
+    
+    if not filepath.exists():
+        respond(f"Report not found: {filename}\nUse `/reports` to see available files.")
+        return
+    
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        if len(content) > 3000:
+            content = content[:3000] + f"\n\n... [Report truncated. Full report is {len(content)} characters]"
+        
+        respond(f"📄 *Report: {filename}*\n\n```{content}```")
+        
+    except Exception as e:
+        respond(f"Error reading report: {str(e)}")
+
+# ============================================
+# EVENT HANDLERS - DIRECT AGENT Q&A
+# ============================================
+
+@app.event("app_mention")
+def handle_app_mention(event, client, logger):
+    """
+    Handle bot mentions for direct agent Q&A
+    Examples:
+    - @bot @psychological what are deep fears?
+    - @bot voice: show exact customer language
+    - @bot competitor who should we position against?
+    - @bot @gtm synthesize strategy
+    """
+    try:
+        text = event.get('text', '')
+        channel = event.get('channel')
+        user = event.get('user')
+        thread_ts = event.get('thread_ts', event.get('ts'))
+        
+        logger.info(f"Bot mentioned: {text}")
+        
+        # Extract agent and question
+        agent_name, question = extract_agent_and_question(text)
+        
+        if agent_name and question:
+            # Agent name already validated by extract_agent_and_question
+            persona = AGENT_PERSONAS.get(agent_name)
+            
+            if persona:
+                emoji = persona['emoji']
+                name = persona['name']
+                
+                # Send typing indicator
+                client.chat_postMessage(
+                    channel=channel,
+                    thread_ts=thread_ts,
+                    text=f"{emoji} *{name}* is thinking..."
+                )
+                
+                # Get agent response
+                client_id = get_client_id(channel, user)
+                response = asyncio.run(get_agent_direct_response(
+                    agent_name,
+                    question,
+                    {"client_id": client_id}
+                ))
+                
+                # Send response in thread
+                client.chat_postMessage(
+                    channel=channel,
+                    thread_ts=thread_ts,
+                    text=f"{emoji} *{name}:*\n\n{response}\n\n_Ask follow-up questions or try another agent!_"
+                )
+                
+                logger.info(f"Agent {agent_name} responded to: {question[:50]}")
+                
+            else:
+                # This shouldn't happen if extract_agent_and_question works correctly
+                client.chat_postMessage(
+                    channel=channel,
+                    thread_ts=thread_ts,
+                    text=f"Unknown agent: {agent_name}\nTry: @psychological, @voice, @competitor, @gtm, @interview_psychological, @interview_sales"
+                )
+        else:
+            # General mention without specific agent
+            if "hello" in text.lower() or "hi" in text.lower():
+                client.chat_postMessage(
+                    channel=channel,
+                    thread_ts=thread_ts,
+                    text=f"Hello <@{user}>! Ask me or my agents anything:\n• `@bot @psychological what are deep fears?`\n• `@bot voice: show pain language`\n• `@bot @gtm synthesize strategy`\n• Use `/help` for all commands"
+                )
+            else:
+                client.chat_postMessage(
+                    channel=channel,
+                    thread_ts=thread_ts,
+                    text="Ask agents directly:\n• `@bot @psychological [question]`\n• `@bot voice: [question]`\n• `@bot @competitor [question]`\n• `@bot @gtm [question]`\n\nOr use `/help` for all commands"
+                )
+                
+    except Exception as e:
+        logger.error(f"Error handling app mention: {e}")
+        client.chat_postMessage(
+            channel=channel,
+            text="Error processing request. Try `/help` for available commands."
+        )
+
+@app.event("message")
+def handle_message_events(body, logger):
+    """Handle message events"""
+    pass  # We primarily use slash commands and mentions
+
+# ============================================
+# MAIN
+# ============================================
 
 if __name__ == "__main__":
-    main()
+    print("=" * 60)
+    print("MARKET RESEARCH SLACK BOT WITH DIRECT AGENT Q&A")
+    print("=" * 60)
+    print(f"Memory System: {'✅ Enabled' if MEMORY_ENABLED else '❌ Disabled'}")
+    print(f"Direct Q&A: {'✅ Enabled' if llm else '❌ Disabled'}")
+    print(f"Workflow: {'✅ Available' if workflow_available else '❌ Not Available'}")
+    print("=" * 60)
+    
+    # Start the bot
+    handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+    
+    print("🤖 Bot is running! Press Ctrl+C to stop.")
+    print("\nDirect Agent Q&A Examples:")
+    print("  @bot @psychological what drives founder anxiety?")
+    print("  @bot voice: show exact pain language")
+    print("  @bot @competitor who should we position against?")
+    print("  @bot @gtm synthesize strategy")  # Fixed example
+    print("\nCommands: /help, /analyze, /memory, /learning, /coach")
+    
+    if MEMORY_ENABLED:
+        print("\n💾 Memory active - Q&A and analyses persist")
+    
+    handler.start()

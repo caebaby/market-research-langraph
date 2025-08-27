@@ -38,6 +38,13 @@ memory_vectors/
 .DS_Store
 Thumbs.db
 
+.env*
+!.env.template
+!.env.example
+*_credentials*
+*api_key*
+*secret*
+
 # Keep important files
 !requirements.txt
 !README.md

@@ -21,6 +21,6 @@ class Config:
         return ChatAnthropic(
             model=Config.LLM_MODEL, 
             temperature=Config.TEMP, 
-            max_tokens=8000, 
+            max_tokens=8192 , 
             api_key=key
         )
