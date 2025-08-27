@@ -2,7 +2,7 @@
 """
 Level 4 GTM Blueprint Agent - Complete Implementation
 Synthesizes all intelligence into actionable go-to-market strategy
-Enhanced for 0.85+ quality with comprehensive GTM components
+Enhanced for 0.85+ quality with comprehensive GTM components and all required methods
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -730,3 +730,85 @@ into revenue.""",
                 agents_referenced += 1
         
         return agents_referenced
+    
+    def _create_shared_insights(self, response: str) -> Dict[str, Any]:
+        """Create insights to share with other agents (though GTM is usually final)"""
+        insights = {
+            'gtm_strategy': {},
+            'action_items': [],
+            'timeline': {},
+            'budget_required': None,
+            'success_metrics': []
+        }
+        
+        # Extract strategy summary
+        if 'positioning' in response.lower():
+            pos_match = re.search(r'positioning[:\s]+([^.]+)', response, re.IGNORECASE)
+            if pos_match:
+                insights['gtm_strategy']['positioning'] = pos_match.group(1).strip()
+        
+        # Extract action items
+        action_items = self._extract_action_items(response)
+        insights['action_items'] = action_items[:10]
+        
+        # Extract timeline
+        timeline = self._extract_timeline(response)
+        insights['timeline'] = timeline
+        
+        # Extract budget
+        budget_info = self._extract_budget(response)
+        insights['budget_required'] = budget_info.get('total')
+        
+        # Extract success metrics
+        metric_patterns = [
+            r"(?:kpi|metric|measure)[:\s]+([^.]+)",
+            r"(?:target|goal)[:\s]+([^.]+)"
+        ]
+        
+        metrics = []
+        for pattern in metric_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            metrics.extend(matches)
+        insights['success_metrics'] = metrics[:5]
+        
+        # Add synthesis summary
+        components = self._verify_components(response)
+        agents_referenced = self._count_agent_references(response)
+        insights['summary'] = f"GTM Blueprint created with {sum(components.values())}/12 components, synthesizing insights from {agents_referenced} specialist agents"
+        
+        return insights
+    
+    def _extract_insights_for_memory(self, response: str) -> List[str]:
+        """Extract key insights for memory storage"""
+        insights = []
+        
+        # Get positioning statement
+        if 'positioning' in response.lower():
+            pos_match = re.search(r'positioning[:\s]+([^.]+)', response, re.IGNORECASE)
+            if pos_match:
+                insights.append(f"Positioning: {pos_match.group(1).strip()[:100]}...")
+        
+        # Get primary channel strategy
+        if 'channel' in response.lower():
+            chan_match = re.search(r'primary channel[:\s]+([^.]+)', response, re.IGNORECASE)
+            if chan_match:
+                insights.append(f"Primary channel: {chan_match.group(1).strip()}")
+        
+        # Get budget and ROI
+        budget_info = self._extract_budget(response)
+        if budget_info['total']:
+            insights.append(f"Total budget required: ${budget_info['total']}")
+        if budget_info['roi']:
+            insights.append(f"Expected ROI: {budget_info['roi']}")
+        
+        # Get key action for first 30 days
+        action_items = self._extract_action_items(response)
+        if action_items:
+            insights.append(f"First action: {action_items[0][:100]}...")
+        
+        # Add completion summary
+        word_count = len(response.split())
+        components = self._verify_components(response)
+        insights.append(f"GTM Blueprint completed: {word_count} words, {sum(components.values())}/12 components")
+        
+        return insights[:5] if insights else ["Comprehensive GTM Blueprint created"]

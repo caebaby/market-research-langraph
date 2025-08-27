@@ -2,7 +2,7 @@
 """
 Level 4 Psychological Agent - Complete Implementation
 Quality-focused with full StandardAgentNodeV4 capabilities
-Enhanced for 0.85+ quality score
+Enhanced for 0.85+ quality score with all required methods
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -341,3 +341,78 @@ haven't consciously recognized.""",
             reverse=True
         )
         return patterns[:5]  # Top 5 patterns
+    
+    def _create_shared_insights(self, response: str) -> Dict[str, Any]:
+        """Create insights to share with other agents"""
+        insights = {
+            'psychological_drivers': [],
+            'hidden_motivations': [],
+            'identity_factors': [],
+            'emotional_triggers': [],
+            'decision_patterns': []
+        }
+        
+        # Extract psychological drivers
+        psychological_insights = self._extract_psychological_insights(response)
+        insights['psychological_drivers'] = psychological_insights[:5]
+        
+        # Extract hidden motivations
+        if 'unconscious' in response.lower() or 'hidden' in response.lower():
+            insights['hidden_motivations'] = [
+                s.strip() for s in response.split('.') 
+                if any(word in s.lower() for word in ['unconscious', 'hidden', 'underlying'])
+            ][:3]
+        
+        # Extract identity factors
+        if 'identity' in response.lower() or 'self-concept' in response.lower():
+            insights['identity_factors'] = [
+                s.strip() for s in response.split('.')
+                if any(word in s.lower() for word in ['identity', 'self-concept', 'see themselves'])
+            ][:3]
+        
+        # Extract emotional triggers
+        frameworks = self._identify_frameworks_used(response)
+        if 'Emotional Triggers' in frameworks:
+            insights['emotional_triggers'] = ["Deep emotional analysis completed"]
+        
+        # Add summary
+        insights['summary'] = f"Psychological analysis revealed {len(psychological_insights)} key insights using {len(frameworks)} frameworks"
+        
+        return insights
+    
+    def _extract_insights_for_memory(self, response: str) -> List[str]:
+        """Extract key insights for memory storage"""
+        insights = []
+        
+        # Use existing psychological insight extraction
+        psychological_insights = self._extract_psychological_insights(response)
+        insights.extend(psychological_insights[:3])
+        
+        # Add framework-based insights
+        frameworks = self._identify_frameworks_used(response)
+        if frameworks:
+            insights.append(f"Applied {len(frameworks)} psychological frameworks: {', '.join(frameworks[:3])}")
+        
+        # Extract any breakthrough insights
+        breakthrough_patterns = [
+            r"breakthrough[:\s]+([^.]+)",
+            r"key insight[:\s]+([^.]+)",
+            r"discovered[:\s]+([^.]+)",
+            r"revealed[:\s]+([^.]+)"
+        ]
+        
+        for pattern in breakthrough_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            insights.extend(matches[:2])
+        
+        # Return top 5 unique insights
+        unique_insights = []
+        seen = set()
+        for insight in insights:
+            if insight not in seen and len(insight) > 20:
+                unique_insights.append(insight)
+                seen.add(insight)
+                if len(unique_insights) >= 5:
+                    break
+        
+        return unique_insights if unique_insights else ["Comprehensive psychological analysis completed"]

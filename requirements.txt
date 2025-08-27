@@ -17,3 +17,5 @@ python-multipart
 slack-bolt==1.18.1
 slack-sdk==3.26.1
 aiohttp==3.9.1
+qdrant-client
+sentence-transformers

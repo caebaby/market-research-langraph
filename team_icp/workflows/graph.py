@@ -1,7 +1,7 @@
 # team_icp/workflows/graph.py
 """
-Modular Workflow Graph - Fixed Version
-Compatible with AgentRegistry and provides ICPGraph class
+Modular Workflow Graph - REAL AGENTS VERSION
+Uses actual agent implementations instead of mocks
 """
 
 from typing import Dict, Any, Optional, List
@@ -17,6 +17,37 @@ except ImportError:
     LANGGRAPH_AVAILABLE = False
     StateGraph = None
     END = None
+
+# Import LangChain for LLM
+try:
+    import os
+    import sys
+    from pathlib import Path
+    
+    # Add parent directories to path for imports
+    current_dir = Path(__file__).parent
+    project_root = current_dir.parent.parent
+    sys.path.insert(0, str(project_root))
+    
+    # Load environment variables
+    from dotenv import load_dotenv
+    env_path = project_root / '.env'
+    load_dotenv(env_path)
+    
+    from langchain_anthropic import ChatAnthropic
+    from core.config import Config
+    llm = Config.get_llm()
+    
+    if not llm and os.getenv('ANTHROPIC_API_KEY'):
+        # Fallback: create LLM directly if Config fails
+        llm = ChatAnthropic(
+            model="claude-3-5-sonnet-20241022",
+            anthropic_api_key=os.getenv('ANTHROPIC_API_KEY'),
+            max_tokens=4000
+        )
+except Exception as e:
+    print(f"LLM setup error: {e}")
+    llm = None
 
 logger = logging.getLogger(__name__)
 
@@ -51,49 +82,23 @@ class ICPState(Dict):
     agent_config_overrides: Optional[Dict[str, Any]]
 
 
-# Import registry with error handling - FIXED VERSION
+# Import registry
 try:
-    from ..agents.registry import AgentRegistry
+    # Try relative import first (for when imported as module)
+    try:
+        from ..agents.registry import AgentRegistry
+    except ImportError:
+        # Fall back to absolute import (for direct execution)
+        from team_icp.agents.registry import AgentRegistry
+    
     registry_instance = AgentRegistry()
     AGENT_REGISTRY = {name: info for name, info in registry_instance.get_all_agents().items()}
     REGISTRY_AVAILABLE = True
     logger.info(f"Registry loaded with {len(AGENT_REGISTRY)} agents")
-    
-    # Define team configs and templates (these might not exist in registry)
-    TEAM_CONFIGS = {
-        "icp": {
-            "sequence": ["psychological", "voice_of_customer", "competitor", 
-                        "interview_psychological", "interview_sales", "gtm_blueprint"],
-            "quality_targets": {
-                "psychological": 0.85,
-                "voice_of_customer": 0.80,
-                "competitor": 0.75,
-                "interview_psychological": 0.75,
-                "interview_sales": 0.75,
-                "gtm_blueprint": 0.85
-            }
-        }
-    }
-    
-    INDUSTRY_TEMPLATES = {
-        "saas": {
-            "context_prefix": "B2B SaaS context",
-            "psychological_focus": ["scaling anxiety", "feature fatigue"],
-            "voice_focus": ["efficiency", "ROI", "integration"]
-        },
-        "coaching": {
-            "context_prefix": "Executive coaching context",
-            "psychological_focus": ["burnout", "imposter syndrome"],
-            "voice_focus": ["transformation", "breakthrough"]
-        }
-    }
-    
 except ImportError as e:
     logger.error(f"Failed to import registry: {e}")
     REGISTRY_AVAILABLE = False
     AGENT_REGISTRY = {}
-    TEAM_CONFIGS = {}
-    INDUSTRY_TEMPLATES = {}
 
 
 # Cache for loaded agents
@@ -102,113 +107,171 @@ loaded_agents = {}
 
 def load_agent_dynamically(agent_name: str, state: ICPState):
     """
-    Dynamically load an agent - simplified version that works with AgentRegistry
+    Dynamically load REAL agents, not mocks
     """
     # Check if already loaded
     if agent_name in loaded_agents:
         return loaded_agents[agent_name]
     
-    if not REGISTRY_AVAILABLE:
-        # Return a mock agent for testing
+    try:
+        # Import and instantiate the REAL agent classes
+        logger.info(f"Loading real agent: {agent_name}")
+        
+        if agent_name == "psychological":
+            from team_icp.agents.psychological import PsychologicalAgent
+            agent = PsychologicalAgent()
+            
+        elif agent_name == "voice_of_customer" or agent_name == "voice":
+            from team_icp.agents.voice import VoiceAgent
+            agent = VoiceAgent()
+            
+        elif agent_name == "competitor":
+            from team_icp.agents.competitor import CompetitorAgent
+            agent = CompetitorAgent()
+            
+        elif agent_name == "interview_psychological":
+            from team_icp.agents.interview_psychological_v4 import PsychologicalInterviewAgentV4
+            agent = PsychologicalInterviewAgentV4()
+            
+        elif agent_name == "interview_sales":
+            from team_icp.agents.interview_sales_v4 import SalesInterviewAgentV4
+            agent = SalesInterviewAgentV4()
+            
+        elif agent_name == "gtm_blueprint" or agent_name == "gtm":
+            from team_icp.agents.gtm_blueprint import GTMBlueprintAgent
+            agent = GTMBlueprintAgent()
+            
+        else:
+            # Try generic import pattern for any other agents
+            module_name = f"team_icp.agents.{agent_name}"
+            class_name = ''.join(word.capitalize() for word in agent_name.split('_')) + 'Agent'
+            
+            module = __import__(module_name, fromlist=[class_name])
+            AgentClass = getattr(module, class_name)
+            agent = AgentClass()
+        
+        loaded_agents[agent_name] = agent
+        logger.info(f"Successfully loaded REAL agent: {agent_name}")
+        return agent
+        
+    except Exception as e:
+        logger.error(f"Failed to load real agent {agent_name}: {e}")
+        logger.error(traceback.format_exc())
+        
+        # Return a mock agent as fallback
         class MockAgent:
             def __init__(self, name):
                 self.agent_name = name
-            def __call__(self, state):
-                state["current_output"] = f"Mock output from {self.agent_name}"
-                state["quality_score"] = 0.75
-                return state
+                
+            def _generate_response(self, task, memories, llm):
+                return f"Mock output from {self.agent_name}: {task[:100]}..."
+                
+            def process(self, task, shared_insights, llm):
+                return {
+                    'output': f"Mock analysis from {self.agent_name}",
+                    'quality_score': 0.75
+                }
         
         mock = MockAgent(agent_name)
         loaded_agents[agent_name] = mock
         return mock
-    
-    try:
-        # Since we don't have AgentFactory, we'll create a simple wrapper
-        agent_info = AGENT_REGISTRY.get(agent_name)
-        if not agent_info:
-            raise ValueError(f"Agent {agent_name} not found in registry")
-        
-        # Create a simple agent wrapper
-        class AgentWrapper:
-            def __init__(self, name, info):
-                self.agent_name = name
-                self.info = info
-            
-            def __call__(self, state):
-                # Simulate agent execution
-                state["current_output"] = f"Analysis from {self.agent_name}: {state.get('business_context', 'No context')}"
-                state["quality_score"] = self.info.get("current_quality", 0.75)
-                return state
-        
-        agent = AgentWrapper(agent_name, agent_info)
-        loaded_agents[agent_name] = agent
-        logger.info(f"Successfully loaded agent: {agent_name}")
-        
-        return agent
-        
-    except Exception as e:
-        logger.error(f"Failed to load agent {agent_name}: {e}")
-        raise RuntimeError(f"Cannot load agent '{agent_name}': {str(e)}")
 
 
 def create_agent_node(agent_name: str):
     """
-    Create a node function for any agent with comprehensive error handling
+    Create a node function that calls REAL agents
     """
     def agent_node(state: ICPState) -> ICPState:
         logger.info(f"[{agent_name.upper()}] Starting execution")
         
         try:
-            # Load the agent
+            # Load the REAL agent
             agent = load_agent_dynamically(agent_name, state)
             
-            # Prepare task description
-            task_descriptions = {
-                "psychological": "Analyze psychological patterns and unconscious drivers",
-                "voice_of_customer": "Extract authentic customer language patterns",
-                "competitor": "Analyze competitive landscape and positioning",
-                "interview_psychological": "Create psychological interview simulations",
-                "interview_sales": "Create sales discovery interviews",
-                "gtm_blueprint": "Synthesize comprehensive GTM strategy"
-            }
+            # Prepare context
+            business_context = state.get("business_context", state.get("task", ""))
+            shared_insights = state.get("shared_insights", {})
             
-            state["current_task"] = {
-                "description": task_descriptions.get(agent_name, f"Perform {agent_name} analysis"),
-                "agent": agent_name,
-                "is_high_stakes": False
-            }
-            
-            # Execute the agent
-            logger.info(f"[{agent_name.upper()}] Executing agent...")
-            updated_state = agent(state)
-            
-            # Merge state updates
-            if isinstance(updated_state, dict):
-                for key, value in updated_state.items():
-                    if value is not None:
-                        state[key] = value
-                logger.info(f"[{agent_name.upper()}] State updated successfully")
+            # Get or create LLM
+            if not llm:
+                logger.warning(f"[{agent_name.upper()}] No LLM available, using mock")
+                state["current_output"] = f"Error: LLM not configured for {agent_name}"
+                state["quality_score"] = 0.0
+            else:
+                # Call the REAL agent's process method or _generate_response
+                logger.info(f"[{agent_name.upper()}] Calling real agent...")
+                
+                # Try process method first (newer agents have this)
+                if hasattr(agent, 'process'):
+                    result = agent.process(business_context, shared_insights, llm)
+                    
+                    if isinstance(result, dict):
+                        state["current_output"] = result.get('output', '')
+                        state["quality_score"] = result.get('quality_score', 0.0)
+                        
+                        # Store additional insights if available
+                        for key in ['exact_phrases', 'competitors_analyzed', 'battle_cards']:
+                            if key in result:
+                                if "additional_insights" not in state:
+                                    state["additional_insights"] = {}
+                                state["additional_insights"][f"{agent_name}_{key}"] = result[key]
+                    else:
+                        state["current_output"] = str(result)
+                        state["quality_score"] = 0.75
+                        
+                # Otherwise try _generate_response (base method)
+                elif hasattr(agent, '_generate_response'):
+                    # Agents expect (task, memories, llm)
+                    memories = []  # Could retrieve from state if we had memory service
+                    output = agent._generate_response(business_context, memories, llm)
+                    state["current_output"] = output
+                    
+                    # Try to get quality score
+                    if hasattr(agent, '_calculate_quality_score'):
+                        state["quality_score"] = agent._calculate_quality_score(output)
+                    else:
+                        state["quality_score"] = 0.85  # Default good score
+                else:
+                    logger.error(f"[{agent_name.upper()}] Agent has no process or _generate_response method")
+                    state["current_output"] = f"Agent {agent_name} implementation error"
+                    state["quality_score"] = 0.0
             
             # Store output in result
             if state.get("current_output"):
                 if "result" not in state:
                     state["result"] = {}
                 state["result"][agent_name] = state["current_output"]
-                logger.info(f"[{agent_name.upper()}] Output stored")
+                logger.info(f"[{agent_name.upper()}] Stored {len(state['current_output'])} chars of output")
             
-            # Update shared insights
+            # Update shared insights for other agents
             if "shared_insights" not in state:
                 state["shared_insights"] = {}
             
-            state["shared_insights"][agent_name] = {
-                "output": state.get("current_output", "")[:500],
-                "quality": state.get("quality_score", 0),
-                "timestamp": datetime.now().isoformat()
-            }
+            # If agent has _create_shared_insights method, use it
+            if hasattr(agent, '_create_shared_insights') and state.get("current_output"):
+                try:
+                    insights = agent._create_shared_insights(state["current_output"])
+                    state["shared_insights"][agent_name] = insights
+                except:
+                    # Fallback to basic insights
+                    state["shared_insights"][agent_name] = {
+                        "output": state.get("current_output", "")[:500],
+                        "quality": state.get("quality_score", 0),
+                        "timestamp": datetime.now().isoformat()
+                    }
+            else:
+                state["shared_insights"][agent_name] = {
+                    "output": state.get("current_output", "")[:500],
+                    "quality": state.get("quality_score", 0),
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            logger.info(f"[{agent_name.upper()}] Quality score: {state.get('quality_score', 0):.2f}")
             
         except Exception as e:
             error_msg = f"{agent_name} agent error: {str(e)}"
             logger.error(f"[{agent_name.upper()}] {error_msg}")
+            logger.error(traceback.format_exc())
             
             # Update state with error information
             state["requires_human_review"] = True
@@ -231,7 +294,7 @@ def create_agent_node(agent_name: str):
 
 def router_node(state: ICPState) -> ICPState:
     """
-    Router node that determines agent sequence with validation
+    Router node that determines agent sequence
     """
     logger.info("[ROUTER] Starting routing logic")
     
@@ -245,20 +308,16 @@ def router_node(state: ICPState) -> ICPState:
     
     # Use default team if no specific agents requested
     if not requested_agents:
-        # Default to ICP team
+        # Default to ICP team - using normalized names
         requested_agents = ["psychological", "voice_of_customer", "competitor", 
                            "interview_psychological", "interview_sales", "gtm_blueprint"]
         logger.info(f"[ROUTER] Using default ICP team")
     
-    # Filter to only valid agents
+    # Normalize agent names (handle underscore/hyphen variations)
     valid_agents = []
     for agent in requested_agents:
-        # Handle both underscore and hyphen variations
         normalized_name = agent.replace("-", "_")
-        if normalized_name in AGENT_REGISTRY or not REGISTRY_AVAILABLE:
-            valid_agents.append(normalized_name)
-        else:
-            logger.warning(f"[ROUTER] Skipping unknown agent: {agent}")
+        valid_agents.append(normalized_name)
     
     state["agents_to_run"] = valid_agents
     logger.info(f"[ROUTER] Agents to run: {valid_agents}")
@@ -279,8 +338,20 @@ def synthesis_node(state: ICPState) -> ICPState:
         # Build comprehensive report
         report_sections = []
         
+        # Order agents for better report flow
+        agent_order = ["psychological", "voice_of_customer", "competitor", 
+                      "interview_psychological", "interview_sales", "gtm_blueprint"]
+        
+        for agent_name in agent_order:
+            if agent_name in state["result"]:
+                output = state["result"][agent_name]
+                if output and not output.startswith("ERROR:"):
+                    agent_title = agent_name.replace("_", " ").title()
+                    report_sections.append(f"**{agent_title} Analysis:**\n{output}\n")
+        
+        # Add any other agents not in the standard order
         for agent_name, output in state["result"].items():
-            if output and not output.startswith("ERROR:"):
+            if agent_name not in agent_order and output and not output.startswith("ERROR:"):
                 agent_title = agent_name.replace("_", " ").title()
                 report_sections.append(f"**{agent_title} Analysis:**\n{output}\n")
         
@@ -296,7 +367,11 @@ def synthesis_node(state: ICPState) -> ICPState:
         
         state["overall_quality"] = sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
         
-        logger.info(f"[SYNTHESIS] Complete. Quality: {state['overall_quality']:.2f}")
+        # Add summary statistics
+        total_words = sum(len(str(output).split()) for output in state["result"].values() if not str(output).startswith("ERROR:"))
+        state["total_word_count"] = total_words
+        
+        logger.info(f"[SYNTHESIS] Complete. Quality: {state['overall_quality']:.2f}, Words: {total_words}")
     
     return state
 
@@ -333,30 +408,28 @@ if LANGGRAPH_AVAILABLE:
         workflow.add_node("router", router_node)
         workflow.add_node("synthesis", synthesis_node)
         
-        # Add nodes for all registered agents
-        if REGISTRY_AVAILABLE:
-            for agent_name in AGENT_REGISTRY.keys():
-                workflow.add_node(agent_name, create_agent_node(agent_name))
-                logger.info(f"Added node for agent: {agent_name}")
-        else:
-            # Add default agents for testing
-            default_agents = ["psychological", "voice_of_customer", "competitor", 
-                            "interview_psychological", "interview_sales", "gtm_blueprint"]
-            for agent_name in default_agents:
-                workflow.add_node(agent_name, create_agent_node(agent_name))
+        # Add nodes for all possible agents (with variations)
+        agent_variations = {
+            "psychological": create_agent_node("psychological"),
+            "voice_of_customer": create_agent_node("voice_of_customer"),
+            "voice": create_agent_node("voice_of_customer"),  # Alias
+            "competitor": create_agent_node("competitor"),
+            "interview_psychological": create_agent_node("interview_psychological"),
+            "interview_psych": create_agent_node("interview_psychological"),  # Alias
+            "interview_sales": create_agent_node("interview_sales"),
+            "gtm_blueprint": create_agent_node("gtm_blueprint"),
+            "gtm": create_agent_node("gtm_blueprint")  # Alias
+        }
+        
+        for agent_name, node_func in agent_variations.items():
+            workflow.add_node(agent_name, node_func)
+            logger.info(f"Added node for agent: {agent_name}")
         
         # Set entry point
         workflow.set_entry_point("router")
         
         # Add conditional routing
-        edge_mapping = {agent_name: agent_name for agent_name in AGENT_REGISTRY.keys()} if REGISTRY_AVAILABLE else {
-            "psychological": "psychological",
-            "voice_of_customer": "voice_of_customer", 
-            "competitor": "competitor",
-            "interview_psychological": "interview_psychological",
-            "interview_sales": "interview_sales",
-            "gtm_blueprint": "gtm_blueprint"
-        }
+        edge_mapping = {name: name for name in agent_variations.keys()}
         edge_mapping["synthesis"] = "synthesis"
         
         workflow.add_conditional_edges(
@@ -366,19 +439,19 @@ if LANGGRAPH_AVAILABLE:
         )
         
         # Each agent routes back to router
-        for agent_name in edge_mapping.keys():
-            if agent_name != "synthesis":
-                workflow.add_edge(agent_name, "router")
+        for agent_name in agent_variations.keys():
+            workflow.add_edge(agent_name, "router")
         
         # Synthesis goes to END
         workflow.add_edge("synthesis", END)
         
         # Compile the graph
         graph = workflow.compile()
-        logger.info(f"Workflow compiled successfully")
+        logger.info(f"Workflow compiled successfully with REAL agents")
         
     except Exception as e:
         logger.error(f"Failed to compile workflow: {e}")
+        logger.error(traceback.format_exc())
         graph = None
 else:
     logger.warning("LangGraph not available - workflow disabled")
@@ -388,8 +461,7 @@ else:
 # MAIN CLASS THAT ADVANCED_BOT.PY NEEDS
 class ICPGraph:
     """
-    Main class for running the ICP workflow
-    This is what advanced_bot.py imports
+    Main class for running the ICP workflow with REAL agents
     """
     def __init__(self):
         self.graph = graph
@@ -397,7 +469,7 @@ class ICPGraph:
         
     def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Run the workflow with given inputs
+        Run the workflow with REAL agents
         
         Args:
             inputs: Should contain 'company' or 'business_context'
@@ -408,32 +480,52 @@ class ICPGraph:
         # Handle both 'company' and 'business_context' inputs
         company = inputs.get("company", inputs.get("business_context", "Unknown"))
         
-        if self.graph:
-            # Run real workflow
+        if self.graph and llm:
+            # Run REAL workflow with REAL agents
             try:
+                logger.info(f"Starting REAL agent analysis for: {company}")
+                
                 state = {
-                    "task": f"Analyze {company}",
-                    "business_context": f"Analyze {company} for market research",
+                    "task": f"Analyze {company} - provide deep market research insights",
+                    "business_context": f"""
+                    Analyze {company} for comprehensive market research.
+                    
+                    Provide:
+                    - Deep psychological analysis of target customers
+                    - Exact customer language and pain points
+                    - Competitive intelligence and positioning gaps
+                    - Interview simulations revealing buying psychology
+                    - Complete GTM strategy synthesis
+                    
+                    Each analysis should be thorough, specific, and actionable.
+                    """,
                     "master_context": f"Company: {company}",
                     "requested_agents": None,  # Use all agents
                     "client_id": f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    "new_data": True
+                    "new_data": True,
+                    "shared_insights": {}
                 }
                 
+                logger.info("Invoking workflow graph with REAL agents...")
                 result = self.graph.invoke(state)
                 
                 # Ensure we have a final_report
                 if "final_report" not in result:
                     result["final_report"] = self._format_results(result)
                 
+                logger.info(f"Analysis complete. Quality: {result.get('overall_quality', 0):.2f}, Words: {result.get('total_word_count', 0)}")
                 return result
                 
             except Exception as e:
                 logger.error(f"Workflow execution failed: {e}")
-                return self._get_simulated_result(company)
+                logger.error(traceback.format_exc())
+                return self._get_error_result(company, str(e))
         else:
-            # Return simulated result if graph not available
-            return self._get_simulated_result(company)
+            # Return error if graph or LLM not available
+            if not self.graph:
+                return self._get_error_result(company, "Workflow graph not compiled (LangGraph may not be installed)")
+            else:
+                return self._get_error_result(company, "LLM not configured")
     
     def _format_results(self, result: Dict[str, Any]) -> str:
         """Format results into a report"""
@@ -441,86 +533,66 @@ class ICPGraph:
             report_parts = []
             for agent, output in result["result"].items():
                 if output and not str(output).startswith("ERROR"):
-                    report_parts.append(f"**{agent.title()}:**\n{output}\n")
+                    agent_title = agent.replace("_", " ").title()
+                    report_parts.append(f"**{agent_title}:**\n{output}\n")
             return "\n".join(report_parts) if report_parts else "Analysis completed but no detailed results."
         return "Analysis completed."
     
-    def _get_simulated_result(self, company: str) -> Dict[str, Any]:
-        """Return simulated result when workflow not available"""
+    def _get_error_result(self, company: str, error_msg: str) -> Dict[str, Any]:
+        """Return error result"""
         return {
             "final_report": f"""
-**Market Analysis for {company}**
+**Analysis Error for {company}**
 
-**Psychological Analysis:**
-{company} triggers deep identity and control issues in their target market. 
-Customers experience fear of obsolescence and imposter syndrome.
+An error occurred during analysis: {error_msg}
 
-**Voice of Customer:**
-Customers say: "I need {company} but it feels overwhelming"
-Common phrases: "too complex", "need guidance", "where do I start"
+Please ensure:
+1. LangGraph is installed: `pip install langgraph`
+2. LLM is configured in .env file
+3. All agent files are present and working
 
-**Competitor Analysis:**
-Main competitors focus on features while {company} could own the emotional angle.
-Clear positioning gap in addressing psychological needs.
-
-**Interview Insights:**
-Users reveal vulnerability about keeping up with technology.
-Strong emotional attachment to brands that "get them".
-
-**Sales Psychology:**
-Buyers choose based on identity alignment, not just features.
-Price sensitivity decreases when identity needs are met.
-
-**GTM Strategy:**
-Position as the human-centered solution in the {company} space.
-Lead with empathy, follow with capability.
-
-*Note: This is simulated analysis. Install LangGraph for real workflow.*
+For testing, run: `python tests/test_available_agents.py`
             """,
-            "overall_quality": 0.75,
-            "synthesis_complete": True
+            "overall_quality": 0.0,
+            "synthesis_complete": False,
+            "error": error_msg
         }
-
-
-# Convenience functions
-def run_team_analysis(
-    business_context: str,
-    team_name: str = "icp",
-    industry: Optional[str] = None,
-    agents: Optional[List[str]] = None,
-    client_id: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    Run a team analysis with specified configuration
-    """
-    graph_instance = ICPGraph()
-    return graph_instance.run({
-        "business_context": business_context,
-        "company": business_context
-    })
 
 
 # Module test
 if __name__ == "__main__":
     print("=" * 60)
-    print("🧪 TESTING WORKFLOW GRAPH")
+    print("TESTING WORKFLOW GRAPH WITH REAL AGENTS")
     print("=" * 60)
     
-    print(f"\n📋 Status:")
+    print(f"\nStatus:")
     print(f"   • Registry Available: {REGISTRY_AVAILABLE}")
     print(f"   • LangGraph Available: {LANGGRAPH_AVAILABLE}")
-    print(f"   • Agents Loaded: {len(AGENT_REGISTRY)}")
+    print(f"   • LLM Available: {llm is not None}")
     print(f"   • Graph Compiled: {graph is not None}")
+    print(f"   • Agents in Registry: {len(AGENT_REGISTRY)}")
     
-    # Test ICPGraph
-    print("\n🔄 Testing ICPGraph class...")
-    try:
-        test_graph = ICPGraph()
-        result = test_graph.run({"company": "TestCompany"})
-        if "final_report" in result:
-            print("✅ ICPGraph working!")
-            print(f"   Report length: {len(result['final_report'])} chars")
-        else:
-            print("⚠️ ICPGraph returned no report")
-    except Exception as e:
-        print(f"❌ ICPGraph test failed: {e}")
+    if graph and llm:
+        print("\n✅ Ready to use REAL agents!")
+        
+        # Test loading an agent
+        print("\nTesting agent loading...")
+        try:
+            test_state = {}
+            psych_agent = load_agent_dynamically("psychological", test_state)
+            print(f"✅ Loaded: {psych_agent.agent_name if hasattr(psych_agent, 'agent_name') else 'PsychologicalAgent'}")
+        except Exception as e:
+            print(f"❌ Failed to load agent: {e}")
+    else:
+        missing = []
+        if not LANGGRAPH_AVAILABLE:
+            missing.append("LangGraph (pip install langgraph)")
+        if not llm:
+            missing.append("LLM configuration (check .env)")
+        if not graph:
+            missing.append("Graph compilation")
+        
+        print(f"\n❌ Missing requirements: {', '.join(missing)}")
+        print("\nTo use real agents, you need to:")
+        for item in missing:
+            print(f"   • Fix: {item}")

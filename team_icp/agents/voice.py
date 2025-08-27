@@ -2,7 +2,7 @@
 """
 Level 4 Voice of Customer Agent - Complete Implementation
 Journal-level accuracy in extracting authentic customer language
-Enhanced for 1500+ words and 0.85+ quality
+Enhanced for 1500+ words and 0.85+ quality with all required methods
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -200,8 +200,15 @@ metaphors, complaints, aspirations, and the specific way they describe their pro
         # Format memories
         memory_context = self._format_voice_memories(memories)
         
-        # Get base voice prompt
-        base_prompt = self.prompts.get_analysis_prompt(context, memory_context)
+        # Try to get base prompt, with fallback if method doesn't exist
+        try:
+            # Try to get the role prompt from VoicePrompts
+            base_prompt = self.prompts.get_role_prompt()
+        except AttributeError:
+            # Fallback if get_role_prompt doesn't exist
+            base_prompt = """You are an expert Voice of Customer specialist who captures the authentic 
+            language customers use. You extract their EXACT words, not paraphrases or interpretations.
+            Your analysis reveals how customers really talk about their problems and desires."""
         
         # Combine prompts
         full_prompt = f"""
@@ -211,6 +218,9 @@ metaphors, complaints, aspirations, and the specific way they describe their pro
         
         CONTEXT FOR ANALYSIS:
         {context}
+        
+        MEMORY CONTEXT:
+        {memory_context}
         
         Remember: Extract EXACT language, not paraphrases. 
         Provide dense, immediately actionable voice insights.
@@ -283,7 +293,7 @@ metaphors, complaints, aspirations, and the specific way they describe their pro
         ]
         
         for marker in markers:
-            pattern = f"{marker}[:\s]+([^.!?]+)[.!?]"
+            pattern = f"{marker}[:\\s]+([^.!?]+)[.!?]"
             matches = re.findall(pattern, response, re.IGNORECASE)
             phrases.extend(matches)
         
@@ -479,3 +489,81 @@ metaphors, complaints, aspirations, and the specific way they describe their pro
         if not hasattr(self, '_voice_memory'):
             return []
         return self._voice_memory[:5]  # Top 5 patterns
+    
+    def _create_shared_insights(self, response: str) -> Dict[str, Any]:
+        """Create insights to share with other agents"""
+        insights = {
+            'exact_phrases': [],
+            'pain_language': [],
+            'aspiration_language': [],
+            'copy_elements': {},
+            'language_patterns': {}
+        }
+        
+        # Extract exact phrases
+        exact_phrases = self._extract_exact_phrases(response)
+        insights['exact_phrases'] = exact_phrases[:20]  # Top 20 phrases
+        
+        # Extract language patterns
+        patterns = self._categorize_language(response)
+        insights['language_patterns'] = {
+            category: phrases[:3] 
+            for category, phrases in patterns.items() 
+            if phrases
+        }
+        
+        # Extract pain and aspiration language specifically
+        insights['pain_language'] = patterns.get('frustration_language', [])[:5]
+        insights['aspiration_language'] = patterns.get('aspiration_language', [])[:5]
+        
+        # Extract copy elements
+        copy = self._extract_copy_elements(response)
+        insights['copy_elements'] = {
+            'headlines': copy['headlines'][:3],
+            'subject_lines': copy['subject_lines'][:3],
+            'ctas': copy['ctas'][:3]
+        }
+        
+        # Add summary
+        insights['summary'] = f"Extracted {len(exact_phrases)} exact phrases across {sum(1 for p in patterns.values() if p)} language categories"
+        
+        return insights
+    
+    def _extract_insights_for_memory(self, response: str) -> List[str]:
+        """Extract key insights for memory storage"""
+        insights = []
+        
+        # Get top exact phrases
+        phrases = self._extract_exact_phrases(response)
+        if phrases:
+            insights.append(f"Top customer phrases: {', '.join(phrases[:3])}")
+        
+        # Get category coverage
+        patterns = self._categorize_language(response)
+        categories_covered = [cat for cat, phrases in patterns.items() if phrases]
+        if categories_covered:
+            insights.append(f"Language categories captured: {', '.join(categories_covered[:5])}")
+        
+        # Get copy elements summary
+        copy = self._extract_copy_elements(response)
+        total_copy = sum(len(v) for v in copy.values())
+        if total_copy > 0:
+            insights.append(f"Generated {total_copy} ready-to-use marketing copy elements")
+        
+        # Extract any powerful phrases
+        power_patterns = [
+            r"powerful phrase[:\s]+([^.]+)",
+            r"golden phrase[:\s]+([^.]+)",
+            r"killer line[:\s]+([^.]+)"
+        ]
+        
+        for pattern in power_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            for match in matches[:2]:
+                insights.append(f"Powerful phrase: {match.strip()}")
+        
+        # Add summary insight
+        word_count = len(response.split())
+        insights.append(f"Voice analysis completed: {word_count} words, {len(phrases)} exact phrases captured")
+        
+        return insights[:5] if insights else ["Voice of customer analysis completed"]

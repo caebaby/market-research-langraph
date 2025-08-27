@@ -2,7 +2,7 @@
 """
 Level 4 Psychological Interview Agent - Complete Implementation
 Creates unnervingly realistic customer interviews revealing deep psychological truths
-Enhanced for 2500+ words (800-900 words per interview)
+Enhanced for 2500+ words (800-900 words per interview) with all required methods
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -517,3 +517,77 @@ themselves.""",
         if not hasattr(self, '_interview_memory'):
             return []
         return self._interview_memory[:3]
+    
+    def _create_shared_insights(self, response: str) -> Dict[str, Any]:
+        """Create insights to share with other agents"""
+        insights = {
+            'psychological_revelations': [],
+            'breakthrough_moments': [],
+            'personas_identified': [],
+            'techniques_demonstrated': [],
+            'emotional_triggers': []
+        }
+        
+        # Extract psychological insights
+        psychological = self._extract_psychological_insights(response)
+        insights['psychological_revelations'] = psychological[:5]
+        
+        # Extract breakthrough moments
+        breakthroughs = self._extract_breakthrough_moments(response)
+        insights['breakthrough_moments'] = breakthroughs[:3]
+        
+        # Identify personas
+        personas = self._identify_personas(response)
+        insights['personas_identified'] = personas
+        
+        # Identify techniques used
+        techniques = self._identify_techniques_used(response)
+        insights['techniques_demonstrated'] = techniques
+        
+        # Extract emotional triggers
+        trigger_patterns = [
+            r"(?:triggered by|emotional when|upset about)[:\s]+([^.]+)",
+            r"(?:fear of|scared of|worried about)[:\s]+([^.]+)"
+        ]
+        
+        triggers = []
+        for pattern in trigger_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            triggers.extend(matches)
+        insights['emotional_triggers'] = triggers[:5]
+        
+        # Add summary
+        word_count = len(response.split())
+        insights['summary'] = f"Conducted 3 psychological depth interviews ({word_count} words) revealing {len(psychological)} insights"
+        
+        return insights
+    
+    def _extract_insights_for_memory(self, response: str) -> List[str]:
+        """Extract key insights for memory storage"""
+        insights = []
+        
+        # Get breakthrough moments
+        breakthroughs = self._extract_breakthrough_moments(response)
+        if breakthroughs:
+            insights.append(f"Key breakthrough: {breakthroughs[0][:100]}...")
+        
+        # Get psychological revelations
+        psychological = self._extract_psychological_insights(response)
+        if psychological:
+            insights.extend([f"Revealed: {p[:80]}..." for p in psychological[:2]])
+        
+        # Get personas identified
+        personas = self._identify_personas(response)
+        if personas:
+            insights.append(f"Personas interviewed: {', '.join(personas)}")
+        
+        # Get techniques demonstrated
+        techniques = self._identify_techniques_used(response)
+        if techniques:
+            insights.append(f"Interview techniques used: {', '.join(techniques)}")
+        
+        # Add completion summary
+        word_count = len(response.split())
+        insights.append(f"Completed {self.num_interviews} psychological interviews ({word_count} words)")
+        
+        return insights[:5] if insights else ["Psychological interview simulations completed"]

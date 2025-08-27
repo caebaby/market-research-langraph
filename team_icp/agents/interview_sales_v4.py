@@ -2,7 +2,7 @@
 """
 Level 4 Sales Interview Agent - Complete Implementation
 Extracts buying psychology and objections through realistic sales conversations
-Enhanced for 2600+ words (850+ words per interview)
+Enhanced for 2600+ words (850+ words per interview) with all required methods
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -620,3 +620,84 @@ for closing deals.""",
         if not hasattr(self, '_sales_memory'):
             return []
         return self._sales_memory[:3]
+    
+    def _create_shared_insights(self, response: str) -> Dict[str, Any]:
+        """Create insights to share with other agents"""
+        insights = {
+            'bant_qualified': {},
+            'objections': [],
+            'decision_criteria': [],
+            'competitive_mentions': [],
+            'buying_triggers': []
+        }
+        
+        # Extract BANT intelligence
+        bant = self._extract_bant(response)
+        insights['bant_qualified'] = {
+            'budget': bant['budget'][:3] if bant['budget'] else ['Not disclosed'],
+            'authority': bant['authority'][:3] if bant['authority'] else ['Unknown'],
+            'timeline': bant['timeline'][:2] if bant['timeline'] else ['Undefined']
+        }
+        
+        # Extract objections
+        objections = self._extract_objections(response)
+        insights['objections'] = objections[:5]
+        
+        # Extract decision criteria
+        criteria = self._extract_decision_criteria(response)
+        insights['decision_criteria'] = criteria[:5]
+        
+        # Extract competitive mentions
+        competitors = self._extract_competitive_mentions(response)
+        insights['competitive_mentions'] = competitors[:5]
+        
+        # Extract buying triggers
+        trigger_patterns = [
+            r"(?:excited about|love|really want)[:\s]+([^.]+)",
+            r"(?:if we could|would buy if)[:\s]+([^.]+)",
+            r"(?:trigger|compelling event)[:\s]+([^.]+)"
+        ]
+        
+        triggers = []
+        for pattern in trigger_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            triggers.extend(matches)
+        insights['buying_triggers'] = triggers[:5]
+        
+        # Add summary
+        word_count = len(response.split())
+        insights['summary'] = f"Conducted 3 sales discovery interviews ({word_count} words) uncovering {len(objections)} objections and {len(criteria)} decision criteria"
+        
+        return insights
+    
+    def _extract_insights_for_memory(self, response: str) -> List[str]:
+        """Extract key insights for memory storage"""
+        insights = []
+        
+        # Get BANT summary
+        bant = self._extract_bant(response)
+        if bant['budget']:
+            insights.append(f"Budget range: {', '.join(bant['budget'][:2])}")
+        if bant['timeline']:
+            insights.append(f"Timeline: {', '.join(bant['timeline'][:2])}")
+        
+        # Get top objections
+        objections = self._extract_objections(response)
+        if objections:
+            insights.append(f"Key objection: {objections[0][:100]}...")
+        
+        # Get decision criteria
+        criteria = self._extract_decision_criteria(response)
+        if criteria:
+            insights.append(f"Top criteria: {', '.join(criteria[:3])}")
+        
+        # Get competitive landscape
+        competitors = self._extract_competitive_mentions(response)
+        if competitors:
+            insights.append(f"Competitors mentioned: {', '.join(competitors[:3])}")
+        
+        # Add completion summary
+        word_count = len(response.split())
+        insights.append(f"Completed {self.num_interviews} sales discovery interviews ({word_count} words)")
+        
+        return insights[:5] if insights else ["Sales discovery interviews completed successfully"]
