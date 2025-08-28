@@ -2,6 +2,7 @@
 """
 Qdrant Cloud-based Memory System for Level 4 AI Agents
 Vector-based semantic memory with persistent storage
+FIXED: Added accessed_at field and proper field handling
 """
 
 import os
@@ -9,7 +10,7 @@ import json
 import hashlib
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 import numpy as np
 
 from dotenv import load_dotenv
@@ -32,7 +33,7 @@ from sentence_transformers import SentenceTransformer
 
 @dataclass
 class Memory:
-    """Memory object structure"""
+    """Memory object structure with proper field handling"""
     client_id: str
     agent_name: str
     memory_type: str  # 'insight', 'learning', 'pattern', 'client_context'
@@ -42,18 +43,53 @@ class Memory:
     quality_impact: float = 0.0
     timestamp: str = None
     access_count: int = 0
+    accessed_at: Optional[str] = None  # ADDED: Track when memory was accessed
+    
+    # Additional fields that might exist in stored memories
+    shared_from: Optional[str] = None
+    original_id: Optional[str] = None
+    shared_at: Optional[str] = None
     
     def __post_init__(self):
         if not self.timestamp:
             self.timestamp = datetime.now().isoformat()
     
     def to_dict(self):
-        return asdict(self)
+        """Convert to dictionary, excluding None values"""
+        data = asdict(self)
+        # Remove None values to keep payload clean
+        return {k: v for k, v in data.items() if v is not None}
+    
+    @classmethod
+    def from_payload(cls, payload: Dict[str, Any]):
+        """
+        Create Memory from Qdrant payload, handling extra fields gracefully
+        
+        WHY: Qdrant might return fields we don't expect, so we filter them
+        """
+        # Get only the fields that Memory expects
+        expected_fields = {
+            'client_id', 'agent_name', 'memory_type', 'content', 
+            'context', 'importance', 'quality_impact', 'timestamp', 
+            'access_count', 'accessed_at', 'shared_from', 'original_id', 'shared_at'
+        }
+        
+        # Filter payload to only include expected fields
+        filtered_payload = {k: v for k, v in payload.items() if k in expected_fields}
+        
+        # Ensure required fields have defaults if missing
+        filtered_payload.setdefault('client_id', 'unknown')
+        filtered_payload.setdefault('agent_name', 'unknown')
+        filtered_payload.setdefault('memory_type', 'insight')
+        filtered_payload.setdefault('content', '')
+        
+        return cls(**filtered_payload)
 
 
 class QdrantMemorySystem:
     """
     Production-ready memory system using Qdrant Cloud
+    FIXED: Improved memory retrieval with proper field handling
     
     WHY Qdrant Cloud:
     - Managed service (no Docker needed)
@@ -129,61 +165,28 @@ class QdrantMemorySystem:
             # CREATE INDEXES for filtering
             print("📇 Creating/verifying indexes...")
             
-            # Index for client_id (required for filtering)
-            try:
-                self.client.create_payload_index(
-                    collection_name=self.collection_name,
-                    field_name="client_id",
-                    field_schema=PayloadSchemaType.KEYWORD
-                )
-                print("   ✓ client_id index created")
-            except Exception as e:
-                if "already exists" in str(e).lower():
-                    print("   ✓ client_id index exists")
-                else:
-                    print(f"   ⚠️ client_id index error: {e}")
+            # Define indexes to create
+            indexes = [
+                ("client_id", PayloadSchemaType.KEYWORD),
+                ("agent_name", PayloadSchemaType.KEYWORD),
+                ("memory_type", PayloadSchemaType.KEYWORD),
+                ("importance", PayloadSchemaType.FLOAT)
+            ]
             
-            # Index for agent_name
-            try:
-                self.client.create_payload_index(
-                    collection_name=self.collection_name,
-                    field_name="agent_name", 
-                    field_schema=PayloadSchemaType.KEYWORD
-                )
-                print("   ✓ agent_name index created")
-            except Exception as e:
-                if "already exists" in str(e).lower():
-                    print("   ✓ agent_name index exists")
-                else:
-                    print(f"   ⚠️ agent_name index error: {e}")
-            
-            # Index for memory_type
-            try:
-                self.client.create_payload_index(
-                    collection_name=self.collection_name,
-                    field_name="memory_type",
-                    field_schema=PayloadSchemaType.KEYWORD
-                )
-                print("   ✓ memory_type index created")
-            except Exception as e:
-                if "already exists" in str(e).lower():
-                    print("   ✓ memory_type index exists")
-                else:
-                    print(f"   ⚠️ memory_type index error: {e}")
-            
-            # Index for importance
-            try:
-                self.client.create_payload_index(
-                    collection_name=self.collection_name,
-                    field_name="importance",
-                    field_schema=PayloadSchemaType.FLOAT
-                )
-                print("   ✓ importance index created")
-            except Exception as e:
-                if "already exists" in str(e).lower():
-                    print("   ✓ importance index exists")
-                else:
-                    print(f"   ⚠️ importance index error: {e}")
+            for field_name, field_type in indexes:
+                try:
+                    self.client.create_payload_index(
+                        collection_name=self.collection_name,
+                        field_name=field_name,
+                        field_schema=field_type,
+                        wait=True
+                    )
+                    print(f"   ✓ {field_name} index created")
+                except Exception as e:
+                    if "already exists" in str(e).lower():
+                        print(f"   ✓ {field_name} index exists")
+                    else:
+                        print(f"   ⚠️ {field_name} index error: {e}")
             
             print("✅ All indexes ready")
                 
@@ -235,7 +238,8 @@ class QdrantMemorySystem:
                         vector=embedding,
                         payload=memory.to_dict()
                     )
-                ]
+                ],
+                wait=True
             )
             
             print(f"💾 Stored memory for {agent_name}: {content[:50]}...")
@@ -249,6 +253,8 @@ class QdrantMemorySystem:
             
         except Exception as e:
             print(f"❌ Error storing memory: {e}")
+            import traceback
+            print(traceback.format_exc())
             return None
     
     def retrieve_memories(
@@ -262,6 +268,7 @@ class QdrantMemorySystem:
     ) -> List[Memory]:
         """
         Retrieve relevant memories using semantic search
+        FIXED: Proper handling of payload fields
         
         WHY: Agents need context-aware memory retrieval
         """
@@ -316,23 +323,36 @@ class QdrantMemorySystem:
                 )
             else:
                 # Just retrieve with filters
-                results = self.client.scroll(
+                scroll_result = self.client.scroll(
                     collection_name=self.collection_name,
                     scroll_filter=Filter(must=must_conditions),
-                    limit=limit
-                )[0]  # Returns (points, next_offset)
+                    limit=limit,
+                    with_payload=True,
+                    with_vectors=False
+                )
+                results = scroll_result[0]  # Returns (points, next_offset)
             
-            # Convert to Memory objects
+            # Convert to Memory objects with proper field handling
             memories = []
             for point in results:
-                payload = point.payload if hasattr(point, 'payload') else point
-                memories.append(Memory(**payload))
-            
-            # Update access count
-            for point in results:
-                point_id = point.id if hasattr(point, 'id') else None
-                if point_id:
-                    self._update_access_count(point_id)
+                try:
+                    # Get payload from the point
+                    if hasattr(point, 'payload'):
+                        payload = point.payload
+                    else:
+                        payload = point
+                    
+                    # Create Memory using from_payload method
+                    memory = Memory.from_payload(payload)
+                    memories.append(memory)
+                    
+                    # Update access tracking if we have the point ID
+                    if hasattr(point, 'id'):
+                        self._update_access_count(point.id)
+                        
+                except Exception as e:
+                    print(f"⚠️ Skipping invalid memory: {e}")
+                    continue
             
             # Cache results
             self.cache[cache_key] = memories
@@ -342,10 +362,12 @@ class QdrantMemorySystem:
             
         except Exception as e:
             print(f"❌ Error retrieving memories: {e}")
+            import traceback
+            print(traceback.format_exc())
             return []
     
     def _update_access_count(self, point_id: str):
-        """Update access count for a memory"""
+        """Update access count and timestamp for a memory"""
         try:
             # Get current point
             points = self.client.retrieve(
@@ -362,10 +384,12 @@ class QdrantMemorySystem:
                 self.client.set_payload(
                     collection_name=self.collection_name,
                     payload=payload,
-                    points=[point_id]
+                    points=[point_id],
+                    wait=True
                 )
-        except:
-            pass  # Silent fail for access count updates
+        except Exception as e:
+            # Silent fail for access count updates
+            pass
     
     def record_learning(
         self,
@@ -440,17 +464,41 @@ class QdrantMemorySystem:
         
         WHY: Cross-pollination of knowledge improves all agents
         """
-        # Store for the receiving agent
-        self.store_memory(
+        # Store for the receiving agent with metadata
+        memory = Memory(
             client_id=client_id,
             agent_name=to_agent,
             memory_type="shared_insight",
             content=insight,
             context=f"Shared by {from_agent}",
-            importance=0.7
+            importance=0.7,
+            shared_from=from_agent,
+            shared_at=datetime.now().isoformat()
         )
         
-        print(f"🤝 {from_agent} → {to_agent}: {insight[:50]}...")
+        # Generate embedding and store
+        try:
+            embedding = self.encoder.encode(insight).tolist()
+            memory_id = hashlib.md5(
+                f"{client_id}_{to_agent}_shared_{insight}_{datetime.now()}".encode()
+            ).hexdigest()
+            
+            self.client.upsert(
+                collection_name=self.collection_name,
+                points=[
+                    PointStruct(
+                        id=memory_id,
+                        vector=embedding,
+                        payload=memory.to_dict()
+                    )
+                ],
+                wait=True
+            )
+            
+            print(f"🤝 {from_agent} → {to_agent}: {insight[:50]}...")
+            
+        except Exception as e:
+            print(f"❌ Error sharing insight: {e}")
     
     def get_client_context(self, client_id: str) -> Dict[str, List[str]]:
         """
@@ -501,22 +549,49 @@ class QdrantMemorySystem:
         WHY: Privacy compliance
         """
         try:
-            # Get all memories for this client
-            memories = self.retrieve_memories(
-                client_id=client_id,
-                limit=1000
-            )
+            # Get all memories for this client to get their IDs
+            all_memories = []
+            offset = None
             
-            if not memories:
+            while True:
+                scroll_result = self.client.scroll(
+                    collection_name=self.collection_name,
+                    scroll_filter=Filter(
+                        must=[
+                            FieldCondition(
+                                key="client_id",
+                                match=MatchValue(value=client_id)
+                            )
+                        ]
+                    ),
+                    limit=100,
+                    offset=offset
+                )
+                
+                points, next_offset = scroll_result
+                if not points:
+                    break
+                    
+                all_memories.extend(points)
+                offset = next_offset
+                
+                if not next_offset:
+                    break
+            
+            if not all_memories:
                 print(f"No memories found for {client_id}")
                 return True
             
-            # Note: Qdrant doesn't have direct filter-based delete yet
-            # We need to get IDs and delete them
-            # This is a limitation we should handle properly
+            # Extract IDs
+            memory_ids = [point.id for point in all_memories if hasattr(point, 'id')]
             
-            print(f"⚠️ Delete operation: Would delete {len(memories)} memories for {client_id}")
-            print("Note: Implement point deletion based on your Qdrant version")
+            if memory_ids:
+                # Delete the points
+                self.client.delete(
+                    collection_name=self.collection_name,
+                    points_selector=memory_ids
+                )
+                print(f"✅ Deleted {len(memory_ids)} memories for {client_id}")
             
             # Clear cache
             self.cache = {k: v for k, v in self.cache.items() if not k.startswith(client_id)}
@@ -525,6 +600,8 @@ class QdrantMemorySystem:
             
         except Exception as e:
             print(f"❌ Error deleting memories: {e}")
+            import traceback
+            print(traceback.format_exc())
             return False
 
 

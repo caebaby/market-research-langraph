@@ -1,7 +1,9 @@
 {
-  "dependencies": ["."],
   "graphs": {
-    "agent": "./agent/graph.py:graph"
+    "app": "team_icp.workflows.graph:graph"
   },
-  "env": ".env"
+  "dependencies": [
+    "."
+  ],
+  "env": "./.env"
 }
