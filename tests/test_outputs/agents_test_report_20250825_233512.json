@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-08-25T23:27:07.660239",
+  "agents_tested": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_passed": [],
+  "agents_failed": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_missing": [],
+  "detailed_results": {
+    "Psychological Analyst": {
+      "agent_name": "Psychological Analyst",
+      "class_name": "PsychologicalAgent",
+      "status": "FAILED",
+      "word_count": 1993,
+      "quality_score": 0.825,
+      "errors": [],
+      "warnings": [
+        "Need 0.03 quality improvement"
+      ],
+      "sample_output": "Certainly! Below is an enhanced version of the psychological analysis for a B2B SaaS company selling AI-powered customer service automation, incorporating additional frameworks, deeper unconscious pattern analysis, more contradictions and paradoxes, specific examples, and \"scary accurate\" insights.\n\n---\n\n## Comprehensive Customer Psychology Analysis of a B2B SaaS Company Selling AI-Powered Customer Service Automation\n\n### PART A: FOUNDATIONAL CUSTOMER PSYCHOLOGY\n\n#### Step 1: Identity and Self-P..."
+    },
+    "Voice Alchemist": {
+      "agent_name": "Voice Alchemist",
+      "class_name": "VoiceAgent",
+      "status": "FAILED",
+      "word_count": 911,
+      "quality_score": 0.7806150000000001,
+      "errors": [],
+      "warnings": [
+        "Need 289 more words",
+        "Need 0.07 quality improvement"
+      ],
+      "sample_output": "## \ud83e\udde0 Voice of Customer Bible: Enterprise Contact Center Leaders\n\n### Accuracy Validation\n- **ICP Match Score:** 9/10 - Strong alignment with the target audience, reflecting their specific challenges and aspirations.\n- **Source Confidence:** 8/10 - Insights are derived from inferred data, customer interactions, and hypothetical scenarios, providing a robust foundation.\n- **\"Mind Reader\" Test:** 9/10 - High likelihood that these insights resonate deeply with the audience, reflecting their unspoken..."
+    },
+    "Competitor Analyst": {
+      "agent_name": "Competitor Analyst",
+      "class_name": "CompetitorAgent",
+      "status": "FAILED",
+      "word_count": 3039,
+      "quality_score": 0.7854000000000001,
+      "errors": [],
+      "warnings": [
+        "Need 0.01 quality improvement"
+      ],
+      "sample_output": "# Strategic Competitive Analysis for AI-Powered Customer Service Automation in Enterprise Contact Centers\n\n## 1. Most Dangerous Competitors\n\n### a. **Zendesk**\n   - **Why They\u2019re a Threat**: Zendesk is a leader in the customer service domain, with a well-established brand and a strong suite of features that cater to enterprise needs. Their extensive integrations and customizable nature make them a go-to option for organizations looking to enhance customer engagement.\n   - **What Makes Them \"Hire..."
+    },
+    "Interview Psychological": {
+      "agent_name": "Interview Psychological",
+      "class_name": "PsychologicalInterviewAgentV4",
+      "status": "FAILED",
+      "word_count": 754,
+      "quality_score": 0.9,
+      "errors": [],
+      "warnings": [
+        "Need 1246 more words"
+      ],
+      "sample_output": "**ENHANCED INTERVIEWS:**\n\n**INTERVIEW 1: The Exhausted Achiever - Successful Software Professional Dying Inside**\n\n[0:00]\n**Interviewer:** Tell me about your current situation with your work.\n\n**Customer:** *sighs deeply* You know, from the outside, everything looks polished. A solid job, good pay, clients who seem to adore me. But honestly? I feel like I'm running on fumes. Like, bone-deep exhausted. Every morning, I wake up and... *pauses, voice thick with emotion* ...I look in the mirror and ..."
+    },
+    "Interview Sales": {
+      "agent_name": "Interview Sales",
+      "class_name": "SalesInterviewAgentV4",
+      "status": "FAILED",
+      "word_count": 865,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [
+        "Need 1135 more words"
+      ],
+      "sample_output": "INTERVIEW 1: The Budget-Conscious Buyer - Mid-size SaaS company\n\nInterviewer: Tell me about your current process for handling [relevant problem].\n\nProspect: Well, right now we're doing everything manually. It's... *sighs* it's a mess, honestly. We've got 3 people full-time just managing this, and we're still dropping balls.\n\nInterviewer: What's the impact of those dropped balls on the business?\n\nProspect: Last quarter alone, we lost two major accounts worth about $500K in annual revenue. My CEO ..."
+    },
+    "GTM Blueprint Strategist": {
+      "agent_name": "GTM Blueprint Strategist",
+      "class_name": "GTMBlueprintAgent",
+      "status": "FAILED",
+      "word_count": 3724,
+      "quality_score": 0.55,
+      "errors": [],
+      "warnings": [
+        "Need 0.30 quality improvement"
+      ],
+      "sample_output": "# GO-TO-MARKET BLUEPRINT\n*Generated: August 25, 2025*\n\n---\n\n## EXECUTIVE SUMMARY & STRATEGIC OVERVIEW\n\n**EXECUTIVE SUMMARY**\n\nIn the rapidly evolving landscape of customer service, the demand for efficiency and innovation is paramount. Our B2B SaaS company, specializing in AI-powered customer service automation, is strategically positioned to capture significant market share within enterprise contact centers. This Executive Summary outlines our Go-To-Market (GTM) strategy, driven by a deep under..."
+    }
+  }
+}

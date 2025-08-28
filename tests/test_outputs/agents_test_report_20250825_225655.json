@@ -1,0 +1,75 @@
+{
+  "test_date": "2025-08-25T22:56:55.484131",
+  "agents_found": 4,
+  "agents_tested": 4,
+  "results": {
+    "Psychological Analyst": {
+      "agent": "Psychological Analyst",
+      "word_count": 475,
+      "quality_score": 0.87,
+      "meets_quality": true,
+      "meets_words": false,
+      "passed": false,
+      "criteria": {
+        "module": "team_icp.agents.psychological",
+        "class": "PsychologicalAgent",
+        "name": "Psychological Analyst",
+        "min_quality": 0.85,
+        "min_words": 1200,
+        "target_words": 1500
+      },
+      "output_preview": "Here's an enhanced version that maintains the existing analysis while adding deeper psychological insights:\n\n[Previous analysis remains intact, with these additions:]\n\nPART 7: PAIN LAYERS ANALYSIS\n\nSu..."
+    },
+    "Voice Alchemist": {
+      "agent": "Voice Alchemist",
+      "word_count": 507,
+      "quality_score": 0.80883,
+      "meets_quality": false,
+      "meets_words": false,
+      "passed": false,
+      "criteria": {
+        "module": "team_icp.agents.voice",
+        "class": "VoiceAgent",
+        "name": "Voice Alchemist",
+        "min_quality": 0.85,
+        "min_words": 1200,
+        "target_words": 1500
+      },
+      "output_preview": "Here's an enhanced, journal-quality voice analysis that maintains existing insights while adding depth and specificity:\n\n# Voice of Customer Analysis: VP of Customer Success in Growth-Stage SaaS\n*Targ..."
+    },
+    "Competitor Analyst": {
+      "agent": "Competitor Analyst",
+      "word_count": 1564,
+      "quality_score": 0.7920000000000001,
+      "meets_quality": false,
+      "meets_words": true,
+      "passed": false,
+      "criteria": {
+        "module": "team_icp.agents.competitor",
+        "class": "CompetitorAgent",
+        "name": "Competitor Analyst",
+        "min_quality": 0.8,
+        "min_words": 1200,
+        "target_words": 1500
+      },
+      "output_preview": "Based on the provided context and psychological insights, here's a strategic competitive analysis for the AI-powered customer success platform:\n\n1. MOST DANGEROUS COMPETITORS\n\nA. Gainsight\n- Primary T..."
+    },
+    "GTM Blueprint Strategist": {
+      "agent": "GTM Blueprint Strategist",
+      "word_count": 2770,
+      "quality_score": 0.72,
+      "meets_quality": false,
+      "meets_words": true,
+      "passed": false,
+      "criteria": {
+        "module": "team_icp.agents.gtm_blueprint",
+        "class": "GTMBlueprintAgent",
+        "name": "GTM Blueprint Strategist",
+        "min_quality": 0.85,
+        "min_words": 2500,
+        "target_words": 3000
+      },
+      "output_preview": "# GO-TO-MARKET BLUEPRINT\n*Generated: August 25, 2025*\n\n---\n\n## EXECUTIVE SUMMARY & STRATEGIC OVERVIEW\n\nEXECUTIVE SUMMARY & STRATEGIC OVERVIEW\nAI-Powered Customer Success Platform GTM Strategy\n--------..."
+    }
+  }
+}

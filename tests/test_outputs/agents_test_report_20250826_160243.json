@@ -1,0 +1,83 @@
+{
+  "timestamp": "2025-08-26T15:56:25.246535",
+  "agents_tested": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_passed": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_failed": [],
+  "agents_missing": [],
+  "detailed_results": {
+    "Psychological Analyst": {
+      "agent_name": "Psychological Analyst",
+      "class_name": "PsychologicalAgent",
+      "status": "PASSED",
+      "word_count": 1935,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "# Comprehensive Customer Psychology Analysis for AI-Powered Customer Service Automation\n\n## Introduction\n\nIn the highly competitive landscape of the $15 billion enterprise contact center market, companies face numerous challenges, including high agent turnover and soaring training costs. Understanding the psychological landscape of decision-makers\u2014specifically the VP of Customer Success, CTO, and CFO\u2014is vital for effectively positioning AI-powered customer service automation solutions. This anal..."
+    },
+    "Voice Alchemist": {
+      "agent_name": "Voice Alchemist",
+      "class_name": "VoiceAgent",
+      "status": "PASSED",
+      "word_count": 1922,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "# Customer Voice Analysis for AI-Powered Customer Service Automation in Enterprise Contact Centers\n\n## **Overview**\n\nThis analysis dives deep into the voice of decision-makers within enterprise contact centers, specifically targeting VP Customer Success, CTOs, and CFOs. The goal is to extract language that captures their frustrations, aspirations, skepticism, trust issues, and overall experiences with customer service automation solutions. Armed with this insight, copywriters can create compelli..."
+    },
+    "Competitor Analyst": {
+      "agent_name": "Competitor Analyst",
+      "class_name": "CompetitorAgent",
+      "status": "PASSED",
+      "word_count": 1564,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "## COMPREHENSIVE COMPETITIVE INTELLIGENCE REPORT\n\n### 1. COMPETITOR LANDSCAPE ANALYSIS\n\n**Competitors Identified:**\n1. **Competitor A: Zendesk**\n   - **Market Position:** Established leader in customer service software.\n   - **Market Share:** ~20% of the enterprise contact center market.\n   - **Funding/Growth Trajectory:** Publicly traded, steady revenue growth, recent acquisition of AI startups to enhance capabilities.\n\n2. **Competitor B: ServiceNow**\n   - **Market Position:** Strong in IT serv..."
+    },
+    "Interview Psychological": {
+      "agent_name": "Interview Psychological",
+      "class_name": "PsychologicalInterviewAgentV4",
+      "status": "PASSED",
+      "word_count": 2159,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "### INTERVIEW 1: THE ANXIOUS INNOVATOR\n\n**Opening (100-150 words):**\n\n**Interviewer:** Thanks for joining me today. Can you start by telling me a bit about your role at TechGen Solutions?\n\n**Innovator:** Sure. I\u2019m the VP of Customer Success here. Basically, I\u2019m responsible for ensuring our clients are satisfied and getting value from our products.\n\n**Interviewer:** Sounds critical. What challenges are you facing right now?\n\n**Innovator:** [sighs deeply] Well, we\u2019ve been trying to implement new t..."
+    },
+    "Interview Sales": {
+      "agent_name": "Interview Sales",
+      "class_name": "SalesInterviewAgentV4",
+      "status": "PASSED",
+      "word_count": 2058,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "## INTERVIEW 1: THE ECONOMIC BUYER\n\n**Character**: CFO/VP evaluating ROI, concerned about budget and business impact.\n\n---\n\n### Opening & Rapport (100-120 words):\n\n**Sales Rep**: \"Thanks for taking the time today. I noticed you've been leading the digital transformation at your company. That's no small feat!\"\n\n**Prospect**: \"Yes, it's been quite a journey. We're at a critical juncture, especially with our customer service operations.\"\n\n**Sales Rep**: \"I can imagine. I reviewed your recent initia..."
+    },
+    "GTM Blueprint Strategist": {
+      "agent_name": "GTM Blueprint Strategist",
+      "class_name": "GTMBlueprintAgent",
+      "status": "PASSED",
+      "word_count": 2981,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "# Comprehensive Go-To-Market Blueprint\n\n## 1. EXECUTIVE SUMMARY (200-250 words)\n\nIn the evolving landscape of customer service, three transformative insights have emerged that can reshape our business strategy. First, the high agent turnover rate in contact centers, averaging 30% annually, significantly drives up training costs, creating a pressing need for automation solutions. Second, enterprises are increasingly looking to improve customer satisfaction through AI-enabled tools, with a 40% pro..."
+    }
+  }
+}

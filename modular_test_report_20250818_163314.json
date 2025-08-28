@@ -1,0 +1,23 @@
+{
+  "tests_passed": 7,
+  "tests_failed": 1,
+  "errors": [
+    {
+      "test": "Workflow",
+      "error": "Result should contain psychological output",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\lemos\\OneDrive\\\u00c1rea de Trabalho\\Chris Agentic\\market-research-langraph\\tests\\test_modular_architecture.py\", line 316, in test_workflow\n    assert \"psychological\" in result[\"result\"], \"Result should contain psychological output\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Result should contain psychological output\n"
+    }
+  ],
+  "warnings": [],
+  "performance": {
+    "Registry System": 0.00021719932556152344,
+    "Agent Factory": 0.0003502368927001953,
+    "Team Configurations": 0.0019490718841552734,
+    "Industry Templates": 0.0025861263275146484,
+    "Dynamic Workflow": 0.014636993408203125,
+    "Custom Configurations": 0.010082244873046875,
+    "Error Handling": 0.010359048843383789,
+    "Performance": 0.007823467254638672
+  },
+  "timestamp": "2025-08-18T16:33:12.486577"
+}

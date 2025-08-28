@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-08-26T01:08:19.062779",
+  "agents_tested": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_passed": [],
+  "agents_failed": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_missing": [],
+  "detailed_results": {
+    "Psychological Analyst": {
+      "agent_name": "Psychological Analyst",
+      "class_name": "PsychologicalAgent",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "Can't instantiate abstract class PsychologicalAgent without an implementation for abstract methods '_create_shared_insights', '_extract_insights_for_memory'"
+      ],
+      "warnings": []
+    },
+    "Voice Alchemist": {
+      "agent_name": "Voice Alchemist",
+      "class_name": "VoiceAgent",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "Can't instantiate abstract class VoiceAgent without an implementation for abstract methods '_create_shared_insights', '_extract_insights_for_memory'"
+      ],
+      "warnings": []
+    },
+    "Competitor Analyst": {
+      "agent_name": "Competitor Analyst",
+      "class_name": "CompetitorAgent",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "Can't instantiate abstract class CompetitorAgent without an implementation for abstract methods '_create_shared_insights', '_extract_insights_for_memory'"
+      ],
+      "warnings": []
+    },
+    "Interview Psychological": {
+      "agent_name": "Interview Psychological",
+      "class_name": "PsychologicalInterviewAgentV4",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "Can't instantiate abstract class PsychologicalInterviewAgentV4 without an implementation for abstract methods '_create_shared_insights', '_extract_insights_for_memory'"
+      ],
+      "warnings": []
+    },
+    "Interview Sales": {
+      "agent_name": "Interview Sales",
+      "class_name": "SalesInterviewAgentV4",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "Can't instantiate abstract class SalesInterviewAgentV4 without an implementation for abstract methods '_create_shared_insights', '_extract_insights_for_memory'"
+      ],
+      "warnings": []
+    },
+    "GTM Blueprint Strategist": {
+      "agent_name": "GTM Blueprint Strategist",
+      "class_name": "GTMBlueprintAgent",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "Can't instantiate abstract class GTMBlueprintAgent without an implementation for abstract methods '_create_shared_insights', '_extract_insights_for_memory'"
+      ],
+      "warnings": []
+    }
+  }
+}

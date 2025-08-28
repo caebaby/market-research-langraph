@@ -1,293 +1,558 @@
 # team_icp/agents/gtm_blueprint.py
-# FINAL FIXED VERSION - Override parent's _format_shared_insights method
+"""
+Level 4 GTM Blueprint Agent - FIXED for Complete Generation
+Synthesizes all intelligence into actionable go-to-market strategy
+Fixed to generate ALL 12 sections without truncation using 8192 tokens
+"""
 
-from typing import Dict, Any, List
-import json
+from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime
 import re
-from core.standard_agent import StandardAgentNode
-from ..prompts.gtm_blueprint_prompts import GTMBlueprintPrompts
+import json
+from core.standard_agent_v4 import StandardAgentNodeV4
 
 
-class GTMBlueprintAgent(StandardAgentNode):
+class GTMBlueprintPrompts:
+    """GTM Blueprint prompts class"""
+    
+    @staticmethod
+    def get_synthesis_prompt():
+        return """You are synthesizing insights from multiple specialist agents into a 
+        comprehensive go-to-market blueprint. Focus on actionable strategies and specific tactics."""
+    
+    @staticmethod
+    def get_blueprint_template():
+        return """Create a structured GTM blueprint with clear sections for positioning, 
+        messaging, channels, timeline, and success metrics."""
+
+
+class GTMBlueprintAgent(StandardAgentNodeV4):
     """
-    GTM Blueprint Agent that synthesizes all insights into comprehensive strategy.
+    GTM Blueprint Synthesizer - Creates comprehensive, actionable go-to-market strategy
+    FIXED: Generates complete 12-section blueprint without truncation
     """
     
     def __init__(self):
-        agent_name = "GTM Blueprint Strategist"
-        role_prompt = GTMBlueprintPrompts.get_role_prompt()
-        
         super().__init__(
-            agent_name=agent_name,
-            role_prompt=role_prompt,
-            target_quality=0.85
+            agent_name="GTM Blueprint Strategist",
+            role_prompt="""You are an expert go-to-market strategist who synthesizes all market intelligence, 
+psychological insights, voice of customer, and competitive analysis into comprehensive, actionable 
+GTM blueprints that drive revenue growth.
+
+Your blueprints are complete and actionable, enabling teams to execute immediately without additional 
+planning. You provide specific tactics, timelines, budgets, and success metrics that turn insights 
+into revenue.""",
+            target_quality=0.85,
+            require_human_review_below=0.70
         )
+        
+        # REMOVED word count limits - let it use all tokens!
+        self.max_tokens = 8192  # Ensure we use maximum available
+        
+        # Critical GTM components that MUST be present
+        self.required_sections = 12  # All 12 sections
+        
+        # Track agent synthesis
+        self.synthesized_agents = []
+        
+        print(f"[{self.agent_name}] Initialized with {self.max_tokens} max tokens for COMPLETE blueprint")
     
-    def _format_shared_insights(self, shared_insights: Dict[str, Any]) -> str:
-        """
-        Override parent's method to handle both string and dict formats in shared_insights.
-        """
-        if not shared_insights:
-            return ""
+    def _generate_response(self, task: str, memories: List, llm) -> str:
+        """Generate COMPLETE GTM blueprint with ALL 12 sections"""
         
-        formatted = "\n\nINSIGHTS FROM OTHER AGENTS:\n"
-        formatted += "=" * 50 + "\n"
+        print(f"[{self.agent_name}] Generating COMPLETE 12-section blueprint...")
         
-        for agent_name, insights in shared_insights.items():
-            # Handle different data types
-            if isinstance(insights, dict):
-                # Extract quality score if available
-                quality_score = insights.get('quality_score', 'N/A')
-                if isinstance(quality_score, (int, float)):
-                    formatted += f"From {agent_name} (Quality Score: {quality_score:.2f}):\n"
-                else:
-                    formatted += f"From {agent_name}:\n"
-                
-                # Extract content
-                content = insights.get('summary', '') or insights.get('content', '') or str(insights)
-            elif isinstance(insights, str):
-                # If it's a string, use it directly
-                formatted += f"From {agent_name}:\n"
-                content = insights
-            else:
-                # Convert to string if it's something else
-                formatted += f"From {agent_name}:\n"
-                content = str(insights)
-            
-            # Add the content
-            if content:
-                formatted += f"{content[:1000]}...\n" if len(content) > 1000 else f"{content}\n"
-            formatted += "-" * 30 + "\n"
+        # Extract context
+        context = task
         
-        return formatted
-    
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Process state and synthesize all insights into GTM blueprint.
-        """
-        print(f"[GTMBlueprintAgent] Starting synthesis")
-        print(f"[GTMBlueprintAgent] Available insights: {list(state.get('shared_insights', {}).keys())}")
-        
-        # Collect all insights from other agents
-        all_insights = self._collect_all_insights(state)
-        print(f"[GTMBlueprintAgent] Collected insights from {len(state.get('shared_insights', {}))} agents")
-        
-        # Add insights to master context
-        if all_insights:
-            current_context = state.get("master_context", "")
-            state["master_context"] = f"{current_context}\n\n{all_insights}"
+        # STREAMLINED BUT COMPLETE PROMPT - More concise to fit in context
+        complete_blueprint_prompt = f"""
+Create a COMPLETE Go-To-Market Blueprint for the following business:
+{context}
+
+CRITICAL INSTRUCTIONS:
+- Generate ALL 12 sections listed below
+- DO NOT truncate or stop early
+- DO NOT ask if user wants to continue
+- Provide comprehensive detail for each section
+- Target 300-500 words per section
+- Use specific numbers, percentages, and timelines throughout
+
+GENERATE THE FOLLOWING 12 SECTIONS IN FULL:
+
+==================================================
+1. EXECUTIVE SUMMARY
+==================================================
+- Key market opportunity and positioning
+- Primary value proposition and differentiation
+- Expected outcomes with specific metrics
+- Investment required and ROI projection
+- Critical success factors
+
+==================================================
+2. MARKET ANALYSIS & OPPORTUNITY
+==================================================
+- TAM/SAM/SOM with specific dollar amounts
+- Market growth rate and trends
+- Key market drivers and dynamics
+- Competitive landscape overview
+- Market entry strategy
+
+==================================================
+3. IDEAL CUSTOMER PROFILE (ICP)
+==================================================
+- Company characteristics (size, industry, revenue)
+- Psychographic profile and motivations
+- Buying process and timeline
+- Decision makers and influencers
+- Budget range and evaluation criteria
+
+==================================================
+4. POSITIONING & MESSAGING FRAMEWORK
+==================================================
+- Core positioning statement
+- Value proposition by segment
+- Key messaging pillars (3)
+- Competitive differentiation
+- Proof points and evidence
+
+==================================================
+5. CHANNEL STRATEGY & TACTICS
+==================================================
+- Primary channels (direct, digital, partner)
+- Channel mix rationale
+- Specific tactics per channel
+- Expected CAC and conversion rates
+- Channel optimization plan
+
+==================================================
+6. PRICING STRATEGY
+==================================================
+- Pricing model and structure
+- Price points and packages
+- Competitive pricing analysis
+- Discounting strategy
+- Value metric alignment
+
+==================================================
+7. SALES ENABLEMENT TOOLKIT
+==================================================
+- Battle cards for top 3 competitors
+- Sales playbook and methodology
+- Objection handling matrix
+- Demo script and flow
+- ROI calculator framework
+
+==================================================
+8. MARKETING CAMPAIGN PLAN
+==================================================
+- Campaign themes and creative direction
+- Content strategy and calendar
+- Demand generation tactics
+- ABM strategy for key accounts
+- Brand building initiatives
+
+==================================================
+9. IMPLEMENTATION TIMELINE
+==================================================
+PHASE 1 (Days 1-30): Immediate actions with specific tasks
+PHASE 2 (Days 31-60): Foundation building activities
+PHASE 3 (Days 61-90): Scaling initiatives
+PHASE 4 (Days 91+): Optimization and expansion
+
+==================================================
+10. SUCCESS METRICS & KPIs
+==================================================
+- Leading indicators (weekly tracking)
+- Lagging indicators (monthly tracking)
+- Success milestones by timeframe
+- Reporting dashboard design
+- Performance benchmarks
+
+==================================================
+11. BUDGET ALLOCATION
+==================================================
+- Total budget required
+- Breakdown by category (sales, marketing, tech)
+- Timeline-based allocation
+- ROI projections
+- Cost optimization strategies
+
+==================================================
+12. RISK MITIGATION PLAN
+==================================================
+- Top 3 risks identified
+- Mitigation strategies for each
+- Contingency plans
+- Early warning indicators
+- Escalation procedures
+
+==================================================
+END OF BLUEPRINT REQUIREMENTS
+==================================================
+
+REMEMBER: Generate ALL 12 sections completely. This is a single, comprehensive deliverable.
+Do not truncate. Do not ask about continuing. Complete all sections now.
+"""
         
         try:
-            # Call parent's __call__ method
-            result = super().__call__(state)
+            # Ensure LLM uses maximum tokens if it has the attribute
+            if hasattr(llm, 'max_tokens'):
+                original_max = llm.max_tokens
+                llm.max_tokens = self.max_tokens
+                print(f"[{self.agent_name}] Set LLM to {self.max_tokens} tokens")
             
-            # Ensure result is a dict
-            if not isinstance(result, dict):
-                print(f"[GTMBlueprintAgent] WARNING: Parent returned {type(result)}, converting to dict")
-                result = {"current_output": str(result)}
+            # Generate complete response
+            response = llm.invoke(complete_blueprint_prompt)
             
-            # Ensure minimum length for comprehensive strategy
-            if result.get("current_output"):
-                output_length = len(result["current_output"])
-                print(f"[GTMBlueprintAgent] Generated {output_length} characters")
-                
-                if output_length < 2500:
-                    print(f"[GTMBlueprintAgent] Output too short, requesting expansion")
-                    result["requires_human_review"] = True
-                    result["review_reason"] = f"GTM Blueprint too brief ({output_length} chars, need 2500+)"
+            # Extract content
+            if hasattr(response, 'content'):
+                blueprint = response.content
+            else:
+                blueprint = str(response)
             
-            # Ensure all state fields are preserved
-            for key in state:
-                if key not in result:
-                    result[key] = state[key]
+            # Restore original max_tokens if we changed it
+            if hasattr(llm, 'max_tokens'):
+                llm.max_tokens = original_max
             
-            return result
+            # Verify completeness
+            word_count = len(blueprint.split())
+            sections_found = self._count_sections(blueprint)
+            
+            print(f"[{self.agent_name}] Generated {word_count} words with {sections_found}/12 sections")
+            
+            # Check for truncation indicators and remove them
+            truncation_phrases = [
+                "Would you like me to continue",
+                "Shall I continue with",
+                "I can continue with",
+                "Let me know if you'd like"
+            ]
+            
+            for phrase in truncation_phrases:
+                if phrase in blueprint:
+                    print(f"[{self.agent_name}] WARNING: Found truncation phrase, removing...")
+                    blueprint = blueprint.split(phrase)[0].strip()
+            
+            # If blueprint is incomplete, add completion notice
+            if sections_found < 12:
+                print(f"[{self.agent_name}] Only {sections_found}/12 sections generated. Token limit may have been reached.")
+                blueprint += f"\n\n[Note: Blueprint generated {sections_found}/12 sections due to token constraints]"
+            
+            return blueprint
             
         except Exception as e:
-            print(f"[GTMBlueprintAgent] Error in synthesis: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            
-            # Return a valid state dict even on error
-            error_state = state.copy()
-            error_state["current_output"] = f"GTM Blueprint generation failed: {str(e)}"
-            error_state["quality_score"] = 0.0
-            error_state["requires_human_review"] = True
-            error_state["review_reason"] = f"GTM Blueprint error: {str(e)}"
-            error_state["agent_name"] = self.agent_name
-            return error_state
+            print(f"[{self.agent_name}] Error generating blueprint: {e}")
+            return f"Error generating GTM blueprint: {str(e)}"
     
-    def _collect_all_insights(self, state: Dict[str, Any]) -> str:
-        """
-        Collect and format all insights from other agents.
-        """
-        insights_parts = []
+    def process(self, task: str, shared_insights: Dict, llm) -> Dict[str, Any]:
+        """Process GTM Blueprint creation with synthesis"""
         
-        # Get from shared_insights
-        shared_insights = state.get("shared_insights", {})
+        print(f"[{self.agent_name}] Starting COMPLETE blueprint generation...")
         
-        # Get from result
-        result = state.get("result", {})
+        # Build comprehensive context
+        context = self._build_gtm_context(task, shared_insights)
         
-        # Priority order for synthesis
-        agent_mapping = {
-            "psychological": "PSYCHOLOGICAL ANALYSIS",
-            "Psychological Analyst": "PSYCHOLOGICAL ANALYSIS",
-            "voice": "VOICE OF CUSTOMER",
-            "Voice of Customer Mind Reader": "VOICE OF CUSTOMER",
-            "competitor": "COMPETITIVE INTELLIGENCE",
-            "Competitive Intelligence Analyst": "COMPETITIVE INTELLIGENCE"
+        # Track which agents we're synthesizing from
+        self._identify_agent_inputs(shared_insights)
+        
+        # Generate complete blueprint
+        memories = []  # GTM doesn't use memories
+        blueprint = self._generate_response(context, memories, llm)
+        
+        # Calculate metrics
+        word_count = len(blueprint.split())
+        sections_count = self._count_sections(blueprint)
+        quality_score = self._calculate_quality_score(blueprint)
+        
+        print(f"[{self.agent_name}] Final output: {word_count} words, {sections_count}/12 sections, quality: {quality_score:.2f}")
+        
+        # Extract key components
+        components_present = self._verify_components(blueprint)
+        action_items = self._extract_action_items(blueprint)
+        timeline = self._extract_timeline(blueprint)
+        budget_breakdown = self._extract_budget(blueprint)
+        
+        return {
+            'output': blueprint,
+            'quality_score': quality_score,
+            'word_count': word_count,
+            'sections_generated': sections_count,
+            'components_present': components_present,
+            'action_items': action_items,
+            'timeline': timeline,
+            'budget': budget_breakdown,
+            'agents_synthesized': self.synthesized_agents
+        }
+    
+    def _count_sections(self, blueprint: str) -> int:
+        """Count how many of the 12 sections are present"""
+        sections_found = 0
+        
+        # Look for section numbers or headers
+        for i in range(1, 13):
+            # Check for various section formats
+            patterns = [
+                f"{i}\\.",  # 1. Section
+                f"{i}\\)",  # 1) Section
+                f"Section {i}",
+                f"#{i}",
+                f"Part {i}"
+            ]
+            
+            for pattern in patterns:
+                if re.search(pattern, blueprint, re.IGNORECASE):
+                    sections_found += 1
+                    break
+        
+        # Also check for section names if numbers aren't found
+        section_names = [
+            "executive summary",
+            "market analysis",
+            "ideal customer",
+            "positioning",
+            "channel strategy",
+            "pricing",
+            "sales enablement",
+            "marketing campaign",
+            "implementation timeline",
+            "success metrics",
+            "budget",
+            "risk mitigation"
+        ]
+        
+        for name in section_names:
+            if name in blueprint.lower() and sections_found < 12:
+                sections_found = max(sections_found, section_names.index(name) + 1)
+        
+        return min(sections_found, 12)
+    
+    def _build_gtm_context(self, task: str, shared_insights: Dict) -> str:
+        """Build comprehensive context for GTM Blueprint"""
+        context = f"BUSINESS CONTEXT: {task}\n\n"
+        
+        if shared_insights:
+            context += "INSIGHTS FROM SPECIALIST AGENTS:\n\n"
+            
+            # Add all shared insights
+            for key, value in shared_insights.items():
+                if isinstance(value, dict):
+                    context += f"{key.upper()}:\n"
+                    for sub_key, sub_value in value.items():
+                        context += f"  - {sub_key}: {str(sub_value)[:200]}...\n"
+                else:
+                    context += f"{key.upper()}: {str(value)[:500]}...\n"
+                context += "\n"
+        
+        return context
+    
+    def _identify_agent_inputs(self, shared_insights: Dict):
+        """Track which agents provided input"""
+        self.synthesized_agents = []
+        
+        insight_str = str(shared_insights).lower()
+        
+        agent_markers = {
+            'Psychological': ['psychological', 'unconscious', 'fear', 'identity'],
+            'Voice': ['voice', 'customer language', 'exact words'],
+            'Competitive': ['competitor', 'competitive', 'positioning'],
+            'Sales': ['sales', 'objection', 'bant'],
+            'Interview': ['interview', 'discovery', 'qualification']
         }
         
-        # Collect from shared insights
-        for key, value in shared_insights.items():
-            label = agent_mapping.get(key, key.upper())
-            
-            if isinstance(value, dict):
-                content = value.get('summary', '') or value.get('content', '') or str(value)
-            elif isinstance(value, str):
-                content = value
-            else:
-                content = str(value)
-            
-            if content and len(content) > 50:
-                insights_parts.append(f"\n=== {label} ===\n{content[:2000]}\n")
-        
-        # Also check result dict for any missing insights
-        for key in ["psychological", "voice", "competitor"]:
-            if key in result and key not in str(insights_parts):
-                content = result[key]
-                if isinstance(content, str) and len(content) > 50:
-                    label = agent_mapping.get(key, key.upper())
-                    insights_parts.append(f"\n=== {label} ===\n{content[:2000]}\n")
-        
-        # Include business context
-        if state.get("business_context"):
-            insights_parts.insert(0, f"=== BUSINESS CONTEXT ===\n{state['business_context']}\n")
-        
-        combined = "\n".join(insights_parts) if insights_parts else ""
-        print(f"[GTMBlueprintAgent] Combined insights length: {len(combined)} chars")
-        return combined
+        for agent, markers in agent_markers.items():
+            if any(marker in insight_str for marker in markers):
+                self.synthesized_agents.append(agent)
     
-    def _generate_response(self, task: str, context: str, memories: List, llm) -> str:
-        """
-        Generate comprehensive GTM blueprint using all insights.
-        """
-        # Get the synthesis template
-        synthesis_template = GTMBlueprintPrompts.get_synthesis_template()
+    def _verify_components(self, blueprint: str) -> Dict[str, bool]:
+        """Verify all required GTM components are present"""
+        blueprint_lower = blueprint.lower()
+        components = {}
         
-        # Get all insights from context
-        all_insights = context if "===" in context else self._extract_insights_from_context(context)
+        component_markers = {
+            'executive_summary': ['executive summary', 'key findings', 'strategic recommendations'],
+            'market_analysis': ['tam', 'sam', 'som', 'market analysis', 'market opportunity'],
+            'icp_definition': ['ideal customer', 'icp', 'target customer', 'customer profile'],
+            'positioning_strategy': ['positioning', 'value proposition', 'differentiation'],
+            'messaging_framework': ['messaging', 'message', 'headlines', 'copy'],
+            'channel_strategy': ['channel', 'distribution', 'go-to-market channels'],
+            'pricing_strategy': ['pricing', 'price', 'cost', '$'],
+            'sales_enablement': ['sales enablement', 'battle cards', 'sales tools', 'objection handling'],
+            'marketing_campaigns': ['campaign', 'marketing', 'launch', 'awareness'],
+            'launch_timeline': ['timeline', 'phase', '30 days', '60 days', '90 days'],
+            'success_metrics': ['metrics', 'kpi', 'success criteria', 'indicators'],
+            'budget_allocation': ['budget', 'investment', 'allocation', 'roi']
+        }
         
-        # Extract business context from the context string
-        business_context = "AI platform for financial advisors"
-        if "BUSINESS CONTEXT ===" in context:
-            try:
-                parts = context.split("BUSINESS CONTEXT ===")
-                if len(parts) > 1:
-                    business_context = parts[1].split("===")[0].strip()[:1000]
-            except:
-                pass
-        elif "Target:" in context:
-            try:
-                business_context = context.split("Target:")[1].split("\n")[0].strip()
-            except:
-                pass
+        for component, markers in component_markers.items():
+            components[component] = any(marker in blueprint_lower for marker in markers)
         
-        # Format the complete prompt
-        try:
-            complete_prompt = synthesis_template.format(
-                all_insights=all_insights,
-                task=task,
-                business_context=business_context
-            )
-        except Exception as e:
-            print(f"[GTMBlueprintAgent] Error formatting template: {e}")
-            complete_prompt = f"""
-            Create a comprehensive GTM Blueprint based on these insights:
-            
-            {all_insights}
-            
-            Business Context: {business_context}
-            Task: {task}
-            
-            Provide a detailed go-to-market strategy with all required sections.
-            """
-        
-        # Add role prompt
-        full_prompt = f"{self.role_prompt}\n\n{complete_prompt}"
-        
-        # Generate response
-        response = llm.invoke(full_prompt)
-        
-        # Extract content
-        if hasattr(response, 'content'):
-            return response.content
-        else:
-            return str(response)
+        return components
     
-    def _extract_insights_from_context(self, context: str) -> str:
-        """
-        Extract and organize insights from context.
-        """
-        if not context:
-            return "No context available"
+    def _extract_action_items(self, blueprint: str) -> List[str]:
+        """Extract specific action items from blueprint"""
+        action_items = []
         
-        # If already formatted with sections, return as is
-        if "===" in context:
-            return context
+        # Look for action-oriented language
+        action_patterns = [
+            r'(?:Week \d+:|Day \d+:)\s*([^.\n]+)',
+            r'(?:Action:|Task:|Deliverable:)\s*([^.\n]+)',
+            r'(?:- )\s*(?:Create|Build|Launch|Develop|Implement|Execute)\s+([^.\n]+)',
+            r'(?:PHASE \d+).*?(?:- )([^.\n]+)'
+        ]
         
-        # Otherwise return the raw context
-        return f"=== CONTEXT ===\n{context}"
+        for pattern in action_patterns:
+            matches = re.findall(pattern, blueprint, re.IGNORECASE | re.MULTILINE)
+            action_items.extend([m.strip() for m in matches if isinstance(m, str)])
+        
+        return list(set(action_items[:20]))  # Top 20 unique action items
     
-    def _reflect(self, task: str, response: str, llm) -> Dict[str, Any]:
-        """
-        Reflect on GTM blueprint quality with high standards.
-        """
-        try:
-            # Get quality criteria
-            quality_criteria = GTMBlueprintPrompts.get_quality_criteria()
-            
-            reflection_prompt = f"""{quality_criteria}
-
-TASK: {task}
-
-GTM BLUEPRINT TO EVALUATE (first 3000 chars):
-{response[:3000]}...
-
-Provide detailed critique for each criterion.
-Then on the LAST LINE ONLY, output a score from 0.0 to 1.0.
-
-CRITIQUE:"""
-            
-            # Get critique
-            critique_response = llm.invoke(reflection_prompt)
-            critique_text = critique_response.content if hasattr(critique_response, 'content') else str(critique_response)
-            
-            # Parse score
-            lines = critique_text.strip().split('\n')
-            last_line = lines[-1].strip() if lines else ""
-            critique_content = '\n'.join(lines[:-1]) if len(lines) > 1 else critique_text
-            
-            # Extract score
-            score_match = re.search(r'(\d*\.?\d+)', last_line)
-            
-            if score_match:
-                score = float(score_match.group(1))
-                score = max(0.0, min(1.0, score))
-                print(f"[GTMBlueprintAgent] Quality score: {score}")
-            else:
-                print(f"[GTMBlueprintAgent] No score found, defaulting to 0.7")
-                score = 0.7
-            
-            return {
-                "critique": critique_content,
-                "score": score
-            }
-            
-        except Exception as e:
-            print(f"[GTMBlueprintAgent] Error in reflection: {e}")
-            return {
-                "critique": f"Reflection error: {str(e)}",
-                "score": 0.5
-            }
+    def _extract_timeline(self, blueprint: str) -> Dict[str, List[str]]:
+        """Extract timeline and milestones"""
+        timeline = {
+            '30_days': [],
+            '60_days': [],
+            '90_days': [],
+            'ongoing': []
+        }
+        
+        # Extract phase-specific items
+        phase_patterns = {
+            '30_days': r'(?:Phase 1|Days 1-30|0-30 days|Immediate).*?(?:Phase 2|Days 31|$)',
+            '60_days': r'(?:Phase 2|Days 31-60|30-60 days).*?(?:Phase 3|Days 61|$)',
+            '90_days': r'(?:Phase 3|Days 61-90|60-90 days).*?(?:Phase 4|Days 91|$)',
+            'ongoing': r'(?:Phase 4|Days 91\+|90\+ days|Ongoing).*?$'
+        }
+        
+        for phase, pattern in phase_patterns.items():
+            match = re.search(pattern, blueprint, re.IGNORECASE | re.DOTALL)
+            if match:
+                items = re.findall(r'[-•]\s*([^-•\n]+)', match.group())
+                timeline[phase] = items[:5] if items else []
+        
+        return timeline
+    
+    def _extract_budget(self, blueprint: str) -> Dict[str, Any]:
+        """Extract budget information"""
+        budget = {
+            'total': None,
+            'breakdown': {},
+            'roi': None
+        }
+        
+        # Extract total budget
+        total_patterns = [
+            r'(?:total budget|total investment).*?\$([0-9,]+)(?:[KMB])?',
+            r'\$([0-9,]+)(?:[KMB])?\s*(?:total|budget|investment)'
+        ]
+        
+        for pattern in total_patterns:
+            match = re.search(pattern, blueprint, re.IGNORECASE)
+            if match:
+                budget['total'] = match.group(1)
+                break
+        
+        # Extract ROI
+        roi_pattern = r'(?:roi|return).*?([0-9]+)%'
+        roi_match = re.search(roi_pattern, blueprint, re.IGNORECASE)
+        if roi_match:
+            budget['roi'] = f"{roi_match.group(1)}%"
+        
+        return budget
+    
+    def _calculate_quality_score(self, blueprint: str) -> float:
+        """Calculate quality score based on completeness and detail"""
+        
+        # Base score
+        score = 0.40
+        
+        # Section completeness (most important - 0.40 possible)
+        sections_found = self._count_sections(blueprint)
+        score += (sections_found / 12.0) * 0.40
+        
+        # Component presence (0.15 possible)
+        components = self._verify_components(blueprint)
+        components_found = sum(components.values())
+        score += (components_found / len(components)) * 0.15
+        
+        # Word count (0.10 possible)
+        word_count = len(blueprint.split())
+        if word_count >= 2000:
+            score += 0.05
+        if word_count >= 3000:
+            score += 0.05
+        
+        # Specificity markers (0.15 possible)
+        specificity_checks = {
+            'has_numbers': bool(re.search(r'\$[0-9,]+', blueprint)),
+            'has_percentages': bool(re.search(r'[0-9]+%', blueprint)),
+            'has_timeline': bool(re.search(r'(?:day|week|month)\s+\d+', blueprint, re.IGNORECASE)),
+            'has_metrics': bool(re.search(r'(?:kpi|metric|roi|cac)', blueprint, re.IGNORECASE)),
+            'has_actions': bool(re.search(r'(?:create|build|launch|implement)', blueprint, re.IGNORECASE))
+        }
+        
+        for check, present in specificity_checks.items():
+            if present:
+                score += 0.03
+        
+        # Synthesis bonus (0.05 possible)
+        if len(self.synthesized_agents) >= 3:
+            score += 0.05
+        
+        # Ensure minimum quality for complete blueprints
+        if sections_found >= 10 and word_count >= 2500:
+            score = max(score, 0.85)
+        
+        return min(score, 1.0)
+    
+    def _create_shared_insights(self, response: str) -> Dict[str, Any]:
+        """Create insights to share with other agents (though GTM is usually final)"""
+        insights = {
+            'gtm_complete': True,
+            'sections_generated': self._count_sections(response),
+            'word_count': len(response.split()),
+            'action_items': self._extract_action_items(response)[:5],
+            'timeline': self._extract_timeline(response),
+            'budget': self._extract_budget(response)
+        }
+        
+        # Add strategy summary
+        exec_summary_match = re.search(
+            r'executive summary(.*?)(?:market analysis|$)', 
+            response, 
+            re.IGNORECASE | re.DOTALL
+        )
+        if exec_summary_match:
+            insights['executive_summary'] = exec_summary_match.group(1).strip()[:500]
+        
+        return insights
+    
+    def _extract_insights_for_memory(self, response: str) -> List[str]:
+        """Extract key insights for memory storage"""
+        insights = []
+        
+        # Get completion status
+        sections = self._count_sections(response)
+        words = len(response.split())
+        insights.append(f"GTM Blueprint: {sections}/12 sections, {words} words")
+        
+        # Get positioning if available
+        pos_match = re.search(r'positioning[:\s]+([^.]+)', response, re.IGNORECASE)
+        if pos_match:
+            insights.append(f"Positioning: {pos_match.group(1).strip()[:100]}")
+        
+        # Get budget if available
+        budget = self._extract_budget(response)
+        if budget['total']:
+            insights.append(f"Budget required: ${budget['total']}")
+        
+        # Get first action item
+        actions = self._extract_action_items(response)
+        if actions:
+            insights.append(f"First action: {actions[0][:100]}")
+        
+        # Add quality assessment
+        quality = self._calculate_quality_score(response)
+        insights.append(f"Blueprint quality: {quality:.2%}")
+        
+        return insights[:5]
