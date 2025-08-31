@@ -51,8 +51,8 @@ into revenue.""",
         
         # Configuration
         self.max_tokens = 8192
-        self.required_sections = 12
-        
+        self.required_sections = 12 # Default, will be dynamic
+        self.sections_per_part = 6  # Default, will be dynamic
         # Track agent synthesis
         self.synthesized_agents = []
         
@@ -370,6 +370,47 @@ into revenue.""",
             
             return state
     
+    def determine_section_count(self, company_context: str) -> tuple:
+        """
+        Dynamically determine section count based on company complexity
+        Returns: (total_sections, sections_per_part)
+        """
+        context_lower = company_context.lower()
+        
+        # Check for complexity indicators
+        complexity_indicators = {
+            'enterprise': 3,
+            'fortune 500': 3,
+            'global': 2,
+            'multinational': 2,
+            'complex': 2,
+            'multi-product': 2,
+            'b2b': 1,
+            'saas': 1,
+            'startup': -1,
+            'small': -1,
+            'simple': -2
+        }
+        
+        complexity_score = 0
+        for indicator, weight in complexity_indicators.items():
+            if indicator in context_lower:
+                complexity_score += weight
+        
+        # Determine sections based on complexity
+        if complexity_score >= 4:
+            # Complex: Full 12 sections in 3 parts
+            print(f"[{self.agent_name}] High complexity detected - using 12 sections in 3 parts")
+            return 12, 4
+        elif complexity_score >= 0:
+            # Medium: 10 sections in 2 parts
+            print(f"[{self.agent_name}] Medium complexity - using 10 sections in 2 parts")
+            return 10, 5
+        else:
+            # Simple: 8 sections in 2 parts
+            print(f"[{self.agent_name}] Low complexity - using 8 sections in 2 parts")
+            return 8, 4
+        
     def process_gtm(self, task: str, shared_insights: Dict, llm) -> Dict[str, Any]:
         """Process GTM Blueprint creation with synthesis"""
         
@@ -414,197 +455,149 @@ into revenue.""",
     # [I'm not repeating them here to save space, but they remain unchanged from your original file]
     
     def _generate_response(self, task: str, memories: List, llm) -> str:
-        """Generate COMPLETE GTM blueprint with ALL 12 sections"""
+     """Generate ADAPTIVE GTM blueprint based on complexity"""
+    
+     context = task
+    
+     # Determine complexity and sections needed
+     total_sections, sections_per_part = self.determine_section_count(context)
+     self.required_sections = total_sections
+    
+     print(f"[{self.agent_name}] Generating {total_sections}-section blueprint...")
+    
+     # Define all 12 possible sections
+     all_sections = {
+        1: ("EXECUTIVE SUMMARY", "Key opportunity, positioning, ROI projection"),
+        2: ("MARKET ANALYSIS & OPPORTUNITY", "TAM/SAM/SOM, growth rates, competitive landscape"),
+        3: ("IDEAL CUSTOMER PROFILE (ICP)", "Demographics, psychographics, buying process"),
+        4: ("POSITIONING & MESSAGING", "Value prop, differentiation, proof points"),
+        5: ("CHANNEL STRATEGY", "Distribution mix, CAC, conversion rates"),
+        6: ("PRICING STRATEGY", "Model, packages, competitive analysis"),
+        7: ("SALES ENABLEMENT", "Battle cards, playbooks, objection handling"),
+        8: ("MARKETING CAMPAIGNS", "Themes, content strategy, demand gen"),
+        9: ("IMPLEMENTATION TIMELINE", "30/60/90 day plan with milestones"),
+        10: ("SUCCESS METRICS", "KPIs, dashboards, benchmarks"),
+        11: ("BUDGET ALLOCATION", "Investment breakdown, ROI projections"),
+        12: ("RISK MITIGATION", "Top risks, contingency plans")
+    }
+    
+    # Select sections based on total count
+     if total_sections == 8:
+        # Essential sections only
+        selected_sections = [1, 2, 3, 4, 5, 6, 9, 10]
+     elif total_sections == 10:
+          # Core + important additions
+        selected_sections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+     else:
+        # All sections
+         selected_sections = list(range(1, 13))
+    
+     # Calculate parts needed
+     num_parts = (total_sections + sections_per_part - 1) // sections_per_part
+    
+     # Generate parts
+     all_parts = []
+    
+     for part_num in range(num_parts):
+        start_idx = part_num * sections_per_part
+        end_idx = min(start_idx + sections_per_part, len(selected_sections))
+        part_sections = selected_sections[start_idx:end_idx]
         
-        print(f"[{self.agent_name}] Generating COMPLETE 12-section blueprint...")
-        
-        # Extract context
-        context = task
-        
-        # STREAMLINED BUT COMPLETE PROMPT
-        complete_blueprint_prompt = f"""
-Create a COMPLETE Go-To-Market Blueprint for the following business:
+        # Build prompt for this part
+        part_prompt = f"""
+Create PART {part_num + 1} of a Go-To-Market Blueprint for:
 {context}
 
-CRITICAL INSTRUCTIONS:
-- Generate ALL 12 sections listed below
-- DO NOT truncate or stop early
-- DO NOT ask if user wants to continue
-- Provide comprehensive detail for each section
-- Target 300-500 words per section
-- Use specific numbers, percentages, and timelines throughout
+Generate SECTIONS {part_sections[0]}-{part_sections[-1]} with EXACTLY 100-150 words per section.
+Be concise but comprehensive. Focus on actionable specifics.
 
-GENERATE THE FOLLOWING 12 SECTIONS IN FULL:
+"""
+        
+        # Add section templates
+        for section_num in part_sections:
+            title, focus = all_sections[section_num]
+            part_prompt += f"""
+==================================================
+{section_num}. {title}
+==================================================
+Focus: {focus}
+Target: 100-150 words with specific metrics and actions
 
-==================================================
-1. EXECUTIVE SUMMARY
-==================================================
-- Key market opportunity and positioning
-- Primary value proposition and differentiation
-- Expected outcomes with specific metrics
-- Investment required and ROI projection
-- Critical success factors
-
-==================================================
-2. MARKET ANALYSIS & OPPORTUNITY
-==================================================
-- TAM/SAM/SOM with specific dollar amounts
-- Market growth rate and trends
-- Key market drivers and dynamics
-- Competitive landscape overview
-- Market entry strategy
-
-==================================================
-3. IDEAL CUSTOMER PROFILE (ICP)
-==================================================
-- Company characteristics (size, industry, revenue)
-- Psychographic profile and motivations
-- Buying process and timeline
-- Decision makers and influencers
-- Budget range and evaluation criteria
-
-==================================================
-4. POSITIONING & MESSAGING FRAMEWORK
-==================================================
-- Core positioning statement
-- Value proposition by segment
-- Key messaging pillars (3)
-- Competitive differentiation
-- Proof points and evidence
-
-==================================================
-5. CHANNEL STRATEGY & TACTICS
-==================================================
-- Primary channels (direct, digital, partner)
-- Channel mix rationale
-- Specific tactics per channel
-- Expected CAC and conversion rates
-- Channel optimization plan
-
-==================================================
-6. PRICING STRATEGY
-==================================================
-- Pricing model and structure
-- Price points and packages
-- Competitive pricing analysis
-- Discounting strategy
-- Value metric alignment
-
-==================================================
-7. SALES ENABLEMENT TOOLKIT
-==================================================
-- Battle cards for top 3 competitors
-- Sales playbook and methodology
-- Objection handling matrix
-- Demo script and flow
-- ROI calculator framework
-
-==================================================
-8. MARKETING CAMPAIGN PLAN
-==================================================
-- Campaign themes and creative direction
-- Content strategy and calendar
-- Demand generation tactics
-- ABM strategy for key accounts
-- Brand building initiatives
-
-==================================================
-9. IMPLEMENTATION TIMELINE
-==================================================
-PHASE 1 (Days 1-30): Immediate actions with specific tasks
-PHASE 2 (Days 31-60): Foundation building activities
-PHASE 3 (Days 61-90): Scaling initiatives
-PHASE 4 (Days 91+): Optimization and expansion
-
-==================================================
-10. SUCCESS METRICS & KPIs
-==================================================
-- Leading indicators (weekly tracking)
-- Lagging indicators (monthly tracking)
-- Success milestones by timeframe
-- Reporting dashboard design
-- Performance benchmarks
-
-==================================================
-11. BUDGET ALLOCATION
-==================================================
-- Total budget required
-- Breakdown by category (sales, marketing, tech)
-- Timeline-based allocation
-- ROI projections
-- Cost optimization strategies
-
-==================================================
-12. RISK MITIGATION PLAN
-==================================================
-- Top 3 risks identified
-- Mitigation strategies for each
-- Contingency plans
-- Early warning indicators
-- Escalation procedures
-
-==================================================
-END OF BLUEPRINT REQUIREMENTS
-==================================================
-
-REMEMBER: Generate ALL 12 sections completely. This is a single, comprehensive deliverable.
-Do not truncate. Do not ask about continuing. Complete all sections now.
 """
         
         try:
             if llm:
-                # Ensure LLM uses maximum tokens if it has the attribute
+                # Set optimal tokens per part
+                original_max = None
                 if hasattr(llm, 'max_tokens'):
                     original_max = llm.max_tokens
-                    llm.max_tokens = self.max_tokens
-                    print(f"[{self.agent_name}] Set LLM to {self.max_tokens} tokens")
+                    # Adjust tokens based on sections in this part
+                    tokens_per_section = 400  # ~100-150 words
+                    llm.max_tokens = min(tokens_per_section * len(part_sections) + 500, 4000)
+                    print(f"[{self.agent_name}] Part {part_num + 1}: {len(part_sections)} sections, {llm.max_tokens} tokens")
                 
-                # Generate complete response
-                response = llm.invoke(complete_blueprint_prompt)
+                # Generate this part
+                print(f"[{self.agent_name}] Generating Part {part_num + 1} (Sections {part_sections[0]}-{part_sections[-1]})...")
+                response = llm.invoke(part_prompt)
                 
                 # Extract content
                 if hasattr(response, 'content'):
-                    blueprint = response.content
+                    part_content = response.content
                 else:
-                    blueprint = str(response)
+                    part_content = str(response)
                 
-                # Restore original max_tokens if we changed it
-                if hasattr(llm, 'max_tokens'):
+                # Count results
+                words = len(part_content.split())
+                sections_found = self._count_sections(part_content)
+                print(f"[{self.agent_name}] Part {part_num + 1}: {words} words, {sections_found} sections")
+                
+                all_parts.append(part_content)
+                
+                # Restore original max_tokens
+                if original_max is not None:
                     llm.max_tokens = original_max
+                    
             else:
-                print(f"[{self.agent_name}] No LLM available, using mock response")
-                blueprint = self._create_mock_response()
-            
-            # Verify completeness
-            word_count = len(blueprint.split())
-            sections_found = self._count_sections(blueprint)
-            
-            print(f"[{self.agent_name}] Generated {word_count} words with {sections_found}/12 sections")
-            
-            # Check for truncation indicators
-            truncation_phrases = [
-                "Would you like me to continue",
-                "Shall I continue with",
-                "I can continue with",
-                "Let me know if you'd like"
-            ]
-            
-            for phrase in truncation_phrases:
-                if phrase in blueprint:
-                    print(f"[{self.agent_name}] WARNING: Found truncation phrase, removing...")
-                    blueprint = blueprint.split(phrase)[0].strip()
-            
-            # If blueprint is incomplete, add completion notice
-            if sections_found < 12:
-                print(f"[{self.agent_name}] Only {sections_found}/12 sections generated. Token limit may have been reached.")
-                blueprint += f"\n\n[Note: Blueprint generated {sections_found}/12 sections due to token constraints]"
-            
-            return blueprint
-            
+                all_parts.append(f"[Mock Part {part_num + 1}]")
+        
         except Exception as e:
-            print(f"[{self.agent_name}] Error generating blueprint: {e}")
-            return f"Error generating GTM blueprint: {str(e)}"
+            print(f"[{self.agent_name}] Error in part {part_num + 1}: {e}")
+            all_parts.append(f"[Error in Part {part_num + 1}: {str(e)}]")
     
+     # Combine all parts
+     blueprint = f"""GO-TO-MARKET BLUEPRINT - ADAPTIVE
+==================================================
+Company Complexity: {'High' if total_sections == 12 else 'Medium' if total_sections == 10 else 'Streamlined'}
+Total Sections:{total_sections}
+==================================================
+"""
+    
+     for i, part in enumerate(all_parts):
+        if i > 0:
+            blueprint += f"\n==================================================\nCONTINUED - PART {i + 1}\n==================================================\n\n"
+        blueprint += part
+    
+     blueprint += f"""
+
+==================================================
+END OF BLUEPRINT - {total_sections} SECTIONS
+=================================================="""
+    
+    # Verify completeness
+     final_word_count = len(blueprint.split())
+     final_sections = self._count_sections(blueprint)
+    
+     print(f"[{self.agent_name}] Final: {final_word_count} words, {final_sections}/{total_sections} sections")
+    
+     # Quality adjustment based on completeness
+     if final_sections >= total_sections:
+        quality_modifier = 1.0
+     else:
+        quality_modifier = final_sections / total_sections
+    
+     print(f"[{self.agent_name}] Quality modifier: {quality_modifier:.2f}")
+    
+     return blueprint       
     # Include all the other methods from your original file unchanged...
     # [_count_sections, _build_gtm_context, _identify_agent_inputs, _verify_components, 
     #  _extract_action_items, _extract_timeline, _extract_budget, _calculate_quality_score,
@@ -787,7 +780,8 @@ Do not truncate. Do not ask about continuing. Complete all sections now.
         score = 0.40
         
         sections_found = self._count_sections(blueprint)
-        score += (sections_found / 12.0) * 0.40
+        # Use dynamic required_sections instead of hardcoded 12
+        score += (sections_found / self.required_sections) * 0.40
         
         components = self._verify_components(blueprint)
         components_found = sum(components.values())
@@ -814,9 +808,17 @@ Do not truncate. Do not ask about continuing. Complete all sections now.
         if len(self.synthesized_agents) >= 3:
             score += 0.05
         
-        if sections_found >= 10 and word_count >= 2500:
+        # Calculate expected word count based on required sections
+        min_expected_words = self.required_sections * 100  # Minimum 100 words per section
+        target_expected_words = self.required_sections * 125  # Target 125 words per section
+        high_quality_words = self.required_sections * 150  # Excellent 150 words per section
+        
+        if sections_found >= self.required_sections and word_count >= target_expected_words:
             score = max(score, 0.85)
         
+        if sections_found >= self.required_sections and word_count >= high_quality_words:
+            score = max(score, 0.95)
+            
         return min(score, 1.0)
     
     def _create_mock_response(self) -> str:
