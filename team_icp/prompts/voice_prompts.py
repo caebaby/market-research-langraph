@@ -1,264 +1,231 @@
-# team_icp/prompts/voice_prompts.py
+# prompts/voice_prompts.py
+"""
+Voice of Customer Agent Prompts
+Aligned with 14-Section Market Research Template
+"""
+
+from typing import Dict, Any, List
 
 class VoicePrompts:
-    """Prompts for Voice of Customer Agent"""
+    """
+    WHY: Capture authentic customer language across all 14 sections
+    WHAT: Template focused on exact phrases and linguistic patterns
+    HOW: Each section extracts specific language types
+    """
     
-    @staticmethod
-    def get_role_prompt():
-        """Voice of Customer specialist role"""
-        return """You are a Customer Voice Specialist who achieves "mind reader" level accuracy. You combine:
+    def __init__(self):
+        self.sections = self._initialize_sections()
+    
+    def _initialize_sections(self) -> Dict[str, str]:
+        """Define voice extraction for each of the 14 sections"""
+        
+        return {
+            "1_executive_summary": """
+            Extract executive-level language:
+            - How executives summarize problems
+            - Language used in board presentations
+            - Executive pain articulation
+            - Strategic priority language
+            - Urgency expressions from leadership
+            Include 5+ exact executive quotes
+            """,
+            
+            "2_market_context": """
+            Capture market context language:
+            - How customers describe market changes
+            - Industry jargon and terminology
+            - Competitive landscape descriptions
+            - Market pressure articulations
+            - Trend discussion language
+            Include 10+ exact market-related phrases
+            """,
+            
+            "3_target_audience": """
+            Extract audience self-description language:
+            - How they describe themselves
+            - Role and identity language
+            - Team description phrases
+            - Capability articulations
+            - Professional identity statements
+            Include 10+ identity phrases
+            """,
+            
+            "4_customer_psychology": """
+            Capture psychological expression language:
+            - Fear articulation phrases
+            - Frustration expressions
+            - Hope and aspiration language
+            - Doubt and uncertainty phrases
+            - Confidence and pride expressions
+            Include 15+ emotional phrases
+            """,
+            
+            "5_voice_of_customer": """
+            Deep voice extraction (PRIMARY FOCUS - 40+ phrases minimum):
+            
+            FRUSTRATION LANGUAGE (10+ phrases):
+            - "I'm so tired of..."
+            - "It drives me crazy when..."
+            - "Why is it so hard to..."
+            - "Every day we waste..."
+            Extract exact complaint language
+            
+            ASPIRATION LANGUAGE (10+ phrases):
+            - "I wish we could..."
+            - "If only we had..."
+            - "Imagine if..."
+            - "What I really need is..."
+            Extract exact desire language
+            
+            OBJECTION LANGUAGE (10+ phrases):
+            - "The problem with solutions like..."
+            - "We've tried before and..."
+            - "I don't believe..."
+            - "Yeah, but what about..."
+            Extract exact resistance language
+            
+            URGENCY LANGUAGE (10+ phrases):
+            - "We need to fix this before..."
+            - "Can't afford to wait..."
+            - "Time is running out..."
+            - "Competition is already..."
+            Extract exact urgency language
+            
+            TRANSFORMATION LANGUAGE:
+            - Before/after descriptions
+            - Success story language
+            - Change narrative phrases
+            """,
+            
+            "6_competitive_landscape": """
+            Extract competitive comparison language:
+            - How they describe competitors
+            - Comparison phrases they use
+            - Switching consideration language
+            - Vendor frustration expressions
+            - Alternative evaluation language
+            Include 10+ competitive phrases
+            """,
+            
+            "7_positioning_strategy": """
+            Capture positioning-relevant language:
+            - Category description phrases
+            - Differentiation language they use
+            - Value articulation patterns
+            - Unique benefit descriptions
+            - Position preference indicators
+            Include 8+ positioning phrases
+            """,
+            
+            "8_messaging_framework": """
+            Extract message-ready language:
+            - Headlines from their words
+            - Tagline-worthy phrases
+            - Hook language patterns
+            - Benefit descriptions
+            - Call-to-action language
+            Include 15+ message-ready phrases
+            """,
+            
+            "9_product_strategy": """
+            Capture product requirement language:
+            - Feature request phrases
+            - Capability descriptions
+            - Integration requirements
+            - Usability expectations
+            - Product vision language
+            Include 10+ product phrases
+            """,
+            
+            "10_pricing_strategy": """
+            Extract pricing and value language:
+            - Budget discussion phrases
+            - ROI articulation patterns
+            - Cost justification language
+            - Investment framing words
+            - Value perception expressions
+            Include 8+ pricing phrases
+            """,
+            
+            "11_sales_strategy": """
+            Capture sales interaction language:
+            - How they describe sales process
+            - Vendor evaluation language
+            - Decision-making phrases
+            - Objection articulations
+            - Commitment expressions
+            Include 10+ sales process phrases
+            """,
+            
+            "12_marketing_strategy": """
+            Extract marketing-relevant language:
+            - Content preferences described
+            - Information seeking patterns
+            - Channel preferences stated
+            - Engagement trigger words
+            - Attention-getting phrases
+            Include 8+ marketing phrases
+            """,
+            
+            "13_success_metrics": """
+            Capture success definition language:
+            - How they measure success
+            - KPI articulation patterns
+            - Goal description phrases
+            - Achievement language
+            - Failure description words
+            Include 8+ success phrases
+            """,
+            
+            "14_implementation_roadmap": """
+            Extract implementation language:
+            - Timeline expectation phrases
+            - Phasing preference language
+            - Risk articulation patterns
+            - Milestone descriptions
+            - Quick win definitions
+            Include 8+ implementation phrases
+            """
+        }
+    
+    def get_full_prompt(self, company_name: str, context: Dict[str, Any]) -> str:
+        """
+        Generate complete 14-section voice extraction prompt
+        """
+        
+        industry = context.get("industry", "technology")
+        segment = context.get("market_segment", "enterprise")
+        
+        prompt = f"""Extract authentic customer voice for {company_name}'s target market.
+        
+CONTEXT:
+- Company: {company_name}
+- Industry: {industry}
+- Target Segment: {segment}
 
-1. **Deep Psychological Understanding**: Using ICP profile to predict private language
-2. **Real-World Validation**: Finding actual examples when possible
-3. **Journal-Level Intimacy**: Capturing how they talk to themselves at 3am
-4. **Copy Creation Expertise**: Extracting phrases ready for ads/emails
-5. **ICP Precision**: Everything filtered through target customer profile
+Generate comprehensive voice extraction following the 14-SECTION MARKET RESEARCH TEMPLATE.
+Focus on EXACT customer language, not paraphrases or interpretations.
 
-You think like:
-- A therapist who's heard 1000 sessions with this exact customer type
-- A copywriter who's tested 10,000 headlines with this audience  
-- A best friend who's heard all their private venting
-- A researcher who's read every forum post they've written
+REQUIREMENTS:
+- Minimum 1500 words total
+- 40+ exact customer phrases in quotation marks
+- Emotional authenticity in language
+- Copy-ready phrases for marketing
+- Use all 14 sections below:
 
-Your output makes customers say: "Were you reading my journal?" and "This is exactly what I tell my spouse!"
-
-CRITICAL: Never invent generic emotional language. Every insight must be traceable to either:
-1. Deep psychological patterns of this specific ICP
-2. Actual discovered language from real customers
-3. Logical inference from combined data
-
-You're creating a "voice bible" that a copywriter could use to write ads that convert at 10x industry standard."""
-
-    @staticmethod
-    def get_language_hypothesis_prompt():
-        """Prompt for generating language hypothesis"""
-        return """Based on this business context alone, infer the target ICP and predict their private language:
-
-BUSINESS CONTEXT:
-{business_context}
-
-First, INFER the likely ICP from the business context:
-- Who would need this?
-- What are their likely pain points?
-- What's their probable role/situation?
-
-Then generate a HYPOTHESIS of how THIS INFERRED PERSON talks when:
-
-1. **Venting to their spouse/best friend**
-   - What exact complaints would they voice?
-   - What metaphors would they use?
-   - What curse words or intensifiers?
-
-2. **Writing in their journal at 3am**
-   - How would they describe their fear?
-   - What words for their exhaustion?
-   - How do they frame their hope?
-
-3. **Texting a trusted colleague**
-   - How do they ask for help?
-   - How do they admit failure?
-   - How do they express ambition?
-
-4. **Posting anonymously online**
-   - What confession would they make?
-   - How would they describe their situation?
-   - What help would they seek?
-
-5. **Internal monologue during crisis**
-   - What do they tell themselves?
-   - What mantras do they repeat?
-   - What fears loop in their head?
-
-For each scenario, provide:
-- EXACT phrases (not paraphrases)
-- Specific word choices that reveal their worldview
-- Language tics that identify them
-- Emotional vocabulary unique to their situation
-
-IMPORTANT: Also extract these specific pattern types:
-
-FRUSTRATION PATTERNS - What they say when venting:
-- "frustrated with [specific thing]"
-- "tired of [specific situation]"
-- "struggling with [specific challenge]"
-- "sick of [specific pain]"
-- "can't stand [specific issue]"
-
-ASPIRATION PATTERNS - What they say when hoping:
-- "looking for [specific solution]"
-- "need to find [specific answer]"
-- "want to achieve [specific outcome]"
-- "trying to become [specific identity]"
-- "desperate for [specific relief]"
-
-INVESTMENT READINESS - What they say when ready to buy:
-- "ready to invest in [category]"
-- "willing to pay for [specific value]"
-- "worth every penny if [specific result]"
-- "shut up and take my money if [condition]"
-- "where do I sign up for [solution]"
-
-This is a HYPOTHESIS to be validated - but based on deep pattern recognition of this ICP type."""
-
-    @staticmethod
-    def get_synthesis_template():
-        """Template for final voice bible synthesis"""
-        return """Create a VOICE OF CUSTOMER BIBLE that achieves "mind reader" accuracy:
-
-BUSINESS CONTEXT:
-{business_context}
-
-TARGET ICP PROFILE:
-{psychological_profile}
-
-AI-GENERATED LANGUAGE HYPOTHESIS:
-{language_hypothesis}
-
-REAL-WORLD VALIDATION DATA:
-{validation_data}
-
-COMPETITOR CONTEXT:
-{competitor_insights}
-
-Create a COPY-READY VOICE BIBLE with journal-level accuracy:
-
-## 🧠 Voice of Customer Bible: [ICP Name/Type]
-
-### Accuracy Validation
-- ICP Match Score: [X/10] - How well does this match our exact target?
-- Source Confidence: [X/10] - How grounded is this in real data vs. hypothesis?
-- "Mind Reader" Test: [X/10] - Would they say "were you reading my journal?"
-
-### 🔥 Pain Language (Private Venting)
-**When they're at their breaking point, they say:**
-- "[Exact phrase with curse words/intensifiers]"
-- "[What they text their friend at midnight]"
-- "[How they describe it to their therapist]"
-
-**The metaphor they always use:**
-- "It's like [specific analogy from their world]"
-
-**The admission they make after 3 drinks:**
-- "[The truth they don't tell vendors]"
-
-### 💭 Inner Monologue (3am Thoughts)
-**The loop in their head:**
-- "[Exact self-talk during crisis]"
-- "[The fear they can't shake]"
-- "[The mantra they repeat]"
-
-**What they write in their journal:**
-- "[Unfiltered stream of consciousness]"
-
-**The prayer/wish they make:**
-- "[What they desperately want]"
-
-### 🎯 Desire Language (Secret Ambitions)
-**How they describe success to themselves:**
-- "[Their private definition of winning]"
-- "[The outcome they visualize]"
-- "[What 'made it' looks like to them]"
-
-**The transformation they want:**
-- "I want to go from [current identity] to [desired identity]"
-- "I want to finally be someone who [specific behavior]"
-
-### 🚨 Trigger Language (Ready to Buy)
-**The breaking point phrase:**
-- "I can't [specific thing] anymore"
-- "I'm done with [specific frustration]"
-- "It's time to [specific action]"
-
-**How they justify the investment:**
-- "[Exact words they use to rationalize spending]"
-- "[How they sell it to their spouse/boss]"
-
-### 🛡️ Objection Language (Hidden Fears)
-**What they really mean when they say "too expensive":**
-- "[The actual fear behind price objection]"
-
-**Their imposter syndrome sounds like:**
-- "[Specific self-doubt phrase]"
-
-**Past trauma language:**
-- "Last time I tried something like this, [specific failure]"
-
-### 📊 Actionable Language Patterns (CRITICAL for Copy)
-
-#### Frustration Triggers (Use in problem-aware copy)
-- "frustrated with..." → [exact phrase they use]
-- "tired of..." → [exact phrase they use]
-- "struggling with..." → [exact phrase they use]
-- "sick of..." → [exact phrase they use]
-- "can't stand..." → [exact phrase they use]
-
-#### Aspiration Hooks (Use in solution-aware copy)
-- "looking for..." → [exact phrase they use]
-- "need to find..." → [exact phrase they use]
-- "want to achieve..." → [exact phrase they use]
-- "trying to..." → [exact phrase they use]
-- "desperate for..." → [exact phrase they use]
-
-#### Investment Ready Signals (Use in CTAs)
-- "ready to invest in..." → [exact phrase they use]
-- "willing to pay for..." → [exact phrase they use]
-- "worth it if..." → [exact phrase they use]
-- "take my money if..." → [exact phrase they use]
-- "where do I sign up for..." → [exact phrase they use]
-
-### 📱 Copy-Ready Headlines (Straight from Their Mouth)
-
-**Email Subject Lines:**
-1. "[Exact phrase that would make them open]"
-2. "[Question they ask themselves]"
-3. "[Confession they relate to]"
-
-**Ad Headlines:**
-1. "[Statement that makes them stop scrolling]"
-2. "[Question that's been haunting them]"
-3. "[Promise in their exact words]"
-
-**Landing Page Opener:**
-"[The paragraph that makes them say 'this is exactly me']"
-
-### 🎪 Comparison Language (vs. Competitors)
-**How they describe competitors' solutions:**
-- "[Competitor A] is too [specific complaint in their words]"
-- "I tried [Competitor B] but [exact frustration]"
-
-**What they wish existed:**
-- "Why can't someone just [specific desire]"
-
-### ✅ Voice Accuracy Checklist
-- [ ] Would they forward this to a friend saying "this is literally me"?
-- [ ] Could you text them these phrases and have them think you're psychic?
-- [ ] Do these sound like their group chat, not a marketing team?
-- [ ] Is this how they talk at 11pm, not 9am?
-- [ ] Would they screenshot this and save it because it's so accurate?
-
-### 🚨 Copy Safety Check
-**NEVER use these phrases** (they trigger skepticism):
-- "[Corporate speak they hate]"
-- "[Overused industry terms]"
-- "[Claims that sound like BS]"
-
-### 💎 The Golden Phrase
-The ONE sentence that captures everything:
-"[The exact words that make them lean in and say 'tell me more']"
-
----
-Remember: This isn't about what they tell surveys. This is about what they tell their journal, their therapist, their 3am thoughts. If it doesn't feel uncomfortably accurate, it's not good enough."""
-
-    @staticmethod
-    def get_reflection_criteria():
-        """Criteria for evaluating voice analysis quality"""
-        return """Evaluate this voice analysis on journal-level accuracy:
-
-1. ICP Specificity (0.25): Is this exactly how THIS target customer talks, not generic?
-2. Private Language (0.25): Does it sound like their journal, not a survey response?
-3. Pattern Extraction (0.2): Are there 15+ specific patterns (frustrated with, looking for, etc.)?
-4. Copy Readiness (0.2): Could you use these phrases directly in ads?
-5. Mind Reader Test (0.1): Would they say 'were you reading my texts?'
-
-Score each criterion and provide total (0-1).
-Focus on AUTHENTICITY and SPECIFICITY, not completeness."""
+"""
+        
+        for section_key, section_prompt in self.sections.items():
+            section_name = section_key.replace("_", " ").upper()
+            prompt += f"\n{section_name}:\n{section_prompt}\n"
+        
+        prompt += """
+CRITICAL RULES:
+- Every phrase must be in quotation marks
+- Never clean up or paraphrase language
+- Include emotional indicators (sighs, pauses)
+- Capture industry-specific jargon
+- Note where each type of language appears (forums, reviews, support)
+"""
+        
+        return prompt

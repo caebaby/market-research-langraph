@@ -1,145 +1,214 @@
-# team_icp/prompts/competitor_prompts.py
+# prompts/competitor_prompts.py
+"""
+Competitor Analysis Agent Prompts
+Aligned with 14-Section Market Research Template
+"""
+
+from typing import Dict, Any, List
 
 class CompetitorPrompts:
-    """Prompts specifically for competitive intelligence analysis"""
+    """
+    WHY: Systematic competitive analysis across all market dimensions
+    WHAT: 14-section template with competitive focus
+    HOW: Each section analyzes competitive dynamics
+    """
     
-    @staticmethod
-    def get_role_prompt():
-        """Elite competitive intelligence analyst role"""
-        return """You are an elite competitive intelligence analyst who uncovers strategic vulnerabilities competitors can't see in themselves.
-
-Your core responsibilities:
-1. Identify the 3-5 most dangerous competitors (not just obvious ones)
-2. Decode their ACTUAL strategy (not what they claim)
-3. Find their hidden constraints and organizational blind spots
-4. Identify positioning gaps they've created
-5. Provide specific attack vectors
-
-STRATEGIC FRAMEWORKS YOU MASTER:
-
-1. **Jobs-to-be-Done Competitive Analysis**
-   - What job are competitors really hired for?
-   - Where are they overserving?
-   - What jobs are they ignoring?
-
-2. **Disruption Theory Application**
-   - Are they moving upmarket too fast?
-   - What "good enough" opportunity exists?
-   - Where are they addicted to high margins?
-
-3. **Blue Ocean Identification**
-   - What are they all competing on?
-   - What could we eliminate that they consider sacred?
-   - What could we reduce/raise/create?
-
-4. **Psychological Positioning Analysis**
-   - What identity do they sell?
-   - What status game are they playing?
-   - What emotional job do they ignore?
-
-5. **Organizational Capability Gaps**
-   - What can't they do because of their business model?
-   - What would require them to "fire" existing customers?
-   - Where are their incentives misaligned?
-
-6. **Speed & Agility Vulnerabilities**
-   - Where are they too slow because of size?
-   - What requires committee approval?
-   - Where could a faster player win?
-
-7. **Strategic SWOT Analysis** (Beyond surface-level)
-   - **Strengths they're over-relying on** (vulnerabilities in disguise)
-   - **Weaknesses they can't fix** (due to business model/culture)
-   - **Opportunities they can't pursue** (innovator's dilemma)
-   - **Threats they don't see coming** (from outside their industry)
-
-You excel at:
-- Finding the "thing behind the thing" in positioning
-- Identifying what competitors CAN'T do (not won't)
-- Spotting overserved segments ripe for disruption
-- Finding positioning that makes competitors irrelevant
-- Identifying emotional/psychological gaps in the market
-
-Always ground your analysis in behavioral evidence, not marketing claims."""
-
-    @staticmethod
-    def get_analysis_template():
-        """Template for structured competitor analysis output"""
-        return """Based on the business context and psychological insights about the target customers, analyze the competitive landscape.
-
-IMPORTANT: 
-- Focus on competitors serving the SAME target customer profile
-- Consider what the target customers' psychological profile tells us about what competitors they'd consider
-- Look for positioning gaps based on the psychological insights
-
-{task}
-
+    def __init__(self):
+        self.sections = self._initialize_sections()
+    
+    def _initialize_sections(self) -> Dict[str, str]:
+        """Define competitive analysis for each of the 14 sections"""
+        
+        return {
+            "1_executive_summary": """
+            Competitive landscape executive summary:
+            - Market leader positions and share
+            - Key competitive threats
+            - Major positioning gaps
+            - Competitive advantages to exploit
+            - Urgent competitive responses needed
+            """,
+            
+            "2_market_context": """
+            Competitive market dynamics:
+            - Market maturity and consolidation
+            - Competitive intensity levels
+            - New entrant threats
+            - Disruption potential
+            - Market share trends
+            """,
+            
+            "3_target_audience": """
+            Competitive audience targeting:
+            - How competitors segment market
+            - Underserved segments identified
+            - Audience loyalty patterns
+            - Switching behavior analysis
+            - Competitive blind spots
+            """,
+            
+            "4_customer_psychology": """
+            Psychological competitive analysis:
+            - How competitors trigger fears
+            - Identity associations with brands
+            - Emotional bonds to competitors
+            - Psychological switching barriers
+            - Mental model disruption opportunities
+            """,
+            
+            "5_voice_of_customer": """
+            Competitive voice analysis:
+            - What customers say about competitors
+            - Complaint patterns about alternatives
+            - Praise language for competitors
+            - Comparison language used
+            - Switching story narratives
+            """,
+            
+            "6_competitive_landscape": """
+            Detailed competitive analysis (PRIMARY FOCUS):
+            
+            DIRECT COMPETITORS (Top 3-5):
+            For each competitor provide:
+            - Company overview and positioning
+            - Market share and growth trajectory
+            - Target segment and ICP overlap
+            - Pricing model and ranges
+            - Key strengths that win deals
+            - Critical weaknesses to exploit
+            - Recent strategic moves
+            - Customer perception analysis
+            
+            INDIRECT COMPETITORS:
+            - Alternative solutions
+            - DIY/Internal build options
+            - Status quo/Do nothing
+            - Adjacent solution providers
+            
+            EMERGING THREATS:
+            - Funded startups
+            - Tech giants entering
+            - Platform plays
+            - New business models
+            
+            COMPETITIVE POSITIONING MAP:
+            - Price vs. Value positions
+            - Feature completeness vs. Ease
+            - Innovation vs. Stability
+            - Market positions visualization
+            """,
+            
+            "7_positioning_strategy": """
+            Competitive positioning opportunities:
+            - Unoccupied position identification
+            - Differentiation vectors available
+            - Position defense strategies
+            - Repositioning competitors tactics
+            - Category creation potential
+            """,
+            
+            "8_messaging_framework": """
+            Competitive messaging strategy:
+            - Messages competitors can't match
+            - Counter-messaging tactics
+            - Competitive proof points
+            - Trap-setting messages
+            - FUD management approach
+            """,
+            
+            "9_product_strategy": """
+            Product strategy vs. competition:
+            - Feature parity requirements
+            - Differentiation features
+            - Competitive leapfrog opportunities
+            - Partnership advantages
+            - Platform strategy implications
+            """,
+            
+            "10_pricing_strategy": """
+            Competitive pricing analysis:
+            - Competitor pricing models
+            - Price positioning strategy
+            - Value perception comparison
+            - Pricing pressure points
+            - Bundling/Unbundling opportunities
+            """,
+            
+            "11_sales_strategy": """
+            Competitive sales tactics:
+            - Win/loss analysis patterns
+            - Competitive displacement playbook
+            - Objection handling differentiators
+            - Proof points that win
+            - Reference customer strategy
+            """,
+            
+            "12_marketing_strategy": """
+            Competitive marketing approach:
+            - Share of voice analysis
+            - Content gap opportunities
+            - Channel advantages
+            - Campaign differentiation
+            - SEO/SEM competition
+            """,
+            
+            "13_success_metrics": """
+            Competitive performance metrics:
+            - Market share targets
+            - Win rate goals
+            - Competitive displacement KPIs
+            - Relative performance indicators
+            - Competitive intelligence metrics
+            """,
+            
+            "14_implementation_roadmap": """
+            Competitive response timeline:
+            - Immediate competitive actions
+            - Quick win opportunities
+            - Long-term competitive strategy
+            - Defensive measures needed
+            - Market entry sequencing
+            """
+        }
+    
+    def get_full_prompt(self, company_name: str, context: Dict[str, Any]) -> str:
+        """
+        Generate complete 14-section competitive analysis prompt
+        """
+        
+        industry = context.get("industry", "technology")
+        segment = context.get("market_segment", "enterprise")
+        
+        prompt = f"""Conduct comprehensive competitive analysis for {company_name}.
+        
 CONTEXT:
-{context}
+- Company: {company_name}
+- Industry: {industry}
+- Target Segment: {segment}
 
-Provide a strategic competitive analysis that includes:
+Generate complete competitive intelligence following the 14-SECTION MARKET RESEARCH TEMPLATE.
+Focus on actionable competitive insights and positioning opportunities.
 
-1. **Most Dangerous Competitors** (3-5)
-   - WHO they are and WHY they're threats
-   - What makes them "hired" by your target customers
+REQUIREMENTS:
+- Minimum 1000 words total
+- Identify 5+ specific competitors
+- Actionable competitive strategies
+- Positioning gap identification
+- Use all 14 sections below:
 
-2. **Strategic SWOT Analysis**
-   - Strengths they're trapped by
-   - Unfixable weaknesses
-   - Opportunities they can't pursue
-   - Blindside threats approaching
-
-3. **Positioning Decode**
-   - What they REALLY sell (identity/status/emotion)
-   - Gap between their claims and market reality
-   - Psychological territory they own vs. abandoned
-
-4. **Hidden Vulnerabilities**
-   - Business model constraints
-   - Organizational antibodies
-   - Innovation dilemmas
-
-5. **Blue Ocean Opportunities**
-   - What everyone competes on that doesn't matter
-   - Underserved or overserved segments
-   - New market space possibilities
-
-6. **Attack Vectors**
-   - Specific positioning to make them irrelevant
-   - Go-to-market strategies they can't counter
-   - Messaging that exploits their constraints
-
-7. **Psychological Insights Applied**
-   - How target customer psychology creates opportunities
-   - Emotional needs competitors miss
-   - Status games we can change
-
-Be specific and name actual companies when possible.
-Focus on ACTIONABLE intelligence, not observations."""
-
-    @staticmethod
-    def get_search_queries():
-        """Strategic search queries for competitive intelligence"""
-        return [
-            "{business_context} competitors struggling with",
-            "{business_context} alternatives frustrated customers",
-            "why I switched from {business_context} competitor",
-            "{business_context} market disruption opportunities",
-            "underserved segments {business_context} industry",
-            "{business_context} competitor weaknesses",
-            "problems with {business_context} market leaders"
-        ]
-    
-    @staticmethod
-    def get_reflection_criteria():
-        """Criteria for evaluating competitor analysis quality"""
-        return """Evaluate this competitive analysis on strategic depth:
-
-1. Hidden Vulnerabilities Found (0-1): Identified constraints competitors can't escape?
-2. Positioning Gaps Clarity (0-1): Found specific spaces they can't occupy?
-3. Psychological Insights (0-1): Understood emotional territory they've ceded?
-4. Actionability (0-1): Can we execute on these insights immediately?
-5. Non-Obvious Insights (0-1): Found something competitors don't see?
-6. Disruption Potential (0-1): Identified how to make them irrelevant?
-
-Rate the STRATEGIC VALUE, not completeness."""
+"""
+        
+        for section_key, section_prompt in self.sections.items():
+            section_name = section_key.replace("_", " ").upper()
+            prompt += f"\n{section_name}:\n{section_prompt}\n"
+        
+        prompt += """
+Ensure the analysis:
+- Names specific competitors
+- Identifies real gaps
+- Provides win strategies
+- Includes market data
+- Offers differentiation paths
+"""
+        
+        return prompt

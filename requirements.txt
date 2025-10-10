@@ -20,3 +20,5 @@ aiohttp==3.9.1
 qdrant-client
 sentence-transformers
 langgraph-cli
+PyPDF2
+python-docx

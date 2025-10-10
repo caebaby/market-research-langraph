@@ -2,235 +2,343 @@
 """
 Level 5 ICP Research Prompts - Deep Psychological Intelligence
 These prompts are the core IP of the ICP research system
+Updated with new concise psychological agent prompt
 """
+
+import os
+from pathlib import Path
 
 class ICPResearchPrompts:
     """Battle-tested prompts for extracting visceral psychological insights"""
     
     @staticmethod
     def get_psychological_analysis_prompt() -> str:
-        """Main prompt for deep psychological analysis with all frameworks"""
-        return """SESSION ISOLATION: Analyze ONLY the current business context below. Do not reference or mix insights from previous business contexts.
+        """
+        Main prompt for deep psychological analysis.
+        Now loads from external TXT file for easier maintenance.
+        """
+        try:
+            # Try to load from TXT file first
+            prompt_path = Path(__file__).parent / "psychological_agent_prompt.txt"
+            
+            if prompt_path.exists():
+                print(f"Loading psychological prompt from: {prompt_path}")
+                with open(prompt_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+            else:
+                print(f"TXT file not found at {prompt_path}, using embedded prompt")
+                # Fallback to embedded prompt
+                return ICPResearchPrompts._get_embedded_psychological_prompt()
+                
+        except Exception as e:
+            print(f"Error loading prompt from file: {e}")
+            print("Falling back to embedded prompt")
+            return ICPResearchPrompts._get_embedded_psychological_prompt()
+    
+    @staticmethod
+    def _get_embedded_psychological_prompt() -> str:
+        """Embedded version of the new psychological prompt as fallback"""
+        return """# PSYCHOLOGICAL INTELLIGENCE AGENT - COMPLETE PROMPT
 
-LEARNING ENHANCEMENT: Apply accumulated expertise in psychological frameworks and analysis techniques while maintaining complete separation between different business contexts.
+## CRITICAL WRITING STANDARDS
 
-IMPORTANT: This is not a blank-slate analysis. Build upon and deepen the existing customer understanding provided. 
-Act as a world-class expert who has studied this specific ICP for years. Your insights should add layers of 
-nuance and depth that only an expert would know, revealing what others miss.
+THINK IN MECHANISMS, NOT DESCRIPTIONS:
+- Every insight must identify: CAUSE → MECHANISM → EFFECT
+- Avoid descriptive prose; use causal chains
+- Example: "Time poverty (cause) → decision deferral → anxiety amplification (mechanism) → chronic paralysis (effect)"
 
-BUSINESS CONTEXT TO ANALYZE:
+WRITE IN LAYERS:
+- Layer 1: The Mechanism (80 words MAX)
+- Layer 2: Why It Matters (50 words MAX)
+- Layer 3: Influence Strategy (100 words MAX)
+- Layer 4: Confidence Level
+
+SELF-EDIT RUTHLESSLY:
+After every paragraph, ask: "Does this sentence add NEW information or restate existing?"
+If restatement → DELETE IT.
+If it's a longer way of saying what was already said → DELETE IT.
+If it's an example of something already explained → KEEP IT.
+
+BAD EXAMPLE: "They feel overwhelmed by time constraints which makes them anxious so they defer decisions which makes them more overwhelmed and more anxious creating a cycle."
+
+GOOD EXAMPLE: "Time poverty → decision deferral → anxiety amplification → paralysis. Each cycle strengthens the pattern."
+
+---
+
+## YOUR MISSION
+
+Create the definitive psychological profile answering:
+1. WHO are they psychologically?
+2. What are their PROBLEMS, PAINS, and DESIRES?
+3. How do we INFLUENCE them based on that psychology?
+
+**This is the only document marketing needs to create winning positioning.**
+
+---
+
+## CORE REQUIREMENTS
+
+**DEPTH:** Uncover the psychological mechanisms driving behavior, not surface observations.
+
+**ACCURACY:** Ground every insight in logic and behavioral patterns. Label "HYPOTHESIS:" when uncertain.
+
+**CONCISION:** Target 10-12 pages MAX. Every sentence must earn its place.
+
+**INFLUENCE-FOCUSED:** Every major insight must include specific influence strategy.
+
+---
+
+## THE GOLD STANDARD
+
+Here's what excellence looks like:
+
+---
+
+**INSIGHT: The Competence-Chaos Paradox**
+
+**THE MECHANISM:**
+11+ years mastering medicine creates belief: "Intelligence solves complex problems." Financial research yields MORE confusion, not clarity. Core identity ("I master systems") conflicts with reality ("I can't crack this"). Result: Shame blocks help-seeking—asking for help = admitting intellectual failure.
+
+**WHY THIS MATTERS:**
+Intelligence is both asset and obstacle. "You need help" triggers "I'm smart enough" defensiveness, strengthening DIY paralysis.
+
+**INFLUENCE STRATEGY:**
+Reframe as subspecialty: "You wouldn't do cardiac surgery outside your training. Financial planning requires 500+ case pattern recognition. You wouldn't waste 100+ hours learning cardiology to treat one patient." Frame as efficiency problem, not intelligence problem. Never "you CAN'T"—position as "you SHOULDN'T waste high-value time."
+
+**CONFIDENCE:** HIGH
+
+---
+
+**That's your model. Now create the full analysis following this standard.**
+
+---
+
+## REQUIRED SECTIONS
+
+### **1. EXECUTIVE SUMMARY (400 words MAX)**
+
+The 3 most critical psychological insights.
+
+For each:
+- **THE MECHANISM:** The psychological pattern (80 words MAX)
+- **WHY THIS MATTERS:** Impact on decisions (50 words MAX)
+- **INFLUENCE STRATEGY:** How to work with this psychology (100 words MAX)
+- **CONFIDENCE:** High/Medium/Low
+
+---
+
+### **2. IDENTITY & TRANSFORMATION (500 words MAX)**
+
+**WHO THEY BELIEVE THEY ARE:**
+3-5 identity layers (bullet format, 2 sentences each)
+
+**DEFENSE MECHANISMS:**
+3-4 defenses (bullet format):
+- Trigger → Response → Example (all in one bullet)
+
+**IDENTITY SHIFTS REQUIRED:**
+4-5 shifts (bullet format):
+- FROM: "X" TO: "Y" | Enabled by: [one sentence]
+
+**INFLUENCE IMPLICATION:** How to enable transformation (100 words MAX)
+
+---
+
+### **3. PROBLEM, PAIN & DESIRE (800 words MAX)**
+
+#### **THE CORE PROBLEM (200 words MAX)**
+- What they say it is (1 sentence)
+- What it actually is (2-3 sentences)
+- Why they can't see it (2-3 sentences)
+- Why it persists (3-4 sentences)
+- **INFLUENCE IMPLICATION** (60 words MAX)
+
+#### **THE PAIN (250 words MAX)**
+- Surface pain (1 sentence)
+- Emotional pain (2-3 sentences)
+- Hidden pain (2-3 sentences)
+- **Pain triggers** (bullets, 4-6 triggers):
+  - Trigger → Why it hurts → Reveals what
+- **INFLUENCE IMPLICATION** (60 words MAX)
+
+#### **THE DESIRE (250 words MAX)**
+- Stated desires (bullets, 3-4 items)
+- Real emotional desires (bullets):
+  - Relief from: [specific]
+  - Confidence about: [specific]
+  - Freedom from: [specific]
+  - Pride about: [specific]
+- Social desires (bullets, by spouse/peers/self)
+- Hidden desires (bullets, 2-3 items)
+- Conflicting desires (bullets, 2-3 conflicts)
+- **Jobs-to-be-done** (bullets):
+  - Functional: [specific]
+  - Emotional: [specific]
+  - Social: [specific]
+- **INFLUENCE IMPLICATION** (80 words MAX)
+
+---
+
+### **4. BELIEF TRANSFORMATION SEQUENCE (700 words MAX)**
+
+**THE REQUIRED JOURNEY (Brief Overview - 300 words MAX):**
+
+The purchase decision requires four sequential belief shifts. Each shift must occur IN ORDER—each enables the next. Marketing that attempts to jump steps (e.g., selling value before establishing trust) triggers automatic resistance.
+
+**The Four Critical Shifts:**
+
+**SHIFT #1: Problem Recognition**
+FROM: "I need to get organized when I have time"
+TO: "I'm losing 5-7 years of compound growth for every year I delay—this IS urgent"
+
+**SHIFT #2: Solution Reframe**
+FROM: "I need to research and DIY this to prove I'm competent"
+TO: "Hiring subspecialty expertise is what competent people do—it's efficiency arbitrage"
+
+**SHIFT #3: Trust Foundation**
+FROM: "All financial advisors are salespeople trying to profit from me"
+TO: "Physician-specialist advisors exist who understand my specific situation and have proven track records"
+
+**SHIFT #4: Control Reconciliation**
+FROM: "Hiring an advisor means losing control and not understanding my finances"
+TO: "Partnership means I stay informed and make decisions while they handle implementation and monitoring"
+
+**Critical Sequencing Rule:** Attempting to sell value/ROI before completing trust-building (Shifts 2-3) = automatic rejection. Attempting to create urgency (Shift 1) before reframing the solution (Shift 2) triggers defensive "I can figure this out myself" response. Each content piece in marketing funnel should facilitate ONE specific shift.
+
+---
+
+**DETAILED TRANSFORMATION ANALYSIS (400 words MAX):**
+
+For each of 4 shifts:
+- **SHIFT #X:** Name
+- **WHY THIS ORDER:** [1 sentence]
+- **HOW TO FACILITATE:** [3-4 sentences with specific language]
+- **AVOID:** [1 sentence]
+
+**INFLUENCE IMPLICATION:** How to structure marketing journey (100 words MAX)
+
+---
+
+### **5. WHY PAST SOLUTIONS FAILED (900 words MAX)**
+
+**3 failed solutions (300 words MAX each):**
+
+**FAILED SOLUTION #X:** [Name]
+- **What they tried:** [2 sentences]
+- **The pattern** (bullets):
+  - Phase 1: [1-2 sentences]
+  - Phase 2: [1-2 sentences]
+  - Phase 3: [1-2 sentences]
+- **Why it failed (their perspective):** [120 words MAX - write as internal monologue]
+- **What they learned** (bullets):
+  - Accurate lessons: [2-3 items, 1 sentence each]
+  - Mislearned lessons: [2-3 items with "Wrong because" + "Missing" in 1-2 sentences each]
+- **Scar tissue** (bullets, 4-6 items):
+  - "Trigger phrase" → Response → Impact
+
+**INFLUENCE IMPLICATION (at end of section):** [150 words MAX covering all 3 solutions]
+
+---
+
+### **6. DECISION ARCHITECTURE (700 words MAX)**
+
+#### **STATED VS. ACTUAL CRITERIA (300 words MAX)**
+- **What they say matters** (bullets, 5-7 items)
+- **What actually matters** (bullets, 3-5 items with examples)
+- **The urgency gap:**
+  - Stated: X/10
+  - Behavioral: X/10
+  - Mechanism: [60 words MAX explaining why gap exists]
+- **INFLUENCE IMPLICATION:** [80 words MAX]
+
+#### **COMMUNICATION STYLE (250 words MAX)**
+All bullets:
+- **Motivation:** Toward X% / Away From X% | Examples
+- **Decision style:** Options vs. Procedures | When each
+- **Convincer:** Primary mode + what works
+- **Reference:** Internal vs. External | When each
+- **INFLUENCE IMPLICATION:** [80 words MAX]
+
+#### **DECISION MOMENT (150 words MAX)**
+- **Pushes them over** (bullets): Emotional/logical/social/temporal triggers
+- **Holds them back:** [40 words MAX]
+- **INFLUENCE IMPLICATION:** [50 words MAX]
+
+---
+
+### **7. HIDDEN PSYCHOLOGY (500 words MAX)**
+
+#### **SAY VS. DO (160 words MAX)**
+Bullets, 4-5 contradictions:
+- Says: "X" Does: "Y" → Mechanism → Example
+
+**INFLUENCE IMPLICATION:** [40 words MAX]
+
+#### **WANT VS. FEAR (160 words MAX)**
+Bullets, 4-5 conflicts:
+- Wants: X Fears: Y → Paralysis mechanism → Example
+
+**INFLUENCE IMPLICATION:** [40 words MAX]
+
+#### **UNSPOKEN OBJECTIONS (180 words MAX)**
+Bullets:
+- "Won't work because..." [4-6 items]
+- "I'm different because..." [3-4 items]
+- "What scares me..." [4-5 items]
+
+**INFLUENCE IMPLICATION:** [60 words MAX - how to surface/address]
+
+---
+
+## CRITICAL CONSTRAINTS
+
+🚫 **NO BLOAT:**
+- No repetitive explanations
+- No step-by-step breakdowns (1→2→3→4→5→6)
+- No obvious transitions ("As mentioned above...")
+- No preambles before sections
+
+✅ **REQUIREMENTS:**
+- Stick to word limits (they're MAXIMUMS not targets)
+- Use bullets where specified
+- Every insight needs INFLUENCE IMPLICATION
+- Specific examples (names, numbers, scenarios)
+- Mechanisms explained in 2-4 sentences MAX
+
+---
+
+## WORD COUNT ENFORCEMENT
+
+If any section exceeds its MAX:
+1. Cut repetition first
+2. Remove step-by-step breakdowns
+3. Compress to core mechanism
+4. Keep influence strategy intact
+
+**Total document: 10-12 pages MAX (roughly 5,000-6,000 words)**
+
+---
+
+## THE TEST
+
+Can marketing read this and:
+- ✅ Understand their psychology deeply?
+- ✅ Know their problem/pain/desire at root level?
+- ✅ Know exactly how to influence them?
+
+If no to any = you're either not deep enough OR too bloated.
+
+---
+
+**BUSINESS CONTEXT:**
 {business_context}
 
-ACCUMULATED EXPERTISE TO APPLY:
+**PREVIOUS INSIGHTS:**
 {memory_patterns}
 
-COMPREHENSIVE CUSTOMER PSYCHOLOGY ANALYSIS
+---
 
-**OBJECTIVE**: Conduct comprehensive customer psychology analysis using established psychological frameworks and behavioral analysis methodologies. Apply deep strategic thinking to understand customer motivations, pain points, and decision-making patterns.
-
-**ANALYSIS DEPTH STANDARDS**:
-- **Comprehensive Coverage**: Apply multiple psychological frameworks for complete customer understanding
-- **Behavioral Insights**: Identify specific behavioral patterns and decision-making triggers
-- **Language Analysis**: Analyze communication patterns and authentic voice characteristics
-- **Strategic Recommendations**: Develop actionable marketing and positioning strategies
-
-**PSYCHOLOGICAL FRAMEWORKS TO APPLY**:
-
-PART A: FOUNDATIONAL CUSTOMER PSYCHOLOGY
-
-Step 1: Identity and Self-Perception Analysis
-- Professional/Personal Identity Conflicts: Gap between intended identity and current reality
-- Self-Perception vs. Market Perception: How they see themselves vs. how others see them
-- Identity Restoration Needs: What psychological changes would align identity with values
-- Status and Recognition Drivers: How recognition affects decision-making
-- Identity Defense Mechanisms: How they protect their self-image when challenged
-
-Step 2: Practical Daily Operations Analysis
-Daily Workflow Disruptions:
-- What specific tasks consume disproportionate time/energy?
-- Which operational bottlenecks cause the most frustration?
-- What manual processes do they wish were automated?
-- Which daily decisions drain their mental energy?
-
-Resource and Capability Gaps:
-- What skills/tools do they lack that they need?
-- Which resources are they constantly searching for?
-- What information gaps slow their decision-making?
-- Which capabilities do they outsource or avoid?
-
-Time and Priority Conflicts:
-- What important tasks get pushed aside by urgent ones?
-- Which competing priorities create the most stress?
-- What strategic work gets sacrificed for operational demands?
-- Which time drains do they recognize but can't eliminate?
-
-Step 3: Emotional Pain Layering
-- Surface Frustrations: Immediate operational annoyances
-- Emotional Impacts: How practical problems affect confidence/stress/relationships
-- Identity Threats: How operational failures threaten their professional self-image
-- Existential Concerns: How daily challenges connect to larger life/career questions
-
-PART B: ADVANCED PSYCHOLOGICAL FRAMEWORK ANALYSIS
-
-Step 4: Jungian Archetype Analysis
-- Primary archetype: Which archetype does the customer most embody? (Hero, Sage, Explorer, Innocent, Everyman, Caregiver, Ruler, Creator, Jester, Magician, Rebel, Lover)
-- Shadow archetype: What shadow aspects do they deny or suppress?
-- Archetypal journey: Where are they in their archetypal transformation?
-- Core archetypal fear: What existential fear drives their behavior?
-- Archetypal desire: What archetypal fulfillment do they seek?
-
-Step 5: LAB Profile Communication Analysis
-- Motivation Direction: Toward goals (seeking pleasure) or Away from problems (avoiding pain)?
-- Motivation Source: Internal (self-motivated) or External (need others' validation)?
-- Frame of Reference: Internal (trust own judgment) or External (need external proof)?
-- Decision Style: Options (flexibility) vs Procedures (step-by-step)?
-- Convincer Strategy: How many examples/how much time before convinced?
-- Action Level: Proactive (initiates) or Reactive (waits/responds)?
-
-Step 6: Jobs-To-Be-Done Analysis
-Functional Jobs (What they need to accomplish):
-- Primary functional outcomes they're trying to achieve
-- Secondary functional jobs that support the primary
-- Maintenance jobs that keep systems running
-- Problem-solving jobs when things go wrong
-
-Emotional Jobs (How they want to feel):
-- Professional confidence and competence feelings
-- Stress reduction and peace of mind needs
-- Recognition and validation desires
-- Control and autonomy requirements
-
-Social Jobs (How they want to be perceived):
-- Professional reputation and status maintenance
-- Peer recognition and respect needs
-- Community contribution and leadership roles
-- Relationship harmony and team dynamics
-
-Step 7: Psychological Contradiction Patterns (DEEP ANALYSIS)
-Identity Contradictions:
-- What do they publicly claim to value vs. what their actions demonstrate?
-- How does their professional persona conflict with their private beliefs?
-- What aspects of their role do they embrace vs. resist?
-- Where do their stated priorities conflict with their actual behavior?
-
-Decision-Making Contradictions:
-- When do they choose short-term comfort over long-term benefit?
-- How do they rationalize decisions that conflict with stated values?
-- What triggers them to act against their own best interests?
-- Where do emotional decisions override logical analysis?
-
-Communication Contradictions:
-- What do they say vs. what their tone/body language conveys?
-- How do their public statements differ from private conversations?
-- When do they ask for one thing but actually need something else?
-- What subtext exists beneath their surface communications?
-
-Behavioral Contradictions:
-- Which behaviors do they repeat despite knowing they're counterproductive?
-- How do they seek solutions while simultaneously resisting change?
-- Where do they desire independence while creating dependencies?
-- What patterns do they complain about but continue to enable?
-
-PART C: COGNITIVE BIAS AND BELIEF ANALYSIS
-
-Step 8: Cognitive Bias Mapping
-- Confirmation Bias: What beliefs are they desperately trying to validate?
-- Status Quo Bias: What changes do they resist and why?
-- Loss Aversion: What specific losses terrify them most?
-- Social Proof: Whose opinions matter most? Who do they compare themselves to?
-- Authority Bias: Which experts/figures do they trust implicitly?
-- Anchoring Bias: What reference points shape their expectations?
-- Sunk Cost Fallacy: What past investments trap them?
-- Dunning-Kruger: Where do they overestimate their competence?
-
-Step 9: Belief Archaeology
-Surface beliefs vs. Deep beliefs for each area:
-- About themselves:
-  * Surface: "I'm a successful professional"
-  * Deep: "I'm not as smart as people think"
-- About their industry:
-  * Surface: "Things are changing fast"
-  * Deep: "I'm becoming obsolete"
-- About solutions:
-  * Surface: "I need better tools"
-  * Deep: "Tools won't fix what's really wrong"
-- About change:
-  * Surface: "I'm open to new ideas"
-  * Deep: "Change means admitting I was wrong"
-
-Step 10: Hidden Objections & Secret Doubts
-Uncover the objections they'll never voice:
-- "This probably won't work for someone like me because..."
-- "I'm different from their other customers because..."
-- "They don't understand that in my situation..."
-- "What they're not telling me is..."
-- "The real reason I haven't solved this is..."
-
-## CONVERSION-CRITICAL INSIGHTS
-
-### Buying Trigger Language:
-Identify the specific language patterns that indicate readiness to purchase:
-
-**Urgency Indicators:**
-- "I can't keep pretending everything is fine"
-- "Something has to change before I lose my mind"  
-- "I need this to work - I'm running out of options"
-- "I'm at my breaking point with this situation"
-
-**Investment Justification Language:**
-- How they rationalize spending money on solutions
-- What categories of expense feel acceptable vs. frivolous
-- Language around "professional development" vs. "business expense"
-- Price anchoring patterns and investment comfort zones
-
-**Decision Moment Psychology:**
-- What circumstances push them from consideration to action
-- External triggers that create urgency (client complaints, family stress, peer pressure)
-- Internal triggers that overcome resistance (identity threats, values conflicts)
-- Social proof requirements before committing to solutions
-
-### Objection Patterns and Psychological Responses:
-**Primary Objections with Underlying Psychology:**
-- "I've tried solutions before and they didn't work" (Fear of repeated failure)
-- "I don't have time to implement another system" (Overwhelm and change resistance)
-- "What if this doesn't work for my specific situation?" (Need for customization/uniqueness)
-- "I need to think about it" (Analysis paralysis and decision avoidance)
-
-**Psychological Objection Drivers:**
-- Past disappointment patterns that create skepticism
-- Risk tolerance levels and loss aversion triggers
-- Authority and validation requirements for decision-making
-- Implementation anxiety and change management fears
-
-### Price Psychology and Investment Behavior:
-**Investment Decision Criteria:**
-- How they evaluate ROI for business development vs. operational solutions
-- Psychological price anchors and comparison frameworks
-- Payment structure preferences (monthly vs. annual vs. one-time)
-- Investment timing patterns and budget cycle psychology
-
-**Value Perception Drivers:**
-- What benefits justify premium pricing in their minds
-- How they weigh cost vs. potential transformation value
-- Social proof requirements for high-ticket purchases
-- Risk reversal needs for different investment levels
-
-DELIVERABLE REQUIREMENTS:
-- Minimum 4,000 words of substantive psychological analysis
-- 25+ specific behavioral insights with actionable implications
-- 15+ psychological patterns with evidence
-- Complete framework coverage - all psychological frameworks thoroughly analyzed
-- 5+ psychological contradiction patterns identified and explored
-- Conversion-critical insights with buying triggers and objection patterns
-
-INSIGHT QUALITY STANDARDS:
-- Each insight must be specific and actionable
-- Psychological analysis must reveal non-obvious patterns
-- Analysis must connect customer psychology to business outcomes
-- Must reveal contradictions and unconscious drivers
-- Must include buying psychology and decision-making triggers
-
-DELIVER COMPREHENSIVE CUSTOMER PSYCHOLOGY ANALYSIS THAT REVEALS UNCONSCIOUS PATTERNS AND PROVIDES FOUNDATION FOR SUPERIOR MARKETING STRATEGY."""
+**BEGIN ANALYSIS NOW. Follow the gold standard. Think in mechanisms. Write in layers. Cut ruthlessly. Respect word limits.**"""
 
     @staticmethod
     def get_conversion_intelligence_prompt() -> str:
@@ -457,3 +565,35 @@ Create a complete psychological portrait that:
    - The truth they've been waiting to hear
 
 This synthesis should feel like a psychological X-ray - revealing the hidden structure that explains everything."""
+
+
+# Test function to verify prompts load correctly
+if __name__ == "__main__":
+    print("Testing ICPResearchPrompts...")
+    print("=" * 60)
+    
+    # Test loading psychological prompt
+    try:
+        prompt = ICPResearchPrompts.get_psychological_analysis_prompt()
+        print(f"✅ Psychological prompt loaded successfully")
+        print(f"   Length: {len(prompt)} characters")
+        print(f"   First 100 chars: {prompt[:100]}...")
+    except Exception as e:
+        print(f"❌ Error loading psychological prompt: {e}")
+    
+    # Test other prompts
+    try:
+        conversion_prompt = ICPResearchPrompts.get_conversion_intelligence_prompt()
+        print(f"✅ Conversion intelligence prompt loaded")
+        print(f"   Length: {len(conversion_prompt)} characters")
+    except Exception as e:
+        print(f"❌ Error loading conversion prompt: {e}")
+    
+    # Test supplementary prompts
+    try:
+        supp_prompts = ICPResearchPrompts.get_supplementary_prompts()
+        print(f"✅ Supplementary prompts loaded: {list(supp_prompts.keys())}")
+    except Exception as e:
+        print(f"❌ Error loading supplementary prompts: {e}")
+    
+    print("=" * 60)

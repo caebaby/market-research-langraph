@@ -5,9 +5,9 @@ import requests
 
 def web_search(query: str):
     # Use your Brave Search API (replace with key)
-    key = os.getenv("BRAVE_SEARCH_API_KEY")
+    key = os.getenv("BRAVE_API_KEY")
     if not key:
-        return "Add BRAVE_SEARCH_API_KEY to env"
+        return "Add BRAVE_API_KEY to env"
     
     url = "https://api.search.brave.com/res/v1/web/search"
     headers = {"X-Subscription-Token": key}

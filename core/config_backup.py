@@ -2,7 +2,6 @@
 """
 Configuration module for Level 5 ICP Intelligence System.
 Provides agent-specific LLM configurations, temperatures, and token limits.
-UPDATED: Using Claude Sonnet 4.5 at temperature 0.3
 """
 
 from langchain_anthropic import ChatAnthropic
@@ -24,33 +23,34 @@ class Config:
     Provides agent-specific configurations for optimal performance.
     """
     
-    # Model configuration - UPDATED to Sonnet 4.5
-    LLM_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
+    # Model configuration
+    LLM_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
     
-    # UPDATED: All agents now use temperature 0.3 for consistent, focused responses
+    # Agent-specific temperatures for optimal performance
+    # Higher temp = more creative, Lower temp = more focused
     AGENT_TEMPERATURES = {
-        'psychological': 0.3,           # Focused for reliable insights
-        'voice_of_customer': 0.3,       # Consistent language extraction
-        'competitor': 0.3,              # Precise competitive analysis
-        'interview_psychological': 0.3,  # Structured, consistent interviews
-        'interview_sales': 0.3,         # Focused sales conversations
-        'gtm_blueprint': 0.3,           # Precise strategy synthesis
-        'gtm': 0.3,                     # Alias for gtm_blueprint
-        'voice': 0.3                    # Alias for voice_of_customer
+        'psychological': 0.85,        # High creativity for deep insights
+        'voice_of_customer': 0.7,     # Balanced for accurate language extraction
+        'competitor': 0.65,           # Lower for factual competitive analysis
+        'interview_psychological': 0.9, # Very creative for realistic interviews
+        'interview_sales': 0.85,      # Creative but structured for sales
+        'gtm_blueprint': 0.75,        # Balanced for strategy synthesis
+        'gtm': 0.75,                  # Alias for gtm_blueprint
+        'voice': 0.7                  # Alias for voice_of_customer
     }
     
-    # Token limits by use case - UPDATED to 20k max
+    # Token limits by use case
     MAX_TOKENS = {
-        'research': 20000,   # Maximum for deep analysis
-        'creative': 20000,   # Maximum for interviews
-        'summary': 10000,    # Medium for summaries (half of max)
-        'quick': 5000        # Quick responses (quarter of max)
+        'research': 8192,    # Maximum for deep analysis
+        'creative': 8192,    # Maximum for interviews
+        'summary': 4096,     # Shorter for summaries
+        'quick': 2048        # Quick responses
     }
     
-    # UPDATED: Default temperature now 0.3
-    DEFAULT_TEMPERATURE = 0.3
+    # Default temperature if agent not specified
+    DEFAULT_TEMPERATURE = 0.7
     
-    # Quality thresholds for each agent (unchanged)
+    # Quality thresholds for each agent
     QUALITY_THRESHOLDS = {
         'interview_psychological': 0.80,
         'interview_sales': 0.80,
@@ -62,7 +62,7 @@ class Config:
         'voice': 0.75
     }
     
-    # Minimum word counts for validation (unchanged)
+    # Minimum word counts for validation
     MIN_WORD_COUNTS = {
         'interview_psychological': 2000,
         'interview_sales': 2000,
@@ -74,7 +74,7 @@ class Config:
         'voice': 1500
     }
     
-    # Agent type categorization (unchanged)
+    # Agent type categorization
     AGENT_TYPES = {
         'analytical': ['psychological', 'competitor'],
         'creative': ['interview_psychological', 'interview_sales'],
@@ -102,16 +102,12 @@ class Config:
             agent_name = agent_name.lower().replace('-', '_')
         
         # Get temperature (priority: custom > agent-specific > default)
-        # UPDATED: Now defaults to 0.3
         if custom_temp is not None:
             temperature = custom_temp
-            print(f"Using custom temperature: {temperature}")
         elif agent_name and agent_name in Config.AGENT_TEMPERATURES:
             temperature = Config.AGENT_TEMPERATURES[agent_name]
-            print(f"Using agent '{agent_name}' temperature: {temperature}")
         else:
             temperature = Config.DEFAULT_TEMPERATURE
-            print(f"Using default temperature: {temperature}")
         
         # Get max tokens based on agent type
         if custom_tokens is not None:
@@ -144,28 +140,18 @@ class Config:
             )
         
         # Log configuration (useful for debugging)
-        logger.info(
+        logger.debug(
             f"Creating LLM for agent '{agent_name}': "
             f"temp={temperature}, tokens={max_tokens}, model={Config.LLM_MODEL}"
         )
         
-        # Add warning if using high token count
-        if max_tokens > 10000:
-            print(f"⚡ Using high token limit: {max_tokens} tokens for {agent_name or 'default'} agent")
-        
-        try:
-            # Create and return configured LLM
-            llm = ChatAnthropic(
-                model=Config.LLM_MODEL,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                api_key=api_key
-            )
-            print(f"✅ Successfully created LLM with Sonnet 4.5 at temp {temperature}")
-            return llm
-        except Exception as e:
-            print(f"❌ Error creating LLM: {e}")
-            raise
+        # Create and return configured LLM
+        return ChatAnthropic(
+            model=Config.LLM_MODEL,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            api_key=api_key
+        )
     
     @staticmethod
     def get_agent_config(agent_name: str) -> Dict[str, Any]:
@@ -237,8 +223,6 @@ class Config:
         """
         return {
             'model': Config.LLM_MODEL,
-            'model_version': 'Claude 3.5 Sonnet 4 (Latest)',
-            'default_temperature': Config.DEFAULT_TEMPERATURE,
             'agents_configured': len(Config.AGENT_TEMPERATURES),
             'temperature_range': f"{min(Config.AGENT_TEMPERATURES.values()):.1f}-{max(Config.AGENT_TEMPERATURES.values()):.1f}",
             'max_tokens_range': f"{min(Config.MAX_TOKENS.values())}-{max(Config.MAX_TOKENS.values())}",
@@ -249,7 +233,7 @@ class Config:
 if __name__ == "__main__":
     # Test configuration
     print("=" * 60)
-    print("CONFIGURATION TEST - SONNET 4.5 @ TEMP 0.3")
+    print("CONFIGURATION TEST")
     print("=" * 60)
     
     # Validate environment
@@ -266,7 +250,6 @@ if __name__ == "__main__":
     
     # Test LLM creation for each agent
     print(f"\nTesting LLM creation for all agents:")
-    print(f"NOTE: All agents now configured with 20k max tokens")
     for agent_name in Config.AGENT_TEMPERATURES.keys():
         try:
             llm = Config.get_llm(agent_name)
