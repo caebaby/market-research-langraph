@@ -1,0 +1,137 @@
+Market Research Brief Template
+
+1. BUSINESS TYPE
+[ ] B2B
+[ ] B2C
+[ ] B2B2C
+
+2. COMPANY NAME
+[Your company name]
+
+3. INDUSTRY
+[Specific industry/niche - be detailed]
+Example: "Financial Services - Independent Financial Advisors"
+Example: "Health & Wellness - Premium Recovery & Wellness Spa Services"
+Example: "SaaS - Project Management for Construction Companies"
+
+4. PRODUCT/SERVICE DESCRIPTION
+[Detailed description of what you offer and HOW it works. Include your unique methodology if applicable]
+
+Structure using pillars/components:
+- PILLAR 1: [Component name] - [What it does and why it matters]
+- PILLAR 2: [Component name] - [What it does and why it matters]
+- PILLAR 3: [Component name] - [What it does and why it matters]
+- PILLAR 4: [Component name] - [What it does and why it matters]
+
+Unique methodology: [Your proprietary approach, framework, or system]
+
+5. TARGET CUSTOMER DESCRIPTION
+[One sentence describing your ideal customer]
+
+Example: "Mid-career financial advisors with 5-10 years experience who are stuck and frustrated with current practice growth"
+Example: "Affluent business professionals aged 35-65 experiencing age-related recovery challenges and seeking premium wellness solutions"
+
+6. DEMOGRAPHICS & CHARACTERISTICS
+- Age: [Range or specific age group]
+- Gender: [If relevant, otherwise note "Both" or "No preference"]
+- Education: [Level - high school, college, advanced degrees]
+- Income: [Individual or household income range]
+- Company size: [For B2B - employees, revenue, etc.]
+- Location: [Geographic focus - city, region, national, global]
+- Career stage: [Experience level, seniority, career phase]
+- Other relevant traits: [Industry-specific characteristics, lifestyle, values, etc.]
+
+7. CUSTOMER CONTEXT/SITUATION
+[Describe their day-to-day reality, responsibilities, and pressures]
+
+Include:
+- Daily/weekly routines and responsibilities
+- Professional pressures and challenges
+- Personal life situation
+- Time constraints and priorities
+- Current tools/solutions they use
+- Environmental factors affecting them
+
+8. PROBLEMS YOUR OFFERING SOLVES
+[List 5-7 specific problems, starting with most painful]
+
+1. [Most urgent/painful problem - the one that keeps them up at night]
+2. [Second most painful - significant impact on daily life/business]
+3. [Third problem - frustrating but manageable]
+4. [Fourth problem - emerging concern]
+5. [Fifth problem - nice-to-solve]
+6. [Sixth problem - secondary impact]
+7. [Seventh problem - related challenge]
+
+9. CUSTOMER COMPLAINTS (EXACT QUOTES)
+[7-10 actual quotes or paraphrases of what customers say]
+
+- "Quote 1 expressing frustration about main problem"
+- "Quote 2 about emotional impact of their pain"
+- "Quote 3 showing urgency or desperation"
+- "Quote 4 about failed solutions they've tried"
+- "Quote 5 expressing time/resource constraints"
+- "Quote 6 about competition or alternatives"
+- "Quote 7 showing fear or anxiety"
+- "Quote 8 expressing desire for change"
+- "Quote 9 about current unsatisfactory situation"
+- "Quote 10 showing willingness to invest in solution"
+
+10. CUSTOMER'S STATED GOALS
+[What they SAY they want to achieve - 5-6 goals]
+
+- Goal 1 (in their words, not business jargon)
+- Goal 2 (specific, measurable outcome they want)
+- Goal 3 (emotional or lifestyle goal)
+- Goal 4 (professional or business goal)
+- Goal 5 (personal development or growth goal)
+- Goal 6 (long-term vision or aspiration)
+
+11. WHAT SUCCESS LOOKS LIKE (IN THEIR WORDS)
+[5-6 quotes describing their vision of success]
+
+- "Success quote 1 - specific outcome they can visualize"
+- "Success quote 2 - emotional state they want to achieve"
+- "Success quote 3 - lifestyle change they desire"
+- "Success quote 4 - professional milestone they're aiming for"
+- "Success quote 5 - personal transformation they envision"
+- "Success quote 6 - long-term vision of their ideal situation"
+
+12. TARGET MARKET DETAILS
+[Expand on demographics with market segmentation details]
+
+Primary segment: [Description of main target]
+- Company characteristics: [For B2B - size, industry, maturity, etc.]
+- Individual characteristics: [For B2C - lifestyle, values, behaviors]
+- Current situation: [What stage/state they're in]
+- Aspirational direction: [Where they want to go]
+
+Secondary segments: [Additional viable markets]
+- Segment 2: [Description]
+- Segment 3: [Description]
+
+Market size and trends: [If known - growth, competition, opportunities]
+
+13. MARKETING GOAL
+[What specific action do you want them to take?]
+
+Example: "Generate qualified leads for discovery calls with [target customer] who are frustrated with [main pain] and want [primary desire]"
+Example: "Drive trial signups from [target segment] who need [solution] to achieve [outcome]"
+
+14. ADDITIONAL CONTEXT
+[Important details about your company, founders, culture, differentiators]
+
+Include:
+- Founder story/credibility: [Background, experience, personal connection to problem]
+- Company values/culture: [What drives the organization]
+- Main differentiators: [What makes you unique in the market]
+- Social proof: [Current customers, results, testimonials, case studies]
+- Unique positioning: [How you're different from competitors]
+- Current marketing assets: [Website, content, tools, systems you have]
+- Brand personality: [Tone, voice, style preferences]
+- Budget considerations: [If relevant to strategy decisions]
+- Timeline: [Launch dates, milestones, urgency factors]
+- Geographic considerations: [Local market dynamics, cultural factors]
+
+INSTRUCTIONS:
+Fill out each section with as much detail as possible. The more context you provide, the more tailored and actionable your market research analysis will be.

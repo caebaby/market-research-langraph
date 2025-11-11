@@ -1,0 +1,599 @@
+# Team-ICP/prompts/research_prompts.py
+"""
+Level 5 ICP Research Prompts - Deep Psychological Intelligence
+These prompts are the core IP of the ICP research system
+Updated with new concise psychological agent prompt
+"""
+
+import os
+from pathlib import Path
+
+class ICPResearchPrompts:
+    """Battle-tested prompts for extracting visceral psychological insights"""
+    
+    @staticmethod
+    def get_psychological_analysis_prompt() -> str:
+        """
+        Main prompt for deep psychological analysis.
+        Now loads from external TXT file for easier maintenance.
+        """
+        try:
+            # Try to load from TXT file first
+            prompt_path = Path(__file__).parent / "psychological_agent_prompt.txt"
+            
+            if prompt_path.exists():
+                print(f"Loading psychological prompt from: {prompt_path}")
+                with open(prompt_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+            else:
+                print(f"TXT file not found at {prompt_path}, using embedded prompt")
+                # Fallback to embedded prompt
+                return ICPResearchPrompts._get_embedded_psychological_prompt()
+                
+        except Exception as e:
+            print(f"Error loading prompt from file: {e}")
+            print("Falling back to embedded prompt")
+            return ICPResearchPrompts._get_embedded_psychological_prompt()
+    
+    @staticmethod
+    def _get_embedded_psychological_prompt() -> str:
+        """Embedded version of the new psychological prompt as fallback"""
+        return """# PSYCHOLOGICAL INTELLIGENCE AGENT - COMPLETE PROMPT
+
+## CRITICAL WRITING STANDARDS
+
+THINK IN MECHANISMS, NOT DESCRIPTIONS:
+- Every insight must identify: CAUSE → MECHANISM → EFFECT
+- Avoid descriptive prose; use causal chains
+- Example: "Time poverty (cause) → decision deferral → anxiety amplification (mechanism) → chronic paralysis (effect)"
+
+WRITE IN LAYERS:
+- Layer 1: The Mechanism (80 words MAX)
+- Layer 2: Why It Matters (50 words MAX)
+- Layer 3: Influence Strategy (100 words MAX)
+- Layer 4: Confidence Level
+
+SELF-EDIT RUTHLESSLY:
+After every paragraph, ask: "Does this sentence add NEW information or restate existing?"
+If restatement → DELETE IT.
+If it's a longer way of saying what was already said → DELETE IT.
+If it's an example of something already explained → KEEP IT.
+
+BAD EXAMPLE: "They feel overwhelmed by time constraints which makes them anxious so they defer decisions which makes them more overwhelmed and more anxious creating a cycle."
+
+GOOD EXAMPLE: "Time poverty → decision deferral → anxiety amplification → paralysis. Each cycle strengthens the pattern."
+
+---
+
+## YOUR MISSION
+
+Create the definitive psychological profile answering:
+1. WHO are they psychologically?
+2. What are their PROBLEMS, PAINS, and DESIRES?
+3. How do we INFLUENCE them based on that psychology?
+
+**This is the only document marketing needs to create winning positioning.**
+
+---
+
+## CORE REQUIREMENTS
+
+**DEPTH:** Uncover the psychological mechanisms driving behavior, not surface observations.
+
+**ACCURACY:** Ground every insight in logic and behavioral patterns. Label "HYPOTHESIS:" when uncertain.
+
+**CONCISION:** Target 10-12 pages MAX. Every sentence must earn its place.
+
+**INFLUENCE-FOCUSED:** Every major insight must include specific influence strategy.
+
+---
+
+## THE GOLD STANDARD
+
+Here's what excellence looks like:
+
+---
+
+**INSIGHT: The Competence-Chaos Paradox**
+
+**THE MECHANISM:**
+11+ years mastering medicine creates belief: "Intelligence solves complex problems." Financial research yields MORE confusion, not clarity. Core identity ("I master systems") conflicts with reality ("I can't crack this"). Result: Shame blocks help-seeking—asking for help = admitting intellectual failure.
+
+**WHY THIS MATTERS:**
+Intelligence is both asset and obstacle. "You need help" triggers "I'm smart enough" defensiveness, strengthening DIY paralysis.
+
+**INFLUENCE STRATEGY:**
+Reframe as subspecialty: "You wouldn't do cardiac surgery outside your training. Financial planning requires 500+ case pattern recognition. You wouldn't waste 100+ hours learning cardiology to treat one patient." Frame as efficiency problem, not intelligence problem. Never "you CAN'T"—position as "you SHOULDN'T waste high-value time."
+
+**CONFIDENCE:** HIGH
+
+---
+
+**That's your model. Now create the full analysis following this standard.**
+
+---
+
+## REQUIRED SECTIONS
+
+### **1. EXECUTIVE SUMMARY (400 words MAX)**
+
+The 3 most critical psychological insights.
+
+For each:
+- **THE MECHANISM:** The psychological pattern (80 words MAX)
+- **WHY THIS MATTERS:** Impact on decisions (50 words MAX)
+- **INFLUENCE STRATEGY:** How to work with this psychology (100 words MAX)
+- **CONFIDENCE:** High/Medium/Low
+
+---
+
+### **2. IDENTITY & TRANSFORMATION (500 words MAX)**
+
+**WHO THEY BELIEVE THEY ARE:**
+3-5 identity layers (bullet format, 2 sentences each)
+
+**DEFENSE MECHANISMS:**
+3-4 defenses (bullet format):
+- Trigger → Response → Example (all in one bullet)
+
+**IDENTITY SHIFTS REQUIRED:**
+4-5 shifts (bullet format):
+- FROM: "X" TO: "Y" | Enabled by: [one sentence]
+
+**INFLUENCE IMPLICATION:** How to enable transformation (100 words MAX)
+
+---
+
+### **3. PROBLEM, PAIN & DESIRE (800 words MAX)**
+
+#### **THE CORE PROBLEM (200 words MAX)**
+- What they say it is (1 sentence)
+- What it actually is (2-3 sentences)
+- Why they can't see it (2-3 sentences)
+- Why it persists (3-4 sentences)
+- **INFLUENCE IMPLICATION** (60 words MAX)
+
+#### **THE PAIN (250 words MAX)**
+- Surface pain (1 sentence)
+- Emotional pain (2-3 sentences)
+- Hidden pain (2-3 sentences)
+- **Pain triggers** (bullets, 4-6 triggers):
+  - Trigger → Why it hurts → Reveals what
+- **INFLUENCE IMPLICATION** (60 words MAX)
+
+#### **THE DESIRE (250 words MAX)**
+- Stated desires (bullets, 3-4 items)
+- Real emotional desires (bullets):
+  - Relief from: [specific]
+  - Confidence about: [specific]
+  - Freedom from: [specific]
+  - Pride about: [specific]
+- Social desires (bullets, by spouse/peers/self)
+- Hidden desires (bullets, 2-3 items)
+- Conflicting desires (bullets, 2-3 conflicts)
+- **Jobs-to-be-done** (bullets):
+  - Functional: [specific]
+  - Emotional: [specific]
+  - Social: [specific]
+- **INFLUENCE IMPLICATION** (80 words MAX)
+
+---
+
+### **4. BELIEF TRANSFORMATION SEQUENCE (700 words MAX)**
+
+**THE REQUIRED JOURNEY (Brief Overview - 300 words MAX):**
+
+The purchase decision requires four sequential belief shifts. Each shift must occur IN ORDER—each enables the next. Marketing that attempts to jump steps (e.g., selling value before establishing trust) triggers automatic resistance.
+
+**The Four Critical Shifts:**
+
+**SHIFT #1: Problem Recognition**
+FROM: "I need to get organized when I have time"
+TO: "I'm losing 5-7 years of compound growth for every year I delay—this IS urgent"
+
+**SHIFT #2: Solution Reframe**
+FROM: "I need to research and DIY this to prove I'm competent"
+TO: "Hiring subspecialty expertise is what competent people do—it's efficiency arbitrage"
+
+**SHIFT #3: Trust Foundation**
+FROM: "All financial advisors are salespeople trying to profit from me"
+TO: "Physician-specialist advisors exist who understand my specific situation and have proven track records"
+
+**SHIFT #4: Control Reconciliation**
+FROM: "Hiring an advisor means losing control and not understanding my finances"
+TO: "Partnership means I stay informed and make decisions while they handle implementation and monitoring"
+
+**Critical Sequencing Rule:** Attempting to sell value/ROI before completing trust-building (Shifts 2-3) = automatic rejection. Attempting to create urgency (Shift 1) before reframing the solution (Shift 2) triggers defensive "I can figure this out myself" response. Each content piece in marketing funnel should facilitate ONE specific shift.
+
+---
+
+**DETAILED TRANSFORMATION ANALYSIS (400 words MAX):**
+
+For each of 4 shifts:
+- **SHIFT #X:** Name
+- **WHY THIS ORDER:** [1 sentence]
+- **HOW TO FACILITATE:** [3-4 sentences with specific language]
+- **AVOID:** [1 sentence]
+
+**INFLUENCE IMPLICATION:** How to structure marketing journey (100 words MAX)
+
+---
+
+### **5. WHY PAST SOLUTIONS FAILED (900 words MAX)**
+
+**3 failed solutions (300 words MAX each):**
+
+**FAILED SOLUTION #X:** [Name]
+- **What they tried:** [2 sentences]
+- **The pattern** (bullets):
+  - Phase 1: [1-2 sentences]
+  - Phase 2: [1-2 sentences]
+  - Phase 3: [1-2 sentences]
+- **Why it failed (their perspective):** [120 words MAX - write as internal monologue]
+- **What they learned** (bullets):
+  - Accurate lessons: [2-3 items, 1 sentence each]
+  - Mislearned lessons: [2-3 items with "Wrong because" + "Missing" in 1-2 sentences each]
+- **Scar tissue** (bullets, 4-6 items):
+  - "Trigger phrase" → Response → Impact
+
+**INFLUENCE IMPLICATION (at end of section):** [150 words MAX covering all 3 solutions]
+
+---
+
+### **6. DECISION ARCHITECTURE (700 words MAX)**
+
+#### **STATED VS. ACTUAL CRITERIA (300 words MAX)**
+- **What they say matters** (bullets, 5-7 items)
+- **What actually matters** (bullets, 3-5 items with examples)
+- **The urgency gap:**
+  - Stated: X/10
+  - Behavioral: X/10
+  - Mechanism: [60 words MAX explaining why gap exists]
+- **INFLUENCE IMPLICATION:** [80 words MAX]
+
+#### **COMMUNICATION STYLE (250 words MAX)**
+All bullets:
+- **Motivation:** Toward X% / Away From X% | Examples
+- **Decision style:** Options vs. Procedures | When each
+- **Convincer:** Primary mode + what works
+- **Reference:** Internal vs. External | When each
+- **INFLUENCE IMPLICATION:** [80 words MAX]
+
+#### **DECISION MOMENT (150 words MAX)**
+- **Pushes them over** (bullets): Emotional/logical/social/temporal triggers
+- **Holds them back:** [40 words MAX]
+- **INFLUENCE IMPLICATION:** [50 words MAX]
+
+---
+
+### **7. HIDDEN PSYCHOLOGY (500 words MAX)**
+
+#### **SAY VS. DO (160 words MAX)**
+Bullets, 4-5 contradictions:
+- Says: "X" Does: "Y" → Mechanism → Example
+
+**INFLUENCE IMPLICATION:** [40 words MAX]
+
+#### **WANT VS. FEAR (160 words MAX)**
+Bullets, 4-5 conflicts:
+- Wants: X Fears: Y → Paralysis mechanism → Example
+
+**INFLUENCE IMPLICATION:** [40 words MAX]
+
+#### **UNSPOKEN OBJECTIONS (180 words MAX)**
+Bullets:
+- "Won't work because..." [4-6 items]
+- "I'm different because..." [3-4 items]
+- "What scares me..." [4-5 items]
+
+**INFLUENCE IMPLICATION:** [60 words MAX - how to surface/address]
+
+---
+
+## CRITICAL CONSTRAINTS
+
+🚫 **NO BLOAT:**
+- No repetitive explanations
+- No step-by-step breakdowns (1→2→3→4→5→6)
+- No obvious transitions ("As mentioned above...")
+- No preambles before sections
+
+✅ **REQUIREMENTS:**
+- Stick to word limits (they're MAXIMUMS not targets)
+- Use bullets where specified
+- Every insight needs INFLUENCE IMPLICATION
+- Specific examples (names, numbers, scenarios)
+- Mechanisms explained in 2-4 sentences MAX
+
+---
+
+## WORD COUNT ENFORCEMENT
+
+If any section exceeds its MAX:
+1. Cut repetition first
+2. Remove step-by-step breakdowns
+3. Compress to core mechanism
+4. Keep influence strategy intact
+
+**Total document: 10-12 pages MAX (roughly 5,000-6,000 words)**
+
+---
+
+## THE TEST
+
+Can marketing read this and:
+- ✅ Understand their psychology deeply?
+- ✅ Know their problem/pain/desire at root level?
+- ✅ Know exactly how to influence them?
+
+If no to any = you're either not deep enough OR too bloated.
+
+---
+
+**BUSINESS CONTEXT:**
+{business_context}
+
+**PREVIOUS INSIGHTS:**
+{memory_patterns}
+
+---
+
+**BEGIN ANALYSIS NOW. Follow the gold standard. Think in mechanisms. Write in layers. Cut ruthlessly. Respect word limits.**"""
+
+    @staticmethod
+    def get_conversion_intelligence_prompt() -> str:
+        """Prompt for applying psychological insights to conversion/marketing"""
+        return """Based on the deep psychological analysis provided, create CONVERSION INTELLIGENCE 
+that translates psychological insights into actionable marketing and sales applications.
+
+PSYCHOLOGICAL ANALYSIS:
+{psychological_analysis}
+
+BUSINESS CONTEXT:
+{business_context}
+
+PROVIDE CONVERSION INTELLIGENCE IN THESE AREAS:
+
+1. MESSAGING HIERARCHY
+Based on the psychological drivers discovered:
+- Primary message (addresses core wound/fear)
+- Supporting messages (address secondary concerns)
+- Proof messages (overcome specific doubts)
+
+2. EMOTIONAL JOURNEY MAPPING
+Design the optimal emotional progression:
+- Starting emotional state (where they are)
+- Transition emotions (bridge to solution)
+- Target emotional state (where they want to be)
+- Resistance points and how to address them
+
+3. TRUST ARCHITECTURE
+Based on their trust patterns:
+- What type of proof they need (data vs. stories vs. authority)
+- Trust-building sequence
+- Credibility markers that matter to them
+- Social proof that resonates
+
+4. OBJECTION PREEMPTION
+Address the unspoken objections:
+- Surface objections (what they'll say)
+- Real objections (what they really fear)
+- Identity objections (who they're afraid of becoming)
+- Investment objections (hidden concerns about cost/effort)
+
+5. CONVERSION TRIGGERS
+Identify specific triggers that drive action:
+- Urgency triggers (what makes them act now)
+- Identity triggers (who they want to become)
+- Social triggers (peer pressure points)
+- Loss triggers (what they're afraid of missing)
+
+6. OFFER POSITIONING
+Frame the solution to match their psychology:
+- Transformation promise (not just features)
+- Identity bridge (from current to desired self)
+- Safety mechanisms (reduce perceived risk)
+- Exclusivity elements (tribe belonging)
+
+7. COPY FRAMEWORKS
+Provide specific copy approaches:
+- Headlines that hit the core wound
+- Subheads that promise transformation
+- Body copy that tells their story
+- CTAs that feel like natural next steps
+
+8. SEGMENTATION STRATEGY
+If there are multiple psychological profiles:
+- Define distinct segments
+- Tailor messaging for each
+- Identify routing mechanisms
+- Create segment-specific funnels
+
+Make every insight immediately actionable for marketing and sales implementation."""
+    
+    @staticmethod
+    def get_supplementary_prompts() -> dict:
+        """Additional specialized prompts for specific analyses"""
+        return {
+            "contradiction_deep_dive": """Analyze the target customer for DEEP CONTRADICTIONS:
+
+Context: {business_context}
+
+Find contradictions in these specific areas:
+1. Professional Image vs. Private Reality
+   - What they project publicly
+   - What they experience privately
+   - The exhausting gap between
+
+2. Rational Knowledge vs. Emotional Behavior
+   - What they know intellectually
+   - How they act emotionally
+   - Why logic doesn't change behavior
+
+3. Stated Values vs. Daily Actions
+   - Values they claim to hold
+   - Actions that contradict those values
+   - Rationalizations they use
+
+4. Future Goals vs. Present Choices
+   - Where they say they want to be
+   - Choices keeping them stuck
+   - The comfort of familiar problems
+
+For each contradiction:
+- Explain both sides clearly
+- Reveal the psychological mechanism
+- Show how it creates suffering
+- Suggest how to address both sides
+
+The goal is compassionate understanding, not judgment.""",
+
+            "voice_extraction_deep": """Extract the target customer's AUTHENTIC VOICE:
+
+Context: {business_context}
+
+Capture their exact words in these vulnerable moments:
+
+1. THE 3 AM SPIRAL
+   - Lying awake worrying: "What if..."
+   - Catastrophizing: "Everyone will find out that..."
+   - Bargaining with universe: "If I could just..."
+
+2. THE CONFESSION TO A CLOSE FRIEND
+   - Admitting fears: "I'm terrified that..."
+   - Revealing inadequacy: "I have no idea how to..."
+   - Expressing exhaustion: "I'm so tired of pretending..."
+
+3. THE INTERNAL NEGOTIATION
+   - Talking themselves out of action: "Yeah, but..."
+   - Justifying inaction: "It's not that bad..."
+   - Postponing change: "I'll deal with it when..."
+
+4. THE COMPARISON TRAP
+   - Social media scrolling: "They make it look so easy..."
+   - Industry events: "Everyone else seems to..."
+   - Success stories: "That would never work for me because..."
+
+5. THE DESPERATE GOOGLE SEARCH
+   - Problem-focused: "Why do I..."
+   - Solution-seeking: "How to finally..."
+   - Symptom-chasing: "Quick fix for..."
+
+Include:
+- Specific jargon or slang they use
+- Emotional words that reveal state of mind
+- Half-finished thoughts showing confusion
+- Contradictory statements revealing conflict
+- The stories they tell themselves""",
+
+            "identity_psychology_deep": """Analyze the target customer's IDENTITY PSYCHOLOGY:
+
+Context: {business_context}
+
+Map their complete identity structure:
+
+1. IDENTITY NARRATIVE ANALYSIS
+   Current Story Arc:
+   - "I used to be..."
+   - "But then..."
+   - "Now I'm..."
+   - "And I'm trying to..."
+
+2. IDENTITY STACK
+   List all identity layers:
+   - Professional: "I'm a..."
+   - Personal: "I'm someone who..."
+   - Aspirational: "I'm becoming..."
+   - Shadow: "I'm not one of those people who..."
+
+3. IDENTITY THREATS
+   What threatens each identity:
+   - Professional identity threatened by: [specific changes/competitors]
+   - Personal identity threatened by: [specific failures/comparisons]
+   - Social identity threatened by: [specific judgments/exclusions]
+
+4. IDENTITY DEFENSE MECHANISMS
+   How they protect their identity:
+   - Dismissal: "That's for people who..."
+   - Superiority: "I'm too advanced for..."
+   - Excuse-making: "In my unique situation..."
+   - Tribe-seeking: "People like us..."
+
+5. IDENTITY TRANSFORMATION RESISTANCE
+   Why they can't change:
+   - "If I change, I'll lose..."
+   - "People expect me to..."
+   - "I've invested too much in..."
+   - "It would mean admitting..."
+
+Reveal the identity crisis at the heart of their struggle."""
+        }
+
+    @staticmethod
+    def get_synthesis_prompt() -> str:
+        """Prompt for synthesizing multiple analyses into unified profile"""
+        return """Synthesize all psychological analyses into a UNIFIED PROFILE:
+
+Previous Analyses:
+{analyses}
+
+Create a complete psychological portrait that:
+
+1. INTEGRATES ALL PATTERNS
+   - Show how different frameworks reveal the same core truths
+   - Connect archetypes to biases to identity to voice
+   - Reveal the unified story across all analyses
+
+2. FINDS THE CORE WOUND
+   - What fundamental fear/pain drives everything?
+   - How does it manifest across different areas?
+   - Why haven't they healed it?
+
+3. MAPS THE PROTECTION PATTERN
+   - How do they protect themselves from the core wound?
+   - What strategies have they developed?
+   - How do these strategies create new problems?
+
+4. REVEALS THE TRANSFORMATION PATH
+   - What would healing look like?
+   - What's the first step they could actually take?
+   - How to speak to both the wound and the possibility?
+
+5. CREATES THE RESONANCE MESSAGE
+   - The one insight that would crack them open
+   - The words that would make them feel truly seen
+   - The truth they've been waiting to hear
+
+This synthesis should feel like a psychological X-ray - revealing the hidden structure that explains everything."""
+
+
+# Test function to verify prompts load correctly
+if __name__ == "__main__":
+    print("Testing ICPResearchPrompts...")
+    print("=" * 60)
+    
+    # Test loading psychological prompt
+    try:
+        prompt = ICPResearchPrompts.get_psychological_analysis_prompt()
+        print(f"✅ Psychological prompt loaded successfully")
+        print(f"   Length: {len(prompt)} characters")
+        print(f"   First 100 chars: {prompt[:100]}...")
+    except Exception as e:
+        print(f"❌ Error loading psychological prompt: {e}")
+    
+    # Test other prompts
+    try:
+        conversion_prompt = ICPResearchPrompts.get_conversion_intelligence_prompt()
+        print(f"✅ Conversion intelligence prompt loaded")
+        print(f"   Length: {len(conversion_prompt)} characters")
+    except Exception as e:
+        print(f"❌ Error loading conversion prompt: {e}")
+    
+    # Test supplementary prompts
+    try:
+        supp_prompts = ICPResearchPrompts.get_supplementary_prompts()
+        print(f"✅ Supplementary prompts loaded: {list(supp_prompts.keys())}")
+    except Exception as e:
+        print(f"❌ Error loading supplementary prompts: {e}")
+    
+    print("=" * 60)

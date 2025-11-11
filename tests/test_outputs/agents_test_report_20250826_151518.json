@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-08-26T15:09:45.319918",
+  "agents_tested": [
+    "Psychological Analyst",
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "Interview Psychological",
+    "Interview Sales",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_passed": [
+    "Psychological Analyst",
+    "Interview Psychological",
+    "Interview Sales"
+  ],
+  "agents_failed": [
+    "Voice Alchemist",
+    "Competitor Analyst",
+    "GTM Blueprint Strategist"
+  ],
+  "agents_missing": [],
+  "detailed_results": {
+    "Psychological Analyst": {
+      "agent_name": "Psychological Analyst",
+      "class_name": "PsychologicalAgent",
+      "status": "PASSED",
+      "word_count": 2090,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "## COMPREHENSIVE CUSTOMER PSYCHOLOGY ANALYSIS FOR AI-POWERED CUSTOMER SERVICE AUTOMATION IN ENTERPRISE CONTACT CENTERS\n\n### INTRODUCTION\n\nIn the burgeoning $15B enterprise contact center market, the dynamics of customer service automation driven by AI present unique challenges and opportunities. This analysis delves into the psychological landscape of decision-makers (VP Customer Success, CTO, and CFO) in enterprise contact centers, exploring their motivations, pain points, and the decision-maki..."
+    },
+    "Voice Alchemist": {
+      "agent_name": "Voice Alchemist",
+      "class_name": "VoiceAgent",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "'VoicePrompts' object has no attribute 'get_analysis_prompt'"
+      ],
+      "warnings": []
+    },
+    "Competitor Analyst": {
+      "agent_name": "Competitor Analyst",
+      "class_name": "CompetitorAgent",
+      "status": "ERROR",
+      "word_count": 0,
+      "quality_score": 0.0,
+      "errors": [
+        "'CompetitorPrompts' object has no attribute 'get_competitive_analysis_prompt'"
+      ],
+      "warnings": []
+    },
+    "Interview Psychological": {
+      "agent_name": "Interview Psychological",
+      "class_name": "PsychologicalInterviewAgentV4",
+      "status": "PASSED",
+      "word_count": 2035,
+      "quality_score": 0.9500000000000001,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "# INTERVIEW 1: THE ANXIOUS INNOVATOR\n\n## Opening (100-150 words):\n\n**Interviewer:** Thank you for making time today. Can you tell me a little about your role and what your company does?\n\n**Innovator:** Sure, I\u2019m the VP of Customer Success at TechSolutions. We provide comprehensive customer service tools to large enterprises, and right now, we\u2019re looking into integrating AI for automation. \n\n**Interviewer:** It sounds like an exciting time for you. What challenges are you facing currently?\n\n**Inn..."
+    },
+    "Interview Sales": {
+      "agent_name": "Interview Sales",
+      "class_name": "SalesInterviewAgentV4",
+      "status": "PASSED",
+      "word_count": 2118,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [],
+      "sample_output": "# INTERVIEW 1: THE ECONOMIC BUYER\n\n**Character**: CFO/VP evaluating ROI, concerned about budget and business impact.\n\n---\n\n### Opening & Rapport (100-120 words)\n\n**Sales Rep**: \"Thanks for taking the time today. I noticed you've been leading the digital transformation at your company. That must be exciting!\"\n\n**Prospect**: \"Yes, it\u2019s been quite a journey. We're at a critical juncture where we need to enhance our customer service capabilities.\"\n\n**Sales Rep**: \"Absolutely. I\u2019ve been following you..."
+    },
+    "GTM Blueprint Strategist": {
+      "agent_name": "GTM Blueprint Strategist",
+      "class_name": "GTMBlueprintAgent",
+      "status": "FAILED",
+      "word_count": 2484,
+      "quality_score": 1.0,
+      "errors": [],
+      "warnings": [
+        "Need 16 more words"
+      ],
+      "sample_output": "# Go-To-Market Blueprint for AI-Powered Customer Service Automation\n\n## 1. EXECUTIVE SUMMARY\n\nIn the rapidly evolving enterprise contact center market, valued at $15 billion, the demand for AI-powered customer service automation is surging. Our analysis reveals three transformative insights: (1) High agent turnover and training costs are crippling operational efficiency, (2) Enterprises are increasingly seeking solutions that enhance customer experience while reducing costs, and (3) Decision-mak..."
+    }
+  }
+}

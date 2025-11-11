@@ -1,0 +1,39 @@
+{
+  "test_date": "2025-08-25T19:10:51.854518",
+  "agents_found": 4,
+  "agents_tested": 4,
+  "results": {
+    "Psychological Analyst": {
+      "agent": "Psychological Analyst",
+      "error": "PsychologicalAgent._generate_response() missing 2 required positional arguments: 'memories' and 'llm'",
+      "passed": false
+    },
+    "Voice Alchemist": {
+      "agent": "Voice Alchemist",
+      "error": "VoiceAgent._generate_response() missing 2 required positional arguments: 'memories' and 'llm'",
+      "passed": false
+    },
+    "Competitor Analyst": {
+      "agent": "Competitor Analyst",
+      "error": "CompetitorAgent._generate_response() missing 2 required positional arguments: 'memories' and 'llm'",
+      "passed": false
+    },
+    "GTM Blueprint Strategist": {
+      "agent": "GTM Blueprint Strategist",
+      "word_count": 2816,
+      "quality_score": 0.0,
+      "meets_quality": false,
+      "meets_words": true,
+      "passed": false,
+      "criteria": {
+        "module": "team_icp.agents.gtm_blueprint",
+        "class": "GTMBlueprintAgent",
+        "name": "GTM Blueprint Strategist",
+        "min_quality": 0.85,
+        "min_words": 2500,
+        "target_words": 3000
+      },
+      "output_preview": "# GO-TO-MARKET BLUEPRINT\n*Generated: August 25, 2025*\n\n---\n\n## EXECUTIVE SUMMARY & STRATEGIC OVERVIEW\n\nEXECUTIVE SUMMARY & STRATEGIC OVERVIEW\nGo-to-Market Strategy: AI-Native Customer Success Platform..."
+    }
+  }
+}

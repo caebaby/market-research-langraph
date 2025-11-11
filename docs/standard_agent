@@ -1,0 +1,277 @@
+Thanks for sharing Gemini’s enhanced guide—it’s a fantastic evolution! It’s 03:45 PM EDT, Sunday, July 20, 2025. The practical focus with code examples and a reusable template aligns perfectly with your vision for a scalable, resale-ready Level 4 system. I’ve reviewed it against Claude’s and my prior inputs, and it looks good with minor tweaks. Since you’re using GitHub web, I’ll guide you to update it and ensure your `PsychologicalAgent` fits.
+
+### Agreement and Assessment
+- **Level 4 Focus**: Agree—Gemini’s shift to Level 4 with governed autonomy is practical and safer, matching Claude’s and my consensus.
+- **Core Capabilities**: The guide’s memory, learning, reflection, and communication align with your agent’s strengths.
+- **Enterprise Foundations**: Gemini’s security, governance, and observability additions address Claude’s gaps, fitting your enterprise needs.
+- **Template**: The `StandardAgentNode` is a game-changer for modularity and scale.
+
+### Changes to Gemini’s Doc
+1. **Clarify Scalability**
+   - Add to Phase 1.1 Memory System: “Memory must support multi-team access (e.g., ICP, Sales) via a shared Supabase instance.”
+2. **Enhance Governance**
+   - Add to 2.2 HITL: “Include a dashboard flag (e.g., `requires_human_review`) for approval workflows.”
+3. **Add Resale Note**
+   - Add to 3.2 Observability: “Export logs as JSON for client reporting, boosting resale value.”
+
+### Step 1: Add Updated Doc
+- Go to your GitHub repo, select `level5-icp-psychological` branch.
+- Click “Create new file” in `docs/`, name it `level_4_agent_standards.md`.
+- Paste this revised version:
+  ```markdown
+  ### **Practical Level 4 Agent Construction Standards**
+
+  **A Framework for Building Enterprise-Grade AI Agents**
+
+  #### **Core Philosophy**
+  We are building **Level 4: High Automation** agents. These are intelligent, learning, and collaborative systems that operate within a governed framework. They are brilliant specialists who require a capable manager (our orchestration graph), not fully autonomous entities operating without boundaries.[1] The human role is that of a supervisor and approver, not an operator.[2]
+
+  ---
+
+  ### **Phase 1: Foundation (The Cognitive Core)**
+
+  *Every agent must be built with these core capabilities.*
+
+  **1.1 Memory System**
+  * **What:** Agents must remember past interactions to inform future actions and maintain context across sessions.[3, 4]
+  * **Implementation:**
+      * **Short-Term Memory:** Managed via the workflow's state object (e.g., LangGraph `StateGraph`).
+      * **Long-Term Memory:** Accessed via a dedicated, persistent service (e.g., Supabase, vector database). Memory must support multi-team access (e.g., ICP, Sales) via a shared Supabase instance.
+  * **Test:** Can an agent performing an analysis in a new session correctly recall and apply a key insight from a previous, completed session?
+  * **Code Example:**
+    ```python
+    def run(self, state):
+        memory_service = state.get("memory_service")
+        business_context = state.get("business_context")
+        recalled_insights = memory_service.recall(query=business_context, limit=5)
+        prompt = f"Based on these past insights: {recalled_insights}, analyze the following..."
+    ```
+
+  **1.2 Learning System**
+  * **What:** The *system* of agents must improve its collective performance over time by learning from successful, human-approved outcomes.[5]
+  * **Implementation:**
+      * A `LearningManager` service analyzes final, approved reports to extract reusable strategies.
+      * These strategies are stored in the long-term memory system.
+  * **Test:** Do quality scores for a specific task type show a measurable upward trend over 10+ independent runs?
+  * **Code Example:**
+    ```python
+    final_state = graph.invoke(initial_state)
+    if final_state.get("human_approved"):
+        final_report = final_state.get("final_report")
+        business_context = final_state.get("business_context")
+        learning_service = final_state.get("learning_service")
+        learning_service.learn_from_report(final_report, business_context)
+    ```
+
+  **1.3 Reflection System**
+  * **What:** Agents must self-evaluate their own output against quality criteria and iteratively refine it before finalizing.[6, 7]
+  * **Implementation:**
+      * Workflows must include a dedicated `_reflect()` method that scores the agent's output.
+      * The orchestration graph must loop back for refinement if the score is below the target threshold (e.g., < 0.9).
+  * **Test:** Given ambiguous input, does the agent recognize its low-quality initial output and trigger a refinement loop?
+  * **Code Example:**
+    ```python
+    def _reflect(self, task, response):
+        score = float(self.llm.invoke(f"Critique: {task}\n{response}").content.split('\n')[-1])
+        return {"score": score}
+
+    def should_refine(state):
+        if state.get("quality_score") < 0.9:
+            return "refine_step"
+        return "continue"
+    ```
+
+  ---
+
+  ### **Phase 2: Collaboration & Governance (The Operational Framework)**
+
+  *Every agent must operate within this governed, team-based structure.*
+
+  **2.1 Orchestrated Communication System**
+  * **What:** Agents must share insights and pass information through the central workflow orchestrator, not through direct peer-to-peer messaging.
+  * **Why Orchestrated:** This ensures a predictable, traceable, and debuggable data flow.
+  * **Implementation:**
+      * The primary workflow state object will contain a `shared_insights` dictionary.
+      * As each agent completes its task, its output is added to the shared state.
+      * Subsequent agents read from this shared state to inform their own analysis.
+  * **Test:** Does the Market agent correctly use a key "customer fear" identified by the Psychological agent?
+  * **Code Example:**
+    ```python
+    def update_shared_state(state):
+        psych_output = state.get("current_output")
+        state["shared_insights"]["psychological"] = psych_output
+        return state
+
+    def run(self, state):
+        psych_insights = state.get("shared_insights", {}).get("psychological", {})
+    ```
+
+  **2.2 Human-in-the-Loop (HITL) Governance**
+  * **What:** The workflow MUST pause and require explicit human approval for critical decisions or when confidence is low.
+  * **When to Trigger HITL:** Final quality score < 0.7 or high-stakes actions.
+  * **Implementation:**
+      * The agent updates the state with `requires_human_review: True`.
+      * The orchestration graph pauses for feedback.
+  * **Test:** Does the workflow pause when quality < 0.7?
+  * **Code Example:**
+    ```python
+    if quality_score < 0.7:
+        state["requires_human_review"] = True
+        state["review_reason"] = f"Low score: {quality_score}"
+
+    def human_approval_node(state):
+        if state.get("requires_human_review"):
+            human_feedback = input("Review and feedback: ")
+            state["human_feedback"] = human_feedback
+    ```
+
+  ---
+
+  ### **Phase 3: Reliability & Security (The Enterprise Chassis)**
+
+  *These systems must be implemented as agents are scaled.*
+
+  **3.1 Security System**
+  * **What:** The system must protect against misuse and data leakage.[8, 5]
+  * **Priority Implementation:**
+      1. **Data Isolation:** Agents access only their `client_id` data.
+      2. **Output Filtering:** Scan outputs for sensitive data.
+      3. **Resource Limits:** Apply rate limiting.
+      4. **Prompt Protection:** Ignore manipulative inputs.
+  * **Test:** Can an agent access another client’s data? (No)
+  * **Code Example:**
+    ```python
+    def run(self, state):
+        client_id = state.get("client_id")
+        if not client_id:
+            raise ValueError("Security Error: Missing client_id")
+        memories = self.memory.recall(context, client_id=client_id)
+    ```
+
+  **3.2 Observability System**
+  * **What:** Every action must be logged and traceable.[10]
+  * **Implementation:**
+      * Integrate with LangSmith.
+      * Log prompts, reasoning, and outputs.
+      * Export logs as JSON for client reporting, boosting resale value.
+  * **Test**: Can you trace a recommendation to its source?
+  * **Code Example:**
+    ```python
+    graph.invoke(initial_state)  # LangSmith handles tracing
+    ```
+
+  ---
+
+  ### **The Standard Level 4 Agent Node: A Complete Template**
+
+  ```python
+  # teams/icp/agents/base.py
+
+  import json
+  from typing import Dict, Any, List
+
+  from core.config import Config
+  from core.memory.interfaces import MemoryInterface
+  from core.tools.tool_executor import ToolExecutor
+
+  class StandardAgentNode:
+      def __init__(self, agent_name: str, role_prompt: str):
+          self.agent_name = agent_name
+          self.role_prompt = role_prompt
+          self.llm = Config.get_llm()
+
+      def _generate_response(self, task: str, context: str, memories: List) -> str:
+          print(f"[{self.agent_name}] Generating response for task: {task}")
+          memories_str = "\n".join([m.get('content', '') for m in memories])
+          prompt = f"""
+          {self.role_prompt}
+          Tools: web_search(query), code_interpreter(code).
+          Decide: 1) JSON tool call, or 2) detailed analysis.
+          MEMORIES: {memories_str}
+          CONTEXT: {context}
+          TASK: {task}
+          """
+          return self.llm.invoke(prompt).content
+
+      def _reflect(self, task: str, response: str) -> Dict[str, Any]:
+          print(f"[{self.agent_name}] Reflecting...")
+          prompt = f"""
+          Critique this response for accuracy, depth, directness.
+          Score 0.0-1.0 on a new line, 0.9+ is enterprise-ready.
+          TASK: {task}
+          RESPONSE: {response}
+          """
+          critique = self.llm.invoke(prompt).content.strip()
+          lines = critique.split('\n')
+          return {"critique": "\n".join(lines[:-1]), "score": float(lines[-1])}
+
+      def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
+          print(f"\n--- Executing Node: {self.agent_name} ---")
+          task = state.get("current_task")
+          context = state.get("master_context", "")
+          memory_service: MemoryInterface = state.get("memory_service")
+          tool_executor: ToolExecutor = state.get("tool_executor")
+
+          memories = memory_service.recall(query=f"{context}\n{task}")
+          response = self._generate_response(task, context, memories)
+          try:
+              tool_call = json.loads(response)
+              if "tool_name" in tool_call and "tool_input" in tool_call:
+                  print(f"[{self.agent_name}] Using tool: {tool_call['tool_name']}")
+                  tool_output = tool_executor.execute(tool_call['tool_name'], tool_call['tool_input'])
+                  response = self._generate_response(task, context + f"\n{tool_output}", memories)
+          except json.JSONDecodeError:
+              pass
+
+          reflection = self._reflect(task, response)
+          state.update({
+              "current_output": response,
+              "critique": reflection["critique"],
+              "quality_score": reflection["score"]
+          })
+          return state
+
+  class PsychologicalAgent(StandardAgentNode):
+      def __init__(self):
+          agent_name = "Psychological Analyst"
+          role_prompt = """
+          You are a psychological analyst specializing in consumer behavior.
+          Uncover unconscious patterns, emotional triggers, and contradictions.
+          Provide deep, non-obvious insights.
+          """
+          super().__init__(agent_name=agent_name, role_prompt=role_prompt)
+  ```
+- Save, commit with message “Added Level 4 Agent Standards”.
+
+### Step 2: Update `psychological.py`
+- Go to `team_icp/agents/psychological.py`, click the pencil icon.
+- Replace with:
+  ```python
+  from .base import StandardAgentNode
+
+  class PsychologicalAgent(StandardAgentNode):
+      def __init__(self):
+          agent_name = "Psychological Analyst"
+          role_prompt = """
+          You are a psychological analyst specializing in consumer behavior.
+          Uncover unconscious patterns, emotional triggers, and contradictions.
+          Provide deep, non-obvious insights.
+          """
+          super().__init__(agent_name=agent_name, role_prompt=role_prompt)
+  ```
+- Save, commit with message “Updated PsychologicalAgent to use StandardAgentNode”.
+
+### Step 3: Redeploy
+- Commit, trigger Railway redeployment.
+
+### Step 4: Test
+- Check logs, test your URL.
+- **Expected**: Analysis with reflection and tools, no errors.
+- **If Error**: Share the log.
+
+### My Take
+- **Agree**: Gemini’s doc is practical, with code examples making it actionable. The Level 4 focus with governance is spot-on.
+- **Disagree**: No major issues—my tweaks enhance scalability and resale, which Gemini missed.
+- **Changes**: My additions (e.g., multi-team memory, export logs) align with your vision without overcomplicating.
+
+Looks good to update—let me know the result!
